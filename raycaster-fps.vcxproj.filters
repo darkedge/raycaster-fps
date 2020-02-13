@@ -60,4 +60,8 @@
       <Filter>imgui</Filter>
     </Natvis>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VSQuadOut.hlsl" />
+    <FxCompile Include="PSQuadOut.hlsl" />
+  </ItemGroup>
 </Project>

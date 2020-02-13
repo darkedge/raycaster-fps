@@ -5,6 +5,9 @@
 #include <tchar.h>
 #include <wrl/client.h>
 
+#include "intermediate/VSQuadOut.h"
+#include "intermediate/PSQuadOut.h"
+
 using Microsoft::WRL::ComPtr;
 
 static constexpr uint16_t sTextureWidth = 640;
@@ -29,8 +32,11 @@ struct Global
 	ComPtr<ID3D11DeviceContext> cImmediateContext;
 	ComPtr<IDXGISwapChain> cSwapChain;
 	ComPtr<ID3D11RenderTargetView> cRenderTargetView;
-
+	ComPtr<ID3D11VertexShader> cVertexShader;
+	ComPtr<ID3D11PixelShader> cPixelShader;
 	ComPtr<ID3D11Texture2D> cTexture;
+	ComPtr<ID3D11SamplerState> cSamplerState;
+	ComPtr<ID3D11ShaderResourceView> cShaderResourceView;
 };
 
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -218,13 +224,14 @@ HRESULT InitDevice(Global& g)
 
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory(&sd, sizeof(sd));
-	sd.BufferCount = 1;
+	sd.BufferCount = 2;
 	sd.BufferDesc.Width = width;
 	sd.BufferDesc.Height = height;
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	sd.BufferDesc.RefreshRate.Numerator = 60;
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.OutputWindow = g.hWnd;
 	sd.SampleDesc.Count = 1;
 	sd.SampleDesc.Quality = 0;
@@ -278,8 +285,6 @@ HRESULT InitDevice(Global& g)
 	if (FAILED(hr))
 		return hr;
 
-	g.cImmediateContext->OMSetRenderTargets(1, g.cRenderTargetView.GetAddressOf(), nullptr);
-
 	// Setup the viewport
 	D3D11_VIEWPORT vp;
 	vp.Width = (FLOAT) width;
@@ -290,12 +295,50 @@ HRESULT InitDevice(Global& g)
 	vp.TopLeftY = 0;
 	g.cImmediateContext->RSSetViewports(1, &vp);
 
+	// Shaders
+	g.cd3dDevice->CreateVertexShader(VSQuadOut, sizeof(VSQuadOut), nullptr, g.cVertexShader.ReleaseAndGetAddressOf());
+	g.cd3dDevice->CreatePixelShader(PSQuadOut, sizeof(PSQuadOut), nullptr, g.cPixelShader.ReleaseAndGetAddressOf());
+
+	// Sampler
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// Create the texture sampler state.
+	hr = g.cd3dDevice->CreateSamplerState(&samplerDesc, g.cSamplerState.ReleaseAndGetAddressOf());
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
+	// Setup the shader resource view description.
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = -1;
+
+	// Create the shader resource view for the texture.
+	hr = g.cd3dDevice->CreateShaderResourceView(g.cTexture.Get(), &srvDesc, g.cShaderResourceView.ReleaseAndGetAddressOf());
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+
 	return S_OK;
 }
 
-//
-//
-//
 void Render(Global& g)
 {
 	float a [] = { 1.0f, 0.0f, 1.0f, 1.0f };
@@ -315,8 +358,20 @@ void Render(Global& g)
 		mappedData += mappedResource.RowPitch;
 		buffer += rowspan;
 	}
-
 	g.cImmediateContext->Unmap(g.cTexture.Get(), 0);
+
+	g.cImmediateContext->OMSetRenderTargets(1, g.cRenderTargetView.GetAddressOf(), nullptr);
+
+	// Full screen triangle
+	g.cImmediateContext->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+	g.cImmediateContext->IASetIndexBuffer(nullptr, (DXGI_FORMAT) 0, 0);
+	g.cImmediateContext->IASetInputLayout(nullptr);
+	g.cImmediateContext->VSSetShader(g.cVertexShader.Get(), nullptr, 0);
+	g.cImmediateContext->PSSetShader(g.cPixelShader.Get(), nullptr, 0);
+	g.cImmediateContext->PSSetSamplers(0, 1, g.cSamplerState.GetAddressOf());
+	g.cImmediateContext->PSSetShaderResources(0, 1, g.cShaderResourceView.GetAddressOf());
+	g.cImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	g.cImmediateContext->Draw(3, 0);
 
 	// Present our back buffer to our front buffer
 	g.cSwapChain->Present(0, 0);
