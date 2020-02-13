@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main1.cpp" />
     <ClCompile Include="imgui-docking\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -20,6 +19,9 @@
     <ClCompile Include="imgui-docking\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mj_d3d11.cpp" />
+    <ClCompile Include="mj_raytracer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-docking\imconfig.h">
@@ -46,9 +48,9 @@
     <ClInclude Include="imgui-docking\imstb_truetype.h">
       <Filter>imgui</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="main.cpp" />
+    <ClInclude Include="mj_d3d11.h" />
+    <ClInclude Include="mj_raytracer.h" />
+    <ClInclude Include="mj_common.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -59,7 +59,6 @@
       <AdditionalIncludeDirectories>imgui-docking</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>d3d11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
@@ -80,7 +79,6 @@
       <AdditionalIncludeDirectories>imgui-docking</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>d3d11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -99,8 +97,9 @@
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui_impl_win32.cpp" />
-    <ClCompile Include="main1.cpp" />
-    <None Include="main.cpp" />
+    <ClCompile Include="mj_d3d11.cpp" />
+    <ClCompile Include="mj_raytracer.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="imgui-docking\misc\natvis\imgui.natvis" />
@@ -114,6 +113,9 @@
     <ClInclude Include="imgui-docking\imstb_truetype.h" />
     <ClInclude Include="imgui_impl_dx11.h" />
     <ClInclude Include="imgui_impl_win32.h" />
+    <ClInclude Include="mj_common.h" />
+    <ClInclude Include="mj_d3d11.h" />
+    <ClInclude Include="mj_raytracer.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PSQuadOut.hlsl">
