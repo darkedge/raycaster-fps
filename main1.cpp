@@ -123,8 +123,19 @@ BOOL InitInstance(Global& g, HINSTANCE hInstance, int nCmdShow)
 {
 	g.hInst = hInstance; // Store instance handle in our global variable
 
+	RECT desktopRect;
+	GetClientRect(GetDesktopWindow(), &desktopRect);
+
+	// Get window rectangle
+	RECT windowRect = { 0, 0, sTextureWidth, sTextureHeight }; // TODO: Config file?
+	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+	// Calculate window dimensions
+	LONG windowWidth = windowRect.right - windowRect.left;
+	LONG windowHeight = windowRect.bottom - windowRect.top;
+
 	g.hWnd = CreateWindow(_T("ImGui Platform"), _T("Untitled"), WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+		CW_USEDEFAULT, 0, windowWidth, windowHeight, nullptr, nullptr, hInstance, nullptr);
 
 	if (!g.hWnd)
 	{
