@@ -60,11 +60,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="imgui-docking\misc\natvis\imgui.natvis">
-      <Filter>imgui</Filter>
-    </Natvis>
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="VSQuadOut.hlsl" />
     <FxCompile Include="PSQuadOut.hlsl" />
   </ItemGroup>
