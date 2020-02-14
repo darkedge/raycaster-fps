@@ -18,6 +18,38 @@ namespace mj
       uint32_t rgba;
     };
 
+    struct float3
+    {
+      float x;
+      float y;
+      float z;
+    };
+
+    struct Ray
+    {
+      float3 origin;
+      float3 direction;
+      float length;
+    };
+
+    struct Sphere
+    {
+      float3 origin;
+      float radius;
+    };
+
+    struct Plane
+    {
+      float3 normal;
+      float3 distance;
+    };
+
+    struct Camera
+    {
+      float3 origin;
+      float3 direction;
+    };
+
     struct Image
     {
       mj::rt::Pixel p[MJ_WIDTH * MJ_HEIGHT];
