@@ -1,6 +1,7 @@
 #include "mj_d3d11.h"
 #include "mj_raytracer.h"
 #include "mj_common.h"
+#include "mj_win32_utils.h"
 
 #include <d3d11.h>
 #include <assert.h>
@@ -15,19 +16,8 @@ static ID3D11SamplerState* s_pSamplerState;
 static ID3D11ShaderResourceView* s_pShaderResourceView;
 static D3D11_VIEWPORT s_Viewport;
 
-struct Pixel
-{
-	uint8_t r8;
-	uint8_t g8;
-	uint8_t b8;
-	uint8_t a8;
-};
-static Pixel p[MJ_WIDTH * MJ_HEIGHT];
-
 bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 {
-	MJ_UNINITIALIZED HRESULT hr;
-
 	s_Viewport.Width = (FLOAT) MJ_WIDTH;
 	s_Viewport.Height = (FLOAT) MJ_HEIGHT;
 	s_Viewport.MinDepth = 0.0f;
@@ -36,8 +26,8 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	s_Viewport.TopLeftY = 0;
 
 	D3D11_SUBRESOURCE_DATA textureData = {};
-	textureData.pSysMem = p;
-	textureData.SysMemPitch = MJ_HEIGHT * sizeof(Pixel);
+	textureData.pSysMem = mj::rt::GetImage;
+	textureData.SysMemPitch = MJ_HEIGHT * sizeof(mj::rt::Pixel);
 
 	D3D11_TEXTURE2D_DESC desc = {};
 	desc.Width = MJ_WIDTH;
@@ -52,13 +42,13 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	desc.MiscFlags = 0;
 
 	assert(!s_pTexture);
-	device->CreateTexture2D(&desc, &textureData, &s_pTexture);
+	WIN32_ASSERT(device->CreateTexture2D(&desc, &textureData, &s_pTexture));
 
 	// Shaders
 	assert(!s_pVertexShader);
-	device->CreateVertexShader(VSQuadOut, sizeof(VSQuadOut), nullptr, &s_pVertexShader);
+	WIN32_ASSERT(device->CreateVertexShader(VSQuadOut, sizeof(VSQuadOut), nullptr, &s_pVertexShader));
 	assert(!s_pPixelShader);
-	device->CreatePixelShader(PSQuadOut, sizeof(PSQuadOut), nullptr, &s_pPixelShader);
+	WIN32_ASSERT(device->CreatePixelShader(PSQuadOut, sizeof(PSQuadOut), nullptr, &s_pPixelShader));
 
 	// Sampler
 	D3D11_SAMPLER_DESC samplerDesc = {};
@@ -78,11 +68,7 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 
 	// Create the texture sampler state.
 	assert(!s_pSamplerState);
-	hr = device->CreateSamplerState(&samplerDesc, &s_pSamplerState);
-	if (FAILED(hr))
-	{
-		return false;
-	}
+	WIN32_ASSERT(device->CreateSamplerState(&samplerDesc, &s_pSamplerState));
 
 	// Setup the shader resource view description.
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -94,35 +80,31 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	// Create the shader resource view for the texture.
 	assert(!s_pShaderResourceView);
 	assert(s_pTexture);
-	hr = device->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pShaderResourceView);
-	if (FAILED(hr))
-	{
-		return false;
-	}
+	WIN32_ASSERT(device->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pShaderResourceView));
 
-	return true;
+	return mj::rt::Init();
 }
 
 void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 {
 	device_context->RSSetViewports(1, &s_Viewport);
 
-	MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedResource;
+	MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE texture;
 	assert(s_pTexture);
-	device_context->Map(s_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	device_context->Map(s_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &texture);
 
-	BYTE* mappedData = reinterpret_cast<BYTE*>(mappedResource.pData);
-	BYTE* buffer = reinterpret_cast<BYTE*>(p);
-	size_t rowspan = MJ_WIDTH * sizeof(Pixel);
-	for (UINT i = 0; i < MJ_HEIGHT; ++i)
+	mj::rt::Update();
+
+	const mj::rt::Pixel* src = mj::rt::GetImage().p;
+	char* dst = reinterpret_cast<char*>(texture.pData);
+	for (uint16_t i = 0; i < MJ_HEIGHT; i++)
 	{
-		memcpy(mappedData, p, rowspan);
-		mappedData += mappedResource.RowPitch;
-		buffer += rowspan;
+		memcpy(dst, src, MJ_WIDTH * sizeof(mj::rt::Pixel));
+		dst += texture.RowPitch;
+		src += MJ_WIDTH;
 	}
-	device_context->Unmap(s_pTexture, 0);
 
-	//device_context->OMSetRenderTargets(1, s_pRenderTargetView.GetAddressOf(), nullptr);
+	device_context->Unmap(s_pTexture, 0);
 
 	// Full screen triangle
 	device_context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
@@ -142,9 +124,11 @@ void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 
 void mj::d3d11::Destroy()
 {
-	if (s_pVertexShader) { s_pVertexShader->Release(); s_pVertexShader = nullptr; }
-	if (s_pPixelShader) { s_pPixelShader->Release(); s_pPixelShader = nullptr; }
-	if (s_pTexture) { s_pTexture->Release(); s_pTexture = nullptr; }
-	if (s_pSamplerState) { s_pSamplerState->Release(); s_pSamplerState = nullptr; }
-	if (s_pShaderResourceView) { s_pShaderResourceView->Release(); s_pShaderResourceView = nullptr; }
+	mj::rt::Destroy();
+
+	SAFE_RELEASE(s_pVertexShader);
+	SAFE_RELEASE(s_pPixelShader);
+	SAFE_RELEASE(s_pTexture);
+	SAFE_RELEASE(s_pSamplerState);
+	SAFE_RELEASE(s_pShaderResourceView);
 }

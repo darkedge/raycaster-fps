@@ -22,6 +22,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mj_d3d11.cpp" />
     <ClCompile Include="mj_raytracer.cpp" />
+    <ClCompile Include="mj_win32_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-docking\imconfig.h">
@@ -51,6 +52,7 @@
     <ClInclude Include="mj_d3d11.h" />
     <ClInclude Include="mj_raytracer.h" />
     <ClInclude Include="mj_common.h" />
+    <ClInclude Include="mj_win32_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

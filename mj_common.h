@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-// Macro for annotation of uninitialized variables
+// Annotation macros
 #define MJ_UNINITIALIZED
 
 // Content dimensions
