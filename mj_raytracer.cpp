@@ -1,11 +1,20 @@
 #include "mj_raytracer.h"
 #include "mj_common.h"
 
-static mj::rt::Image s_Image;
+using namespace mj::rt;
+
+static Image s_Image;
+
+static Sphere s_Sphere;
 
 bool mj::rt::Init()
 {
   return true;
+}
+
+static void IntersectRaySphere(const Ray& ray, const Sphere& sphere)
+{
+
 }
 
 void mj::rt::Update()
@@ -14,15 +23,12 @@ void mj::rt::Update()
   {
     for (uint16_t y = 0; y < MJ_HEIGHT; y++)
     {
-      if (x == y)
-      {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0xFF0000FF;
-      }
+      
     }
   }
 }
 
-const mj::rt::Image& mj::rt::GetImage()
+const Image& mj::rt::GetImage()
 {
   return s_Image;
 }
