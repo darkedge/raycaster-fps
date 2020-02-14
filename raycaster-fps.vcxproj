@@ -104,6 +104,7 @@
     <ClCompile Include="imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui_impl_win32.cpp" />
     <ClCompile Include="mj_d3d11.cpp" />
+    <ClCompile Include="mj_input.cpp" />
     <ClCompile Include="mj_raytracer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mj_win32_utils.cpp" />
@@ -119,6 +120,7 @@
     <ClInclude Include="imgui_impl_win32.h" />
     <ClInclude Include="mj_common.h" />
     <ClInclude Include="mj_d3d11.h" />
+    <ClInclude Include="mj_input.h" />
     <ClInclude Include="mj_raytracer.h" />
     <ClInclude Include="mj_win32_utils.h" />
   </ItemGroup>

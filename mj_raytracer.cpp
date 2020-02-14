@@ -1,5 +1,6 @@
 #include "mj_raytracer.h"
 #include "mj_common.h"
+#include "mj_input.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
