@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "mj_common.h"
+#include "glm/glm.hpp"
 
 namespace mj
 {
@@ -18,36 +19,41 @@ namespace mj
       uint32_t rgba;
     };
 
-    struct float3
-    {
-      float x;
-      float y;
-      float z;
-    };
-
     struct Ray
     {
-      float3 origin;
-      float3 direction;
+      glm::vec3 origin;
+      glm::vec3 direction;
+      float length;
+    };
+
+    struct RaycastResult
+    {
+      glm::vec3 intersection;
+      glm::vec3 normal;
       float length;
     };
 
     struct Sphere
     {
-      float3 origin;
+      glm::vec3 origin;
       float radius;
     };
 
     struct Plane
     {
-      float3 normal;
-      float3 distance;
+      glm::vec3 normal;
+      glm::vec3 distance;
     };
 
     struct Camera
     {
-      float3 origin;
-      float3 direction;
+      glm::vec3 origin;
+      glm::vec3 direction;
+
+      glm::vec3 topLeft;
+      glm::vec3 topRight;
+      glm::vec3 bottomLeft;
+      glm::vec3 bottomRight;
     };
 
     struct Image
