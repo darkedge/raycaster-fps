@@ -53,7 +53,7 @@ bool mj::rt::Init()
 
   s_Shapes[DemoShape_CyanPlane].type = Shape::Shape_Plane;
   s_Shapes[DemoShape_CyanPlane].plane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-  s_Shapes[DemoShape_CyanPlane].plane.distance = 5.0f;
+  s_Shapes[DemoShape_CyanPlane].plane.distance = 3.0f;
   s_Shapes[DemoShape_CyanPlane].color = glm::vec3(0.0f, 1.0f, 1.0f);
 
   s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -106,6 +106,24 @@ static glm::vec2 ScreenToCameraSpace(const glm::vec2& ss, float fov)
   return ss * glm::tan(fov * 0.5f);
 }
 
+static float DoSoftShadowSphere(const glm::vec3& ro, const glm::vec3 rd, const glm::vec3 sph, float radius, float k)
+{
+  glm::vec3 oc = ro - sph;
+  float b = glm::dot(oc, rd);
+  float c = glm::dot(oc, oc) - radius * radius;
+  float h = b * b - c;
+
+#if 0
+  // physically plausible shadow
+  float d = sqrt(max(0.0, sph.w * sph.w - h)) - sph.w;
+  float t = -b - sqrt(max(h, 0.0));
+  return (t < 0.0) ? 1.0 : smoothstep(0.0, 1.0, 2.5 * k * d / t);
+#else
+  // cheap but not plausible alternative
+  return (b > 0.0) ? glm::step(-0.0001f, c) : glm::smoothstep(0.0f, 1.0f, h * k / b);
+#endif    
+}
+
 void mj::rt::Update()
 {
   CameraMovement(MJ_REF s_Camera);
@@ -156,7 +174,7 @@ void mj::rt::Update()
       }
       if (pShape)
       {
-        glm::vec3 light = glm::normalize(glm::vec3(0.6f, 0.3f, -0.4f));
+        glm::vec3 light = glm::normalize(glm::vec3(0.3f, 0.6f, -1.0f));
 
         // Get intersection normal
         glm::vec3 normal = glm::zero<glm::vec3>();
@@ -175,6 +193,14 @@ void mj::rt::Update()
 
         glm::vec3 color = pShape->color;
         color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
+        for (const auto& shape : s_Shapes)
+        {
+          if (shape.type == Shape::Shape_Sphere)
+          {
+            color *= DoSoftShadowSphere(intersection, light, shape.sphere.origin, shape.sphere.radius, 2.0f);
+          }
+        }
+        color = glm::sqrt(color);
         s_Image.p[y * MJ_WIDTH + x] = glm::vec4(color, 1.0f);
       }
       else
