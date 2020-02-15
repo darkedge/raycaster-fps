@@ -193,13 +193,6 @@ void mj::rt::Update()
 
         glm::vec3 color = pShape->color;
         color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
-        for (const auto& shape : s_Shapes)
-        {
-          if (shape.type == Shape::Shape_Sphere)
-          {
-            color *= DoSoftShadowSphere(intersection, light, shape.sphere.origin, shape.sphere.radius, 2.0f);
-          }
-        }
         color = glm::sqrt(color);
         s_Image.p[y * MJ_WIDTH + x] = glm::vec4(color, 1.0f);
       }

@@ -85,6 +85,29 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	return mj::rt::Init();
 }
 
+void mj::d3d11::Resize(float width, float height)
+{
+  // Touch window from inside
+  const float ratio = (float) MJ_WIDTH / MJ_HEIGHT;
+  const float newRatio = width / height;
+  if (newRatio > ratio)
+  {
+	float w = height * ratio;
+	s_Viewport.Width = w;
+	s_Viewport.Height = height;
+	s_Viewport.TopLeftX = (width - w) / 2.0f;
+	s_Viewport.TopLeftY = 0;
+  } 
+  else
+  {
+	float h = width / ratio;
+	s_Viewport.Width = width;
+	s_Viewport.Height = h;
+	s_Viewport.TopLeftX = 0;
+	s_Viewport.TopLeftY = (height - h) / 2.0f;
+  }
+}
+
 void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 {
 	device_context->RSSetViewports(1, &s_Viewport);

@@ -43,7 +43,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
 
   // Get window rectangle
   RECT windowRect = { 0, 0, MJ_WIDTH, MJ_HEIGHT };
-  auto dwStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
+  auto dwStyle = WS_OVERLAPPEDWINDOW;
   AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
   // Calculate window dimensions
@@ -549,6 +549,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
       CleanupRenderTarget();
       g_pSwapChain->ResizeBuffers(0, (UINT) LOWORD(lParam), (UINT) HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+      mj::d3d11::Resize((float) LOWORD(lParam), (float) HIWORD(lParam));
       CreateRenderTarget();
     }
     return 0;
