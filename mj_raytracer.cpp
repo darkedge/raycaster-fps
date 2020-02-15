@@ -1,6 +1,7 @@
 #include "mj_raytracer.h"
 #include "mj_common.h"
 #include "mj_input.h"
+#include "camera.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -11,13 +12,15 @@ static Image s_Image;
 static Sphere s_Sphere;
 static Camera s_Camera;
 
+static const float s_FieldOfView = 45.0f; // Degrees
+
 bool mj::rt::Init()
 {
   s_Sphere.origin = glm::vec3(0.0f, 0.0f, 10.0f);
   s_Sphere.radius = 1.0f;
 
-  s_Camera.origin = glm::vec3(0.0f, 0.0f, 0.0f);
-  s_Camera.direction = glm::vec3(0.0f, 0.0f, 1.0f);
+  s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
+  s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
 
   return true;
 }
@@ -43,7 +46,7 @@ static bool IntersectRaySphere(const Ray& ray, const Sphere& sphere, RaycastResu
   {
     // Pick closest of two intersection
     float sqrt = glm::sqrt(determinant);
-    float t = glm::min(-b + sqrt, -b - sqrt);
+    float t = -b - sqrt;//glm::min(-b + sqrt, -b - sqrt);
     result.length = t;
     result.intersection = ray.origin + t * ray.direction;
     return true;
@@ -72,27 +75,29 @@ static glm::vec2 ScreenToCameraSpace(const glm::vec2& ss, float fov)
 static Ray CreateRay(const Camera& camera, const glm::vec2& cs)
 {
   MJ_UNINITIALIZED Ray ray;
-  ray.origin = camera.origin;
+  ray.origin = camera.position;
   ray.length = FLT_MAX;
 
   auto mat = glm::identity<glm::mat4>();
-  mat = glm::translate(mat, camera.origin);
-  ray.origin = camera.origin;
+  mat = glm::translate(mat, camera.position) * glm::mat4_cast(camera.rotation);
+  ray.origin = camera.position;
   glm::vec3 p = mat * glm::vec4(cs, 1, 1);
-  ray.direction = glm::normalize(p - camera.origin);
+  ray.direction = glm::normalize(p - camera.position);
 
   return ray;
 }
 
 void mj::rt::Update()
 {
+  CameraMovement(MJ_REF s_Camera);
+
   for (uint16_t x = 0; x < MJ_WIDTH; x++)
   {
     for (uint16_t y = 0; y < MJ_HEIGHT; y++)
     {
       glm::vec2 ndc = PixelToNDCSpace(x, y, MJ_WIDTH, MJ_HEIGHT);
       glm::vec2 ss = NDCToScreenSpace(ndc, (float)MJ_WIDTH / MJ_HEIGHT);
-      glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(90.0f));
+      glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(s_FieldOfView));
 
       const Ray ray = CreateRay(s_Camera, cs);
 

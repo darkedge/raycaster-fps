@@ -45,17 +45,6 @@ namespace mj
       glm::vec3 distance;
     };
 
-    struct Camera
-    {
-      glm::vec3 origin;
-      glm::vec3 direction;
-
-      glm::vec3 topLeft;
-      glm::vec3 topRight;
-      glm::vec3 bottomLeft;
-      glm::vec3 bottomRight;
-    };
-
     struct Image
     {
       mj::rt::Pixel p[MJ_WIDTH * MJ_HEIGHT];

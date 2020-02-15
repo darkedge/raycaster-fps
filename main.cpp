@@ -1,6 +1,3 @@
-// dear imgui - standalone example application for DirectX 11
-// If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
-
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
@@ -13,12 +10,13 @@
 #include "mj_common.h"
 #include "mj_input.h"
 #include "mj_win32_utils.h"
+#include "game.h"
 
 // Data
-static ID3D11Device*            g_pd3dDevice = NULL;
-static ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
-static IDXGISwapChain*          g_pSwapChain = NULL;
-static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
+static ID3D11Device* g_pd3dDevice = NULL;
+static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
+static IDXGISwapChain* g_pSwapChain = NULL;
+static ID3D11RenderTargetView* g_mainRenderTargetView = NULL;
 
 // Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
@@ -31,228 +29,206 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 // Main code
 int main(int, char**)
 {
-    ImGui_ImplWin32_EnableDpiAwareness();
+  ImGui_ImplWin32_EnableDpiAwareness();
 
-    // Create application window
-    RECT desktopRect;
-    GetClientRect(GetDesktopWindow(), &desktopRect);
+  // Create application window
+  RECT desktopRect;
+  GetClientRect(GetDesktopWindow(), &desktopRect);
 
-    // Get window rectangle
-    RECT windowRect = { 0, 0, MJ_WIDTH, MJ_HEIGHT };
-    auto dwStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
-    AdjustWindowRect(&windowRect, dwStyle, FALSE);
+  // Get window rectangle
+  RECT windowRect = { 0, 0, MJ_WIDTH, MJ_HEIGHT };
+  auto dwStyle = (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
+  AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
-    // Calculate window dimensions
-    LONG windowWidth = windowRect.right - windowRect.left;
-    LONG windowHeight = windowRect.bottom - windowRect.top;
+  // Calculate window dimensions
+  LONG windowWidth = windowRect.right - windowRect.left;
+  LONG windowHeight = windowRect.bottom - windowRect.top;
 
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL };
-    ::RegisterClassEx(&wc);
-    HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("raycaster-fps"), dwStyle, 100, 100, windowWidth, windowHeight, NULL, NULL, wc.hInstance, NULL);
+  WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL };
+  ::RegisterClassEx(&wc);
+  HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("raycaster-fps"), dwStyle, 100, 100, windowWidth, windowHeight, NULL, NULL, wc.hInstance, NULL);
 
-    // Initialize Direct3D
-    if (!CreateDeviceD3D(hwnd))
-    {
-        CleanupDeviceD3D();
-        ::UnregisterClass(wc.lpszClassName, wc.hInstance);
-        return 1;
-    }
+  // Initialize Direct3D
+  if (!CreateDeviceD3D(hwnd))
+  {
+    CleanupDeviceD3D();
+    ::UnregisterClass(wc.lpszClassName, wc.hInstance);
+    return 1;
+  }
 
-    // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    ::UpdateWindow(hwnd);
+  // Show the window
+  ::ShowWindow(hwnd, SW_SHOWDEFAULT);
+  ::UpdateWindow(hwnd);
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-    //io.ConfigViewportsNoAutoMerge = true;
-    //io.ConfigViewportsNoTaskBarIcon = true;
-    //io.ConfigViewportsNoDefaultParent = true;
-    //io.ConfigDockingAlwaysTabBar = true;
-    //io.ConfigDockingTransparentPayload = true;
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void) io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+  //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+  //io.ConfigViewportsNoAutoMerge = true;
+  //io.ConfigViewportsNoTaskBarIcon = true;
+  //io.ConfigViewportsNoDefaultParent = true;
+  //io.ConfigDockingAlwaysTabBar = true;
+  //io.ConfigDockingTransparentPayload = true;
 #if 1
-    io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;     // FIXME-DPI: THIS CURRENTLY DOESN'T WORK AS EXPECTED. DON'T USE IN USER APP!
-    io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI
+  io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;     // FIXME-DPI: THIS CURRENTLY DOESN'T WORK AS EXPECTED. DON'T USE IN USER APP!
+  io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports; // FIXME-DPI
 #endif
 
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
-
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-    ImGuiStyle& style = ImGui::GetStyle();
+  ImGuiStyle& style = ImGui::GetStyle();
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+  {
+    style.WindowRounding = 0.0f;
+    style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+  }
+
+  // Setup Platform/Renderer bindings
+  ImGui_ImplWin32_Init(hwnd);
+  ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+
+  if (!mj::d3d11::Init(g_pd3dDevice, g_pd3dDeviceContext))
+  {
+    return EXIT_FAILURE;
+  }
+  InitKeymap();
+
+  // Main loop
+  MSG msg;
+  ZeroMemory(&msg, sizeof(msg));
+  mj::input::Init();
+  LARGE_INTEGER lastTime, perfFreq;
+  WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&lastTime));
+  WIN32_FAIL_IF_ZERO(QueryPerformanceFrequency(&perfFreq));
+  while (msg.message != WM_QUIT)
+  {
+    // Poll and handle messages (inputs, window resize, etc.)
+    // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+    // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+    // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+    // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+    if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+    {
+      ::TranslateMessage(&msg);
+      ::DispatchMessage(&msg);
+      continue;
+    }
+    mj::input::Update();
+
+    LARGE_INTEGER now;
+    WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&now));
+    LONGLONG counts = now.QuadPart - lastTime.QuadPart;
+    SetDeltaTime((float)counts / perfFreq.QuadPart);
+
+    // Start the Dear ImGui frame
+    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
+    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    {
+      ImGui::Begin("Hello, world!");
+      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+      ImGui::End();
+    }
+
+    // Rendering
+    ImGui::Render();
+    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+    mj::d3d11::Update(g_pd3dDeviceContext);
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    // Update and Render additional Platform Windows
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-        style.WindowRounding = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
     }
 
-    // Setup Platform/Renderer bindings
-    ImGui_ImplWin32_Init(hwnd);
-    ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+    g_pSwapChain->Present(1, 0); // Present with vsync
+    //g_pSwapChain->Present(0, 0); // Present without vsync
+  }
 
-    if (!mj::d3d11::Init(g_pd3dDevice, g_pd3dDeviceContext))
-    {
-        return EXIT_FAILURE;
-    }
-    InitKeymap();
+  // Cleanup
+  mj::d3d11::Destroy();
+  ImGui_ImplDX11_Shutdown();
+  ImGui_ImplWin32_Shutdown();
+  ImGui::DestroyContext();
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Read 'docs/FONTS.txt' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
+  CleanupDeviceD3D();
+  ::DestroyWindow(hwnd);
+  ::UnregisterClass(wc.lpszClassName, wc.hInstance);
 
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    //ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  return 0;
+}
 
-    // Main loop
-    MSG msg;
-    ZeroMemory(&msg, sizeof(msg));
-    mj::input::Init();
-    while (msg.message != WM_QUIT)
-    {
-        mj::input::Update();
-        // Poll and handle messages (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-        if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-        {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-            continue;
-        }
-
-        // Start the Dear ImGui frame
-        ImGui_ImplDX11_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            //ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        // Rendering
-        ImGui::Render();
-        g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
-        //g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, (float*)&clear_color);
-        mj::d3d11::Update(g_pd3dDeviceContext);
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-        // Update and Render additional Platform Windows
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
-
-        g_pSwapChain->Present(1, 0); // Present with vsync
-        //g_pSwapChain->Present(0, 0); // Present without vsync
-    }
-
-    // Cleanup
-    mj::d3d11::Destroy();
-    ImGui_ImplDX11_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
-    CleanupDeviceD3D();
-    ::DestroyWindow(hwnd);
-    ::UnregisterClass(wc.lpszClassName, wc.hInstance);
-
-    return 0;
+int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR pCmdLine, int32_t /*nCmdShow*/)
+{
+#ifdef _DEBUG
+  WIN32_FAIL_IF_ZERO(AllocConsole());
+  freopen("CONIN$", "r", stdin);
+  freopen("CONOUT$", "w", stdout);
+  freopen("CONOUT$", "w", stderr);
+#endif
+  main(0, nullptr);
 }
 
 // Helper functions
 
 bool CreateDeviceD3D(HWND hWnd)
 {
-    // Setup swap chain
-    DXGI_SWAP_CHAIN_DESC sd;
-    ZeroMemory(&sd, sizeof(sd));
-    sd.BufferCount = 2;
-    sd.BufferDesc.Width = 0;
-    sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hWnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+  // Setup swap chain
+  DXGI_SWAP_CHAIN_DESC sd;
+  ZeroMemory(&sd, sizeof(sd));
+  sd.BufferCount = 2;
+  sd.BufferDesc.Width = 0;
+  sd.BufferDesc.Height = 0;
+  sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+  sd.BufferDesc.RefreshRate.Numerator = 60;
+  sd.BufferDesc.RefreshRate.Denominator = 1;
+  sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+  sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  sd.OutputWindow = hWnd;
+  sd.SampleDesc.Count = 1;
+  sd.SampleDesc.Quality = 0;
+  sd.Windowed = TRUE;
+  sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-    UINT createDeviceFlags = 0;
+  UINT createDeviceFlags = 0;
 #ifdef _DEBUG
-    createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+  createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-    D3D_FEATURE_LEVEL featureLevel;
-    const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-    if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
-        return false;
+  D3D_FEATURE_LEVEL featureLevel;
+  const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
+  if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+    return false;
 
-    CreateRenderTarget();
-    return true;
+  CreateRenderTarget();
+  return true;
 }
 
 void CleanupDeviceD3D()
 {
-    CleanupRenderTarget();
-    if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = NULL; }
-    if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = NULL; }
-    if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = NULL; }
+  CleanupRenderTarget();
+  SAFE_RELEASE(g_pSwapChain);
+  SAFE_RELEASE(g_pd3dDeviceContext);
+  SAFE_RELEASE(g_pd3dDevice);
 }
 
 void CreateRenderTarget()
 {
-    ID3D11Texture2D* pBackBuffer;
-    g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
-    pBackBuffer->Release();
+  ID3D11Texture2D* pBackBuffer;
+  g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
+  pBackBuffer->Release();
 }
 
 void CleanupRenderTarget()
 {
-    if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
+  if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
 }
 
 #ifndef WM_DPICHANGED
@@ -262,12 +238,7 @@ void CleanupRenderTarget()
 static uint8_t s_translateKey[256];
 static void initTranslateKey(uint8_t vk, Key::Enum _key)
 {
-  //BX_CHECK(vk < BX_COUNTOF(s_translateKey), "Out of bounds %d.", vk);
   s_translateKey[vk & 0xff] = (uint8_t) _key;
-
-  //SDL_Keycode keyCode = SDL_GetKeyFromScancode(vk);
-  //const char* keyName = SDL_GetKeyName(keyCode);
-  //mj::input::SetKeyName(_key, keyName);
 }
 
 static Key::Enum translateKey(uint8_t vk)
@@ -369,25 +340,24 @@ static void InitKeymap()
   initTranslateKey(VK_RWIN, Key::RightMeta);
 
   // Raw input
-    RAWINPUTDEVICE device[2];
+  RAWINPUTDEVICE device[2];
 
-    // Keyboard
-    device[0].usUsagePage = 0x01;
-    device[0].usUsage = 0x06;
-    // RIDEV_NOLEGACY disables WM_KEYDOWN, but also breaks hotkeys like PrintScreen
-    device[0].dwFlags = 0;
-    device[0].hwndTarget = nullptr;
+  // Keyboard
+  device[0].usUsagePage = 0x01;
+  device[0].usUsage = 0x06;
+  // RIDEV_NOLEGACY disables WM_KEYDOWN, but also breaks hotkeys like PrintScreen
+  device[0].dwFlags = 0;
+  device[0].hwndTarget = nullptr;
 
-    // Mouse
-    device[1].usUsagePage = 0x01;
-    device[1].usUsage = 0x02;
-    device[1].dwFlags = 0;
-    device[1].hwndTarget = nullptr;
+  // Mouse
+  device[1].usUsagePage = 0x01;
+  device[1].usUsage = 0x02;
+  device[1].dwFlags = 0;
+  device[1].hwndTarget = nullptr;
 
-    WIN32_FAIL_IF_ZERO(RegisterRawInputDevices(device, 2, sizeof(RAWINPUTDEVICE)));
+  WIN32_FAIL_IF_ZERO(RegisterRawInputDevices(device, 2, sizeof(RAWINPUTDEVICE)));
 }
 
-//LRESULT WINAPI MjWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void MjWndProc(HWND hwnd, LPARAM lParam)
 {
   RAWINPUT raw;
@@ -503,142 +473,65 @@ void MjWndProc(HWND hwnd, LPARAM lParam)
     {
       // right-hand CONTROL and ALT have their e0 bit set
     case VK_CONTROL:
-      if (isE0)
-      {
-        virtualKey = VK_RCONTROL;
-      }
-      else
-      {
-        virtualKey = VK_LCONTROL;
-      }
-
+      if (isE0) { virtualKey = VK_RCONTROL; }
+      else { virtualKey = VK_LCONTROL; }
       break;
-
     case VK_MENU:
-      if (isE0)
-      {
-        virtualKey = VK_RMENU;
-      }
-      else
-      {
-        virtualKey = VK_LMENU;
-      }
-
+      if (isE0) { virtualKey = VK_RMENU; }
+      else { virtualKey = VK_LMENU; }
       break;
 
       // NUMPAD ENTER has its e0 bit set
     case VK_RETURN:
-      if (isE0)
-      {
-        virtualKey = MJ_NUMPAD_ENTER; // normally unassigned
-      }
-
+      if (isE0) { virtualKey = MJ_NUMPAD_ENTER; } // normally unassigned
       break;
 
       // the standard INSERT, DELETE, HOME, END, PRIOR and NEXT keys will always have their e0 bit set, but the
       // corresponding keys on the NUMPAD will not.
     case VK_INSERT:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD0;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD0; }
       break;
-
     case VK_DELETE:
-      if (!isE0)
-      {
-        virtualKey = VK_DECIMAL;
-      }
-
+      if (!isE0) { virtualKey = VK_DECIMAL; }
       break;
-
     case VK_HOME:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD7;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD7; }
       break;
-
     case VK_END:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD1;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD1; }
       break;
-
     case VK_PRIOR:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD9;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD9; }
       break;
-
     case VK_NEXT:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD3;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD3; }
       break;
 
       // the standard arrow keys will always have their e0 bit set, but the
       // corresponding keys on the NUMPAD will not.
     case VK_LEFT:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD4;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD4; }
       break;
-
     case VK_RIGHT:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD6;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD6; }
       break;
-
     case VK_UP:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD8;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD8; }
       break;
-
     case VK_DOWN:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD2;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD2; }
       break;
 
       // NUMPAD 5 doesn't have its e0 bit set
     case VK_CLEAR:
-      if (!isE0)
-      {
-        virtualKey = VK_NUMPAD5;
-      }
-
+      if (!isE0) { virtualKey = VK_NUMPAD5; }
       break;
     }
 
     // a key can either produce a "make" or "break" scancode. this is used to differentiate between down-presses and releases
     // see http://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
-    if (flags & RI_KEY_BREAK)
-    {
-      mj::input::SetKey(translateKey(virtualKey), false);
-    }
-    else
-    {
-      mj::input::SetKey(translateKey(virtualKey), true);
-    }
+    if (flags & RI_KEY_BREAK) { mj::input::SetKey(translateKey(virtualKey), false); }
+    else { mj::input::SetKey(translateKey(virtualKey), true); }
   }
 }
 
@@ -650,35 +543,35 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   {
     MjWndProc(hWnd, lParam);
   }
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
-        return true;
+  if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+    return true;
 
-    switch (msg)
+  switch (msg)
+  {
+  case WM_SIZE:
+    if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
     {
-    case WM_SIZE:
-        if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
-        {
-            CleanupRenderTarget();
-            g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-            CreateRenderTarget();
-        }
-        return 0;
-    case WM_SYSCOMMAND:
-        if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
-            return 0;
-        break;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    case WM_DPICHANGED:
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
-        {
-            //const int dpi = HIWORD(wParam);
-            //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
-            const RECT* suggested_rect = (RECT*)lParam;
-            ::SetWindowPos(hWnd, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
-        }
-        break;
+      CleanupRenderTarget();
+      g_pSwapChain->ResizeBuffers(0, (UINT) LOWORD(lParam), (UINT) HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+      CreateRenderTarget();
     }
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    return 0;
+  case WM_SYSCOMMAND:
+    if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+      return 0;
+    break;
+  case WM_DESTROY:
+    ::PostQuitMessage(0);
+    return 0;
+  case WM_DPICHANGED:
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)
+    {
+      //const int dpi = HIWORD(wParam);
+      //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
+      const RECT* suggested_rect = (RECT*) lParam;
+      ::SetWindowPos(hWnd, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    break;
+  }
+  return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }

@@ -24,6 +24,8 @@
     <ClCompile Include="mj_raytracer.cpp" />
     <ClCompile Include="mj_win32_utils.cpp" />
     <ClCompile Include="mj_input.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-docking\imconfig.h">
@@ -55,6 +57,8 @@
     <ClInclude Include="mj_common.h" />
     <ClInclude Include="mj_win32_utils.h" />
     <ClInclude Include="mj_input.h" />
+    <ClInclude Include="camera.h" />
+    <ClInclude Include="game.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
