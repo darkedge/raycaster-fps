@@ -9,5 +9,5 @@ struct VSQuadOut
 
 float4 PSQuadOut(VSQuadOut input) : SV_TARGET
 {
-	return shaderTexture.Sample(SampleType, input.texcoord).wzyx;
+	return shaderTexture.Sample(SampleType, input.texcoord);
 }

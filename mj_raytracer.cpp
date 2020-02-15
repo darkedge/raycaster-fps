@@ -29,32 +29,32 @@ bool mj::rt::Init()
   s_Shapes[DemoShape_RedSphere].type = Shape::Shape_Sphere;
   s_Shapes[DemoShape_RedSphere].sphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
   s_Shapes[DemoShape_RedSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_RedSphere].color = 0xff0000ff;
+  s_Shapes[DemoShape_RedSphere].color = glm::vec3(1.0f, 0.0f, 0.0f);
 
   s_Shapes[DemoShape_YellowSphere].type = Shape::Shape_Sphere;
   s_Shapes[DemoShape_YellowSphere].sphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
   s_Shapes[DemoShape_YellowSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_YellowSphere].color = 0xffff00ff;
+  s_Shapes[DemoShape_YellowSphere].color = glm::vec3(1.0f, 1.0f, 0.0f);
 
   s_Shapes[DemoShape_BlueSphere].type = Shape::Shape_Sphere;
   s_Shapes[DemoShape_BlueSphere].sphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
   s_Shapes[DemoShape_BlueSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_BlueSphere].color = 0x0000ffff;
+  s_Shapes[DemoShape_BlueSphere].color = glm::vec3(0.0f, 0.0f, 1.0f);
 
   s_Shapes[DemoShape_GreenSphere].type = Shape::Shape_Sphere;
   s_Shapes[DemoShape_GreenSphere].sphere.origin = glm::vec3(-2.0f, 0.0f, 10.0f);
   s_Shapes[DemoShape_GreenSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_GreenSphere].color = 0x00ff00ff;
+  s_Shapes[DemoShape_GreenSphere].color = glm::vec3(0.0f, 1.0f, 0.0f);
 
   s_Shapes[DemoShape_WhitePlane].type = Shape::Shape_Plane;
   s_Shapes[DemoShape_WhitePlane].plane.normal = glm::vec3(0.0f, -1.0f, 0.0f);
   s_Shapes[DemoShape_WhitePlane].plane.distance = 5.0f;
-  s_Shapes[DemoShape_WhitePlane].color = 0xffffffff;
+  s_Shapes[DemoShape_WhitePlane].color = glm::vec3(1.0f, 1.0f, 1.0f);
 
   s_Shapes[DemoShape_CyanPlane].type = Shape::Shape_Plane;
   s_Shapes[DemoShape_CyanPlane].plane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
   s_Shapes[DemoShape_CyanPlane].plane.distance = 5.0f;
-  s_Shapes[DemoShape_CyanPlane].color = 0x00ffffff;
+  s_Shapes[DemoShape_CyanPlane].color = glm::vec3(0.0f, 1.0f, 1.0f);
 
   s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
   s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
@@ -129,7 +129,6 @@ void mj::rt::Update()
       glm::vec2 ss = NDCToScreenSpace(ndc, (float) MJ_WIDTH / MJ_HEIGHT);
       glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(s_FieldOfView));
 
-      //const Ray ray = CreateRay(s_Camera, cs);
       glm::vec3 p = mat * glm::vec4(cs, 1, 1);
       ray.length = FLT_MAX;
       ray.direction = glm::normalize(p - s_Camera.position);
@@ -157,11 +156,30 @@ void mj::rt::Update()
       }
       if (pShape)
       {
-        s_Image.p[y * MJ_WIDTH + x].rgba = pShape->color;
+        glm::vec3 light = glm::normalize(glm::vec3(0.6f, 0.3f, -0.4f));
+
+        // Get intersection normal
+        glm::vec3 normal = glm::zero<glm::vec3>();
+        const glm::vec3 intersection = ray.origin + ray.length * ray.direction;
+        switch (pShape->type)
+        {
+        case Shape::Shape_Sphere:
+          normal = (intersection - pShape->sphere.origin) / pShape->sphere.radius;
+          break;
+        case Shape::Shape_Plane:
+          normal = pShape->plane.normal;
+          break;
+        default:
+          break;
+        }
+
+        glm::vec3 color = pShape->color;
+        color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
+        s_Image.p[y * MJ_WIDTH + x] = glm::vec4(color, 1.0f);
       }
       else
       {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0x000000ff;
+        s_Image.p[y * MJ_WIDTH + x] = glm::vec4(glm::zero<glm::vec3>(), 1.0f);
       }
     }
   }

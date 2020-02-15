@@ -7,18 +7,6 @@ namespace mj
 {
   namespace rt
   {
-    union Pixel
-    {
-      struct
-      {
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
-        uint8_t a;
-      };
-      uint32_t rgba;
-    };
-
     struct Ray
     {
       glm::vec3 origin;
@@ -45,7 +33,7 @@ namespace mj
         Shape_Plane
       };
       Type type;
-      uint32_t color;
+      glm::vec3 color;
       union
       {
         Sphere sphere;
@@ -55,7 +43,7 @@ namespace mj
 
     struct Image
     {
-      mj::rt::Pixel p[MJ_WIDTH * MJ_HEIGHT];
+      glm::vec4 p[MJ_WIDTH * MJ_HEIGHT];
     };
 
     bool Init();
