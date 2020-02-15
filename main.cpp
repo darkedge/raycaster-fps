@@ -13,10 +13,10 @@
 #include "game.h"
 
 // Data
-static ID3D11Device* g_pd3dDevice = NULL;
-static ID3D11DeviceContext* g_pd3dDeviceContext = NULL;
-static IDXGISwapChain* g_pSwapChain = NULL;
-static ID3D11RenderTargetView* g_mainRenderTargetView = NULL;
+static ID3D11Device* g_pd3dDevice = nullptr;
+static ID3D11DeviceContext* g_pd3dDeviceContext = nullptr;
+static IDXGISwapChain* g_pSwapChain = nullptr;
+static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
 
 // Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
@@ -27,8 +27,14 @@ void InitKeymap();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Main code
-int main(int, char**)
+int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR pCmdLine, int32_t /*nCmdShow*/)
 {
+#ifdef _DEBUG
+  WIN32_FAIL_IF_ZERO(AllocConsole());
+  freopen("CONIN$", "r", stdin);
+  freopen("CONOUT$", "w", stdout);
+  freopen("CONOUT$", "w", stderr);
+#endif
   ImGui_ImplWin32_EnableDpiAwareness();
 
   // Create application window
@@ -44,9 +50,9 @@ int main(int, char**)
   LONG windowWidth = windowRect.right - windowRect.left;
   LONG windowHeight = windowRect.bottom - windowRect.top;
 
-  WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("ImGui Example"), NULL };
+  WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, _T("ImGui Example"), nullptr };
   ::RegisterClassEx(&wc);
-  HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("raycaster-fps"), dwStyle, 100, 100, windowWidth, windowHeight, NULL, NULL, wc.hInstance, NULL);
+  HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("raycaster-fps"), dwStyle, CW_USEDEFAULT, 0, windowWidth, windowHeight, nullptr, nullptr, wc.hInstance, nullptr);
 
   // Initialize Direct3D
   if (!CreateDeviceD3D(hwnd))
@@ -110,7 +116,7 @@ int main(int, char**)
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
     // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
-    if (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+    if (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
     {
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
@@ -138,7 +144,7 @@ int main(int, char**)
 
     // Rendering
     ImGui::Render();
-    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
     mj::d3d11::Update(g_pd3dDeviceContext);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
@@ -164,17 +170,6 @@ int main(int, char**)
   ::UnregisterClass(wc.lpszClassName, wc.hInstance);
 
   return 0;
-}
-
-int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR pCmdLine, int32_t /*nCmdShow*/)
-{
-#ifdef _DEBUG
-  WIN32_FAIL_IF_ZERO(AllocConsole());
-  freopen("CONIN$", "r", stdin);
-  freopen("CONOUT$", "w", stdout);
-  freopen("CONOUT$", "w", stderr);
-#endif
-  main(0, nullptr);
 }
 
 // Helper functions
@@ -204,7 +199,7 @@ bool CreateDeviceD3D(HWND hWnd)
 #endif
   D3D_FEATURE_LEVEL featureLevel;
   const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-  if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+  if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
     return false;
 
   CreateRenderTarget();
@@ -223,13 +218,13 @@ void CreateRenderTarget()
 {
   ID3D11Texture2D* pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
+  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
   pBackBuffer->Release();
 }
 
 void CleanupRenderTarget()
 {
-  if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = NULL; }
+  if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = nullptr; }
 }
 
 #ifndef WM_DPICHANGED
@@ -550,7 +545,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   switch (msg)
   {
   case WM_SIZE:
-    if (g_pd3dDevice != NULL && wParam != SIZE_MINIMIZED)
+    if (g_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
     {
       CleanupRenderTarget();
       g_pSwapChain->ResizeBuffers(0, (UINT) LOWORD(lParam), (UINT) HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
@@ -570,7 +565,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
       //const int dpi = HIWORD(wParam);
       //printf("WM_DPICHANGED to %d (%.0f%%)\n", dpi, (float)dpi / 96.0f * 100.0f);
       const RECT* suggested_rect = (RECT*) lParam;
-      ::SetWindowPos(hWnd, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+      ::SetWindowPos(hWnd, nullptr, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
     }
     break;
   }
