@@ -43,7 +43,7 @@ namespace mj
 
     struct Image
     {
-      glm::vec4 p[MJ_WIDTH * MJ_HEIGHT];
+      glm::vec4 p[MJ_RT_WIDTH * MJ_RT_HEIGHT];
     };
 
     bool Init();

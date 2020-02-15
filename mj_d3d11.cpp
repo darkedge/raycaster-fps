@@ -18,8 +18,8 @@ static D3D11_VIEWPORT s_Viewport;
 
 bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 {
-	s_Viewport.Width = (FLOAT) MJ_WIDTH;
-	s_Viewport.Height = (FLOAT) MJ_HEIGHT;
+	s_Viewport.Width = (FLOAT) MJ_WND_WIDTH;
+	s_Viewport.Height = (FLOAT) MJ_WND_HEIGHT;
 	s_Viewport.MinDepth = 0.0f;
 	s_Viewport.MaxDepth = 1.0f;
 	s_Viewport.TopLeftX = 0;
@@ -27,11 +27,11 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 
 	D3D11_SUBRESOURCE_DATA textureData = {};
 	textureData.pSysMem = mj::rt::GetImage;
-	textureData.SysMemPitch = MJ_HEIGHT * sizeof(glm::vec4);
+	textureData.SysMemPitch = MJ_RT_HEIGHT * sizeof(glm::vec4);
 
 	D3D11_TEXTURE2D_DESC desc = {};
-	desc.Width = MJ_WIDTH;
-	desc.Height = MJ_HEIGHT;
+	desc.Width = MJ_RT_WIDTH;
+	desc.Height = MJ_RT_HEIGHT;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
 	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -88,7 +88,7 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 void mj::d3d11::Resize(float width, float height)
 {
   // Touch window from inside
-  const float ratio = (float) MJ_WIDTH / MJ_HEIGHT;
+  const float ratio = (float) MJ_RT_WIDTH / MJ_RT_HEIGHT;
   const float newRatio = width / height;
   if (newRatio > ratio)
   {
@@ -120,11 +120,11 @@ void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 
 	const glm::vec4* src = mj::rt::GetImage().p;
 	char* dst = reinterpret_cast<char*>(texture.pData);
-	for (uint16_t i = 0; i < MJ_HEIGHT; i++)
+	for (uint16_t i = 0; i < MJ_RT_HEIGHT; i++)
 	{
-		memcpy(dst, src, MJ_WIDTH * sizeof(glm::vec4));
+		memcpy(dst, src, MJ_RT_WIDTH * sizeof(glm::vec4));
 		dst += texture.RowPitch;
-		src += MJ_WIDTH;
+		src += MJ_RT_WIDTH;
 	}
 
 	device_context->Unmap(s_pTexture, 0);

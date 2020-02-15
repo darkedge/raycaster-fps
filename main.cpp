@@ -42,7 +42,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   GetClientRect(GetDesktopWindow(), &desktopRect);
 
   // Get window rectangle
-  RECT windowRect = { 0, 0, MJ_WIDTH, MJ_HEIGHT };
+  RECT windowRect = { 0, 0, MJ_WND_WIDTH, MJ_WND_HEIGHT };
   auto dwStyle = WS_OVERLAPPEDWINDOW;
   AdjustWindowRect(&windowRect, dwStyle, FALSE);
 

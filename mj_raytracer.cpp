@@ -90,8 +90,8 @@ static float IntersectRayPlane(const Ray& ray, const Plane& plane)
 
 static glm::vec2 PixelToNDCSpace(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
-  return glm::vec2(((float) x + 0.5f) / MJ_WIDTH,
-    ((float) y + 0.5f) / MJ_HEIGHT);
+  return glm::vec2(((float) x + 0.5f) / MJ_RT_WIDTH,
+    ((float) y + 0.5f) / MJ_RT_HEIGHT);
 }
 
 // aspect is x/y
@@ -139,12 +139,12 @@ void mj::rt::Update()
     Init();
   }
 
-  for (uint16_t x = 0; x < MJ_WIDTH; x++)
+  for (uint16_t x = 0; x < MJ_RT_WIDTH; x++)
   {
-    for (uint16_t y = 0; y < MJ_HEIGHT; y++)
+    for (uint16_t y = 0; y < MJ_RT_HEIGHT; y++)
     {
-      glm::vec2 ndc = PixelToNDCSpace(x, y, MJ_WIDTH, MJ_HEIGHT);
-      glm::vec2 ss = NDCToScreenSpace(ndc, (float) MJ_WIDTH / MJ_HEIGHT);
+      glm::vec2 ndc = PixelToNDCSpace(x, y, MJ_RT_WIDTH, MJ_RT_HEIGHT);
+      glm::vec2 ss = NDCToScreenSpace(ndc, (float) MJ_RT_WIDTH / MJ_RT_HEIGHT);
       glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(s_FieldOfView));
 
       glm::vec3 p = mat * glm::vec4(cs, 1, 1);
@@ -194,11 +194,11 @@ void mj::rt::Update()
         glm::vec3 color = pShape->color;
         color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
         color = glm::sqrt(color);
-        s_Image.p[y * MJ_WIDTH + x] = glm::vec4(color, 1.0f);
+        s_Image.p[y * MJ_RT_WIDTH + x] = glm::vec4(color, 1.0f);
       }
       else
       {
-        s_Image.p[y * MJ_WIDTH + x] = glm::vec4(glm::zero<glm::vec3>(), 1.0f);
+        s_Image.p[y * MJ_RT_WIDTH + x] = glm::vec4(glm::zero<glm::vec3>(), 1.0f);
       }
     }
   }
