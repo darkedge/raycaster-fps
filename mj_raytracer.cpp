@@ -9,35 +9,52 @@ using namespace mj::rt;
 
 static Image s_Image;
 
-static Sphere s_RedSphere;
-static Sphere s_YellowSphere;
-static Sphere s_BlueSphere;
-static Sphere s_GreenSphere;
-static Plane s_WhitePlane;
-static Plane s_CyanPlane;
+enum DemoShape {
+  DemoShape_RedSphere,
+  DemoShape_YellowSphere,
+  DemoShape_BlueSphere,
+  DemoShape_GreenSphere,
+  DemoShape_WhitePlane,
+  DemoShape_CyanPlane,
+  DemoShape_Count
+};
+
+static Shape s_Shapes[DemoShape_Count];
 static Camera s_Camera;
 
 static const float s_FieldOfView = 45.0f; // Degrees
 
 bool mj::rt::Init()
 {
-  s_RedSphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
-  s_RedSphere.radius = 1.0f;
+  s_Shapes[DemoShape_RedSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_RedSphere].sphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
+  s_Shapes[DemoShape_RedSphere].sphere.radius = 1.0f;
+  s_Shapes[DemoShape_RedSphere].color = 0xff0000ff;
 
-  s_YellowSphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
-  s_YellowSphere.radius = 1.0f;
+  s_Shapes[DemoShape_YellowSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_YellowSphere].sphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
+  s_Shapes[DemoShape_YellowSphere].sphere.radius = 1.0f;
+  s_Shapes[DemoShape_YellowSphere].color = 0xffff00ff;
 
-  s_BlueSphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
-  s_BlueSphere.radius = 1.0f;
+  s_Shapes[DemoShape_BlueSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_BlueSphere].sphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
+  s_Shapes[DemoShape_BlueSphere].sphere.radius = 1.0f;
+  s_Shapes[DemoShape_BlueSphere].color = 0x0000ffff;
 
-  s_GreenSphere.origin = glm::vec3(-2.0f, 0.0f, 10.0f);
-  s_GreenSphere.radius = 1.0f;
+  s_Shapes[DemoShape_GreenSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_GreenSphere].sphere.origin = glm::vec3(-2.0f, 0.0f, 10.0f);
+  s_Shapes[DemoShape_GreenSphere].sphere.radius = 1.0f;
+  s_Shapes[DemoShape_GreenSphere].color = 0x00ff00ff;
 
-  s_WhitePlane.normal = glm::vec3(0.0f, -1.0f, 0.0f);
-  s_WhitePlane.distance = 5.0f;
+  s_Shapes[DemoShape_WhitePlane].type = Shape::Shape_Plane;
+  s_Shapes[DemoShape_WhitePlane].plane.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+  s_Shapes[DemoShape_WhitePlane].plane.distance = 5.0f;
+  s_Shapes[DemoShape_WhitePlane].color = 0xffffffff;
 
-  s_CyanPlane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-  s_CyanPlane.distance = 5.0f;
+  s_Shapes[DemoShape_CyanPlane].type = Shape::Shape_Plane;
+  s_Shapes[DemoShape_CyanPlane].plane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Shapes[DemoShape_CyanPlane].plane.distance = 5.0f;
+  s_Shapes[DemoShape_CyanPlane].color = 0x00ffffff;
 
   s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
   s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
@@ -46,39 +63,29 @@ bool mj::rt::Init()
   return true;
 }
 
-static bool IntersectRaySphere(const Ray& ray, const Sphere& sphere, RaycastResult& result)
+static float IntersectRaySphere(const Ray& ray, const Sphere& sphere)
 {
   glm::vec3 m = ray.origin - sphere.origin;
   float b = glm::dot(m, ray.direction);
   float c = glm::dot(m, m) - sphere.radius * sphere.radius;
   if (c > 0.0f && b > 0.0f)
   {
-    return false;
+    return -1.0f;
   }
   float determinant = b * b - c;
   if (determinant < 0)
   {
-    return false;
+    return -1.0f;
   }
   else
   {
-    // Pick closest of two intersections
-    result.length = -b - glm::sqrt(determinant);
-    result.intersection = ray.origin + result.length * ray.direction;
-    result.normal = (result.intersection - sphere.origin) / sphere.radius;
-    return true;
+    return -b - glm::sqrt(determinant);
   }
 }
 
-static bool IntersectRayPlane(const Ray& ray, const Plane& plane, RaycastResult& result)
+static float IntersectRayPlane(const Ray& ray, const Plane& plane)
 {
-  result.length= -(glm::dot(ray.origin, plane.normal) + plane.distance) / glm::dot(ray.direction, plane.normal);
-  if (result.length > 0.0f)
-  {
-    return true;
-  }
-
-  return false;
+  return -(glm::dot(ray.origin, plane.normal) + plane.distance) / glm::dot(ray.direction, plane.normal);
 }
 
 static glm::vec2 PixelToNDCSpace(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
@@ -106,9 +113,7 @@ void mj::rt::Update()
   MJ_UNINITIALIZED Ray ray;
   auto mat = glm::identity<glm::mat4>();
   mat = glm::translate(mat, s_Camera.position) * glm::mat4_cast(s_Camera.rotation);
-
   ray.origin = s_Camera.position;
-  ray.length = FLT_MAX;
 
   // Reset button
   if (mj::input::GetKeyDown(Key::KeyR))
@@ -126,32 +131,33 @@ void mj::rt::Update()
 
       //const Ray ray = CreateRay(s_Camera, cs);
       glm::vec3 p = mat * glm::vec4(cs, 1, 1);
+      ray.length = FLT_MAX;
       ray.direction = glm::normalize(p - s_Camera.position);
 
-      MJ_UNINITIALIZED RaycastResult result;
-      if (IntersectRaySphere(ray, s_RedSphere, MJ_REF result))
+      const Shape* pShape = nullptr;
+      float t = FLT_MAX;
+      for (const auto& shape : s_Shapes)
       {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0xff0000ff;
+        switch (shape.type)
+        {
+        case Shape::Shape_Sphere:
+          t = IntersectRaySphere(ray, shape.sphere);
+          break;
+        case Shape::Shape_Plane:
+          t = IntersectRayPlane(ray, shape.plane);
+          break;
+        default:
+          break;
+        }
+        if (t >= 0.0f && t < ray.length)
+        {
+          ray.length = t;
+          pShape = &shape;
+        }
       }
-      else if (IntersectRaySphere(ray, s_YellowSphere, MJ_REF result))
+      if (pShape)
       {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0xffff00ff;
-      }
-      else if (IntersectRaySphere(ray, s_BlueSphere, MJ_REF result))
-      {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0x0000ffff;
-      }
-      else if (IntersectRaySphere(ray, s_GreenSphere, MJ_REF result))
-      {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0x00ff00ff;
-      }
-      else if (IntersectRayPlane(ray, s_WhitePlane, MJ_REF result))
-      {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0xffffffff;
-      }
-      else if (IntersectRayPlane(ray, s_CyanPlane, MJ_REF result))
-      {
-        s_Image.p[y * MJ_WIDTH + x].rgba = 0x00ffffff;
+        s_Image.p[y * MJ_WIDTH + x].rgba = pShape->color;
       }
       else
       {

@@ -26,13 +26,6 @@ namespace mj
       float length;
     };
 
-    struct RaycastResult
-    {
-      glm::vec3 intersection;
-      glm::vec3 normal;
-      float length;
-    };
-
     struct Sphere
     {
       glm::vec3 origin;
@@ -43,6 +36,21 @@ namespace mj
     {
       glm::vec3 normal;
       float distance;
+    };
+
+    struct Shape {
+      enum Type
+      {
+        Shape_Sphere,
+        Shape_Plane
+      };
+      Type type;
+      uint32_t color;
+      union
+      {
+        Sphere sphere;
+        Plane plane;
+      };
     };
 
     struct Image
