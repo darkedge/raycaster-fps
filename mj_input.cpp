@@ -427,8 +427,8 @@ void mj::input::Update()
 {
   mouseDX = mouseDXNext;
   mouseDY = mouseDYNext;
-  mouseDXNext = 0.0f;
-  mouseDYNext = 0.0f;
+  mouseDXNext = 0;
+  mouseDYNext = 0;
 
   for (int32_t i = 0; i < INPUT_NUM_INTS; i++)
   {
@@ -471,10 +471,10 @@ void mj::input::ReleaseEverything()
   memset(mouseActivePrev, 0, sizeof(mouseActivePrev));
   memset(mouseBreak, 0, sizeof(mouseBreak));
   memset(mouseMake, 0, sizeof(mouseMake));
-  mouseDX = 0.0f;
-  mouseDY = 0.0f;
-  mouseDXNext = 0.0f;
-  mouseDYNext = 0.0f;
+  mouseDX = 0;
+  mouseDY = 0;
+  mouseDXNext = 0;
+  mouseDYNext = 0;
 }
 
 
