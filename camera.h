@@ -13,4 +13,5 @@ struct Camera
   glm::vec3 bottomRight;
 };
 
+void CameraInit(Camera& camera);
 void CameraMovement(Camera& camera);

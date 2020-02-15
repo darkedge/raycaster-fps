@@ -42,7 +42,7 @@ namespace mj
     struct Plane
     {
       glm::vec3 normal;
-      glm::vec3 distance;
+      float distance;
     };
 
     struct Image

@@ -122,6 +122,7 @@ int main(int, char**)
     WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&now));
     LONGLONG counts = now.QuadPart - lastTime.QuadPart;
     SetDeltaTime((float)counts / perfFreq.QuadPart);
+    lastTime = now;
 
     // Start the Dear ImGui frame
     ImGui_ImplDX11_NewFrame();
