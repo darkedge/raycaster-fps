@@ -41,6 +41,16 @@ namespace mj
       };
     };
 
+    enum DemoShape {
+      DemoShape_RedSphere,
+      DemoShape_YellowSphere,
+      DemoShape_BlueSphere,
+      DemoShape_GreenSphere,
+      DemoShape_WhitePlane,
+      DemoShape_CyanPlane,
+      DemoShape_Count
+    };
+
     struct Image
     {
       glm::vec4 p[MJ_RT_WIDTH * MJ_RT_HEIGHT];

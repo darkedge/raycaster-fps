@@ -1,5 +1,6 @@
 #include "mj_d3d11.h"
 #include "mj_raytracer.h"
+#include "mj_raytracer_cuda.h"
 #include "mj_common.h"
 #include "mj_win32_utils.h"
 
@@ -36,9 +37,10 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	desc.ArraySize = 1;
 	desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	desc.SampleDesc.Count = 1;
-	desc.Usage = D3D11_USAGE_DYNAMIC;
+	//desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.Usage = D3D11_USAGE_DEFAULT;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	//desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.MiscFlags = 0;
 
 	assert(!s_pTexture);
@@ -82,7 +84,9 @@ bool mj::d3d11::Init(ID3D11Device* device, ID3D11DeviceContext* device_context)
 	assert(s_pTexture);
 	WIN32_ASSERT(device->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pShaderResourceView));
 
-	return mj::rt::Init();
+	//return mj::rt::Init();
+	mj::cuda::Init(s_pTexture);
+	return true;
 }
 
 void mj::d3d11::Resize(float width, float height)
@@ -116,8 +120,10 @@ void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 	assert(s_pTexture);
 	device_context->Map(s_pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &texture);
 
-	mj::rt::Update();
+	//mj::rt::Update();
+	mj::cuda::Update();
 
+#if 0
 	const glm::vec4* src = mj::rt::GetImage().p;
 	char* dst = reinterpret_cast<char*>(texture.pData);
 	for (uint16_t i = 0; i < MJ_RT_HEIGHT; i++)
@@ -126,6 +132,7 @@ void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 		dst += texture.RowPitch;
 		src += MJ_RT_WIDTH;
 	}
+#endif
 
 	device_context->Unmap(s_pTexture, 0);
 
@@ -147,7 +154,8 @@ void mj::d3d11::Update(ID3D11DeviceContext* device_context)
 
 void mj::d3d11::Destroy()
 {
-	mj::rt::Destroy();
+	//mj::rt::Destroy();
+	mj::cuda::Destroy();
 
 	SAFE_RELEASE(s_pVertexShader);
 	SAFE_RELEASE(s_pPixelShader);

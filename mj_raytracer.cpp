@@ -8,17 +8,6 @@
 using namespace mj::rt;
 
 static Image s_Image;
-
-enum DemoShape {
-  DemoShape_RedSphere,
-  DemoShape_YellowSphere,
-  DemoShape_BlueSphere,
-  DemoShape_GreenSphere,
-  DemoShape_WhitePlane,
-  DemoShape_CyanPlane,
-  DemoShape_Count
-};
-
 static Shape s_Shapes[DemoShape_Count];
 static Camera s_Camera;
 
@@ -90,8 +79,8 @@ static float IntersectRayPlane(const Ray& ray, const Plane& plane)
 
 static glm::vec2 PixelToNDCSpace(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
-  return glm::vec2(((float) x + 0.5f) / MJ_RT_WIDTH,
-    ((float) y + 0.5f) / MJ_RT_HEIGHT);
+  return glm::vec2(((float) x + 0.5f) / width,
+    ((float) y + 0.5f) / height);
 }
 
 // aspect is x/y

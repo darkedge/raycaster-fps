@@ -127,7 +127,12 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
     LARGE_INTEGER now;
     WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&now));
     LONGLONG counts = now.QuadPart - lastTime.QuadPart;
-    SetDeltaTime((float)counts / perfFreq.QuadPart);
+    float dt = (float) counts / perfFreq.QuadPart;
+    if (dt > (1.0f / 60.0f))
+    {
+      dt = 1.0f / 60.0f;
+    }
+    SetDeltaTime(dt);
     lastTime = now;
 
     // Start the Dear ImGui frame
