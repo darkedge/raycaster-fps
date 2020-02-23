@@ -1,5 +1,6 @@
 #include "mj_raytracer_cuda.h"
 #include "game.h"
+#include "mj_input.h"
 
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -36,6 +37,13 @@ static size_t s_Pitch;
 
 static mj::cuda::Constant s_Constant;
 static mj::cuda::Constant* s_pDevicePtr;
+
+static void Reset()
+{
+  s_Constant.s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
+  s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
+  CameraInit(MJ_REF s_Constant.s_Camera);
+}
 
 void mj::cuda::Init(ID3D11Texture2D* s_pTexture)
 {
@@ -75,9 +83,7 @@ void mj::cuda::Init(ID3D11Texture2D* s_pTexture)
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.distance = 3.0f;
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].color = glm::vec3(0.0f, 1.0f, 1.0f);
 
-  s_Constant.s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
-  s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
-  CameraInit(MJ_REF s_Constant.s_Camera);
+  Reset();
 
   size_t numBytes = sizeof(s_Constant);
   cudaMalloc((void**) &s_pDevicePtr, numBytes);
@@ -87,6 +93,12 @@ void mj::cuda::Init(ID3D11Texture2D* s_pTexture)
 void mj::cuda::Update()
 {
   CameraMovement(MJ_REF s_Constant.s_Camera);
+
+  // Reset button
+  if (mj::input::GetKeyDown(Key::KeyR))
+  {
+    Reset();
+  }
 
   auto mat = glm::identity<glm::mat4>();
   s_Constant.mat = glm::translate(mat, s_Constant.s_Camera.position) * glm::mat4_cast(s_Constant.s_Camera.rotation);

@@ -48,6 +48,15 @@ static inline __device__ glm::vec2 ScreenToCameraSpace(const glm::vec2& ss, floa
   return ss * glm::tan(fov * 0.5f);
 }
 
+/**
+ * @brief      Primary ray tracing kernel.
+ *
+ * @param      surface    The surface
+ * @param[in]  width      The width
+ * @param[in]  height     The height
+ * @param[in]  pitch      The pitch
+ * @param[in]  pConstant  The constant
+ */
 __global__ void cuda_raytracer(unsigned char* surface, int width, int height, size_t pitch, const mj::cuda::Constant* __restrict__ pConstant)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
