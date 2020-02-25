@@ -26,11 +26,19 @@ namespace mj
       float distance;
     };
 
+    struct AABB
+    {
+      glm::vec3 min;
+      glm::vec3 max;
+    };
+
     struct Shape {
       enum Type
       {
         Shape_Sphere,
-        Shape_Plane
+        Shape_Plane,
+        Shape_AABB,
+        Shape_Octree
       };
       Type type;
       glm::vec3 color;
@@ -38,6 +46,7 @@ namespace mj
       {
         Sphere sphere;
         Plane plane;
+        AABB aabb;
       };
     };
 
@@ -45,7 +54,7 @@ namespace mj
       DemoShape_RedSphere,
       DemoShape_YellowSphere,
       DemoShape_BlueSphere,
-      DemoShape_GreenSphere,
+      DemoShape_GreenAABB,
       DemoShape_WhitePlane,
       DemoShape_CyanPlane,
       DemoShape_Count

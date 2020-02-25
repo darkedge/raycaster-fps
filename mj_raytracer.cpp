@@ -30,10 +30,10 @@ bool mj::rt::Init()
   s_Shapes[DemoShape_BlueSphere].sphere.radius = 1.0f;
   s_Shapes[DemoShape_BlueSphere].color = glm::vec3(0.0f, 0.0f, 1.0f);
 
-  s_Shapes[DemoShape_GreenSphere].type = Shape::Shape_Sphere;
-  s_Shapes[DemoShape_GreenSphere].sphere.origin = glm::vec3(-2.0f, 0.0f, 10.0f);
-  s_Shapes[DemoShape_GreenSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_GreenSphere].color = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Shapes[DemoShape_GreenAABB].type = Shape::Shape_AABB;
+  s_Shapes[DemoShape_GreenAABB].aabb.min = glm::vec3(0.0f, 0.0f, 0.0f);
+  s_Shapes[DemoShape_GreenAABB].aabb.max = glm::vec3(1.0f, 1.0f, 1.0f);
+  s_Shapes[DemoShape_GreenAABB].color = glm::vec3(0.0f, 1.0f, 0.0f);
 
   s_Shapes[DemoShape_WhitePlane].type = Shape::Shape_Plane;
   s_Shapes[DemoShape_WhitePlane].plane.normal = glm::vec3(0.0f, -1.0f, 0.0f);

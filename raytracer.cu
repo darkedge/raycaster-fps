@@ -5,6 +5,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+// https://gamedev.stackexchange.com/a/146362
+static inline __device__ float IntersectRayAABB(const mj::rt::Ray& ray, const glm::vec3& min, const glm::vec3& max)
+{
+  glm::vec3 dirInv = 1.0f / ray.direction;
+
+  float t1 = (min.x - ray.origin.x) * dirInv.x;
+  float t2 = (max.x - ray.origin.x) * dirInv.x;
+
+  float tmin = fminf(t1, t2);
+  float tmax = fmaxf(t1, t2);
+
+  t1 = (min.y - ray.origin.y) * dirInv.y;
+  t2 = (max.y - ray.origin.y) * dirInv.y;
+
+  tmin = fmaxf(tmin, fminf(t1, t2));
+  tmax = fminf(tmax, fmaxf(t1, t2));
+
+  t1 = (min.z - ray.origin.z) * dirInv.z;
+  t2 = (max.z - ray.origin.z) * dirInv.z;
+
+  tmin = fmaxf(tmin, fminf(t1, t2));
+  tmax = fminf(tmax, fmaxf(t1, t2));
+
+  if (tmax >= tmin)
+  {
+    return tmin;
+  }
+  else
+  {
+    return -1.0f;
+  }
+}
+
 static inline __device__ float IntersectRaySphere(const mj::rt::Ray& ray, const mj::rt::Sphere& sphere)
 {
   glm::vec3 m = ray.origin - sphere.origin;
@@ -90,6 +124,12 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
     case mj::rt::Shape::Shape_Plane:
       t = IntersectRayPlane(ray, shape.plane);
       break;
+    case mj::rt::Shape::Shape_AABB:
+      t = IntersectRayAABB(ray, shape.aabb.min, shape.aabb.max);
+      break;
+    case mj::rt::Shape::Shape_Octree:
+      // TODO
+      break;
     default:
       break;
     }
@@ -113,6 +153,22 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
       break;
     case mj::rt::Shape::Shape_Plane:
       normal = pShape->plane.normal;
+      break;
+    case mj::rt::Shape::Shape_AABB:
+    {
+      // https://blog.johnnovak.net/2016/10/22/the-nim-raytracer-project-part-4-calculating-box-normals/
+      glm::vec3 c = (pShape->aabb.min + pShape->aabb.max) * 0.5f; // aabb center
+      glm::vec3 p = intersection - c; // vector from intersection to center
+      glm::vec3 d = (pShape->aabb.min - pShape->aabb.max) * 0.5f; //??
+      float bias = 1.0001f;
+
+      normal = glm::normalize(glm::vec3((float) ((int) (p.x / glm::abs(d.x) * bias)),
+        (float) ((int) (p.y / glm::abs(d.y) * bias)),
+        (float) ((int) (p.z / glm::abs(d.z) * bias))));
+    }
+    break;
+    case mj::rt::Shape::Shape_Octree:
+      // TODO
       break;
     default:
       break;
