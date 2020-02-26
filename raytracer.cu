@@ -159,12 +159,12 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
       // https://blog.johnnovak.net/2016/10/22/the-nim-raytracer-project-part-4-calculating-box-normals/
       glm::vec3 c = (pShape->aabb.min + pShape->aabb.max) * 0.5f; // aabb center
       glm::vec3 p = intersection - c; // vector from intersection to center
-      glm::vec3 d = (pShape->aabb.min - pShape->aabb.max) * 0.5f; //??
+      glm::vec3 d = (pShape->aabb.max - pShape->aabb.min) * 0.5f; //??
       float bias = 1.0001f;
 
       normal = glm::normalize(glm::vec3((float) ((int) (p.x / glm::abs(d.x) * bias)),
-        (float) ((int) (p.y / glm::abs(d.y) * bias)),
-        (float) ((int) (p.z / glm::abs(d.z) * bias))));
+        (float) ((int) (p.y / d.y * bias)),
+        (float) ((int) (p.z / d.z * bias))));
     }
     break;
     case mj::rt::Shape::Shape_Octree:
