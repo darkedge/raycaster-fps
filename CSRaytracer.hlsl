@@ -4,11 +4,6 @@ struct Camera
 {
   float3 position;
   float4 rotation;
-
-  float3 topLeft;
-  float3 topRight;
-  float3 bottomLeft;
-  float3 bottomRight;
 };
 
 struct Ray
@@ -76,22 +71,20 @@ static inline float IntersectRayAABB(const Ray ray, const float3 amin, const flo
 
 static inline float IntersectRaySphere(const Ray ray, const float3 origin, float radius)
 {
-  float3 m = ray.origin - origin;
-  float b  = dot(m, ray.direction);
-  float c  = dot(m, m) - radius * radius;
-  if (c > 0.0f && b > 0.0f)
+  float3 m  = ray.origin - origin;
+  float b   = dot(m, ray.direction);
+  float c   = dot(m, m) - radius * radius;
+  float ret = -1.0f;
+  if (!(c > 0.0f && b > 0.0f))
   {
-    return -1.0f;
+    float determinant = b * b - c;
+    if (determinant >= 0)
+    {
+      ret = -b - sqrt(determinant);
+    }
   }
-  float determinant = b * b - c;
-  if (determinant < 0)
-  {
-    return -1.0f;
-  }
-  else
-  {
-    return -b - sqrt(determinant);
-  }
+
+  return ret;
 }
 
 static inline float IntersectRayPlane(const Ray ray, float3 normal, float distance)
@@ -124,26 +117,18 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
   const int x = dispatchThreadId.x;
   const int y = dispatchThreadId.y;
 
-  // TODO: Debug code, remove
-  int width = 320;
-  int height = 200;
-
   if (x >= width || y >= height)
     return;
 
   float2 ndc = PixelToNDCSpace(x, y, width, height);
   float2 ss  = NDCToScreenSpace(ndc, (float)width / height);
-  float2 cs  = ScreenToCameraSpace(ss, radians(45.0f));
+  float2 cs  = ScreenToCameraSpace(ss, radians(s_FieldOfView));
 
   Ray ray;
   float3 p      = mul(mat, float4(cs, 1, 1)).xyz;
   ray.origin    = s_Camera.position;
   ray.length    = FLT_MAX;
   ray.direction = normalize(p - s_Camera.position);
-
-  // TODO: Debug code, remove
-  s_Texture[dispatchThreadId.xy] = float4(ray.direction, 1.0f);
-  return;
 
   int shapeId = -1;
   float t     = FLT_MAX;
@@ -212,22 +197,15 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
     float3 color = s_Shapes[shapeId].color;
     color *= clamp(dot(normal, light), 0.0f, 1.0f);
     color = sqrt(color);
-#if 0
-    pixel[0] = color.x;
-    pixel[1] = color.y;
-    pixel[2] = color.z;
-    pixel[3] = 1.0f;
-#endif
-    s_Texture[dispatchThreadId.xy] = float4(color.x, color.y, color.z, 1.0f);
+
+    s_Texture[dispatchThreadId.xy] = float4(color, 1.0f);
+    //s_Texture[dispatchThreadId.xy] = float4(ray.origin, 1.0f);
+    //s_Texture[dispatchThreadId.xy] = float4(ray.length / 8.0f, ray.length / 8.0f, ray.length / 8.0f, 1.0f);
+    // s_Texture[dispatchThreadId.xy] = float4(shapeId / 1.0f, shapeId / 2.0f, shapeId / 4.0f, 1.0f);
+    // s_Texture[dispatchThreadId.xy] = float4(dispatchThreadId.x / 320.0f, dispatchThreadId.y / 200.0f, color.z, 1.0f);
   }
   else
   {
-#if 0
-    pixel[0] = 0.0f;
-    pixel[1] = 0.0f;
-    pixel[2] = 0.0f;
-    pixel[3] = 1.0f;
-#endif
-    s_Texture[dispatchThreadId.xy] = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    s_Texture[dispatchThreadId.xy] = float4(1.0f, 0.0f, 1.0f, 1.0f);
   }
 }

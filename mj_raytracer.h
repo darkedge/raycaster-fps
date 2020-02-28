@@ -48,7 +48,6 @@ namespace mj
         Plane plane;
         AABB aabb;
       };
-      float padding[8];
     };
 
     enum DemoShape

@@ -46,34 +46,34 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture)
   SetDebugName(s_pComputeShader, "mj_unordered_access_view");
 
   s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].type          = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].color         = glm::vec3(1.0f, 0.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].sphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].color         = glm::vec3(1.0f, 0.0f, 0.0f);
 
   s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].type          = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].color         = glm::vec3(1.0f, 1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].sphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].color         = glm::vec3(1.0f, 1.0f, 0.0f);
 
   s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].type          = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].color         = glm::vec3(0.0f, 0.0f, 1.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].sphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].color         = glm::vec3(0.0f, 0.0f, 1.0f);
 
   s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].type     = mj::rt::Shape::Shape_AABB;
+  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].color    = glm::vec3(0.0f, 1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].aabb.min = glm::vec3(-2.5f, -0.5f, 9.5f);
   s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].aabb.max = glm::vec3(-1.5f, 0.5f, 10.5f);
-  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].color    = glm::vec3(0.0f, 1.0f, 0.0f);
 
   s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].type           = mj::rt::Shape::Shape_Plane;
+  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].color          = glm::vec3(1.0f, 1.0f, 1.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].plane.normal   = glm::vec3(0.0f, -1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].plane.distance = 5.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].color          = glm::vec3(1.0f, 1.0f, 1.0f);
 
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].type           = mj::rt::Shape::Shape_Plane;
+  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].color          = glm::vec3(0.0f, 1.0f, 1.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.normal   = glm::vec3(0.0f, 1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.distance = 3.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].color          = glm::vec3(0.0f, 1.0f, 1.0f);
 
   s_Constant.width = MJ_RT_WIDTH;
   s_Constant.height = MJ_RT_HEIGHT;

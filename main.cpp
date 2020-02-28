@@ -169,8 +169,8 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       ImGui::RenderPlatformWindowsDefault();
     }
 
-    // g_pSwapChain->Present(1, 0); // Present with vsync
-    g_pSwapChain->Present(0, 0); // Present without vsync
+    g_pSwapChain->Present(1, 0); // Present with vsync
+    //g_pSwapChain->Present(0, 0); // Present without vsync
   }
 
   // Cleanup

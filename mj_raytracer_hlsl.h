@@ -18,11 +18,12 @@ namespace mj
     {
       glm::mat4 mat;
       rt::Shape s_Shapes[rt::DemoShape_Count];
+      float paddding[12];
       Camera s_Camera;
       const float s_FieldOfView = 45.0f; // Degrees
       int width;
       int height;
-      char padding[4];
+      float padding;
     };
 
     [[nodiscard]] bool Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture);
