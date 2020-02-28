@@ -24,10 +24,11 @@ struct Shape
   float maxZ;
 };
 
+StructuredBuffer<Shape> s_Shapes : register(t0); // Shader resource binding
+
 cbuffer Constants : register(b0)
 {
   float4x4 mat;
-  Shape s_Shapes[6];
   Camera s_Camera;
   float s_FieldOfView;
   int width;

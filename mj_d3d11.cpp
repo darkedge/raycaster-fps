@@ -26,10 +26,6 @@ bool mj::d3d11::Init(ID3D11Device* pDevice)
   s_Viewport.TopLeftX = 0;
   s_Viewport.TopLeftY = 0;
 
-  D3D11_SUBRESOURCE_DATA textureData = {};
-  textureData.pSysMem                = mj::rt::GetImage;
-  textureData.SysMemPitch            = MJ_RT_HEIGHT * sizeof(glm::vec4);
-
   D3D11_TEXTURE2D_DESC desc = {};
   desc.Width                = MJ_RT_WIDTH;
   desc.Height               = MJ_RT_HEIGHT;
@@ -37,14 +33,12 @@ bool mj::d3d11::Init(ID3D11Device* pDevice)
   desc.ArraySize            = 1;
   desc.Format               = DXGI_FORMAT_R32G32B32A32_FLOAT;
   desc.SampleDesc.Count     = 1;
-  // desc.Usage = D3D11_USAGE_DYNAMIC;
-  desc.Usage     = D3D11_USAGE_DEFAULT;
-  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-  // desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-  desc.MiscFlags = 0;
+  desc.Usage                = D3D11_USAGE_DEFAULT;
+  desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+  desc.MiscFlags            = 0;
 
   assert(!s_pTexture);
-  WIN32_ASSERT(pDevice->CreateTexture2D(&desc, &textureData, &s_pTexture));
+  WIN32_ASSERT(pDevice->CreateTexture2D(&desc, nullptr, &s_pTexture));
 
   // Shaders
   assert(!s_pVertexShader);

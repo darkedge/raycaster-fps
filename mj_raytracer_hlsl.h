@@ -17,8 +17,6 @@ namespace mj
     struct Constant
     {
       glm::mat4 mat;
-      rt::Shape s_Shapes[rt::DemoShape_Count];
-      float paddding[12];
       Camera s_Camera;
       const float s_FieldOfView = 45.0f; // Degrees
       int width;
