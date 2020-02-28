@@ -32,7 +32,8 @@ namespace mj
       glm::vec3 max;
     };
 
-    struct Shape {
+    struct Shape
+    {
       enum Type
       {
         Shape_Sphere,
@@ -40,17 +41,18 @@ namespace mj
         Shape_AABB,
         Shape_Octree
       };
-      Type type;
+      int type;
       glm::vec3 color;
-      union
-      {
+      union {
         Sphere sphere;
         Plane plane;
         AABB aabb;
       };
+      float padding[8];
     };
 
-    enum DemoShape {
+    enum DemoShape
+    {
       DemoShape_RedSphere,
       DemoShape_YellowSphere,
       DemoShape_BlueSphere,
@@ -69,5 +71,5 @@ namespace mj
     void Update();
     const Image& GetImage();
     void Destroy();
-  }
-}
+  } // namespace rt
+} // namespace mj

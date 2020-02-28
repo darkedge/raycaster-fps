@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 // https://gamedev.stackexchange.com/a/146362
 static inline __device__ float IntersectRayAABB(const mj::rt::Ray& ray, const glm::vec3& min, const glm::vec3& max)
 {
@@ -42,8 +41,8 @@ static inline __device__ float IntersectRayAABB(const mj::rt::Ray& ray, const gl
 static inline __device__ float IntersectRaySphere(const mj::rt::Ray& ray, const mj::rt::Sphere& sphere)
 {
   glm::vec3 m = ray.origin - sphere.origin;
-  float b = glm::dot(m, ray.direction);
-  float c = glm::dot(m, m) - sphere.radius * sphere.radius;
+  float b     = glm::dot(m, ray.direction);
+  float c     = glm::dot(m, m) - sphere.radius * sphere.radius;
   if (c > 0.0f && b > 0.0f)
   {
     return -1.0f;
@@ -66,8 +65,7 @@ static inline __device__ float IntersectRayPlane(const mj::rt::Ray& ray, const m
 
 static inline __device__ glm::vec2 PixelToNDCSpace(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
-  return glm::vec2(((float) x + 0.5f) / width,
-    ((float) y + 0.5f) / height);
+  return glm::vec2(((float)x + 0.5f) / width, ((float)y + 0.5f) / height);
 }
 
 // aspect is x/y
@@ -91,29 +89,31 @@ static inline __device__ glm::vec2 ScreenToCameraSpace(const glm::vec2& ss, floa
  * @param[in]  pitch      The pitch
  * @param[in]  pConstant  The constant
  */
-__global__ void cuda_raytracer(unsigned char* surface, int width, int height, size_t pitch, const mj::cuda::Constant* __restrict__ pConstant)
+__global__ void cuda_raytracer(unsigned char* surface, int width, int height, size_t pitch,
+                               const mj::cuda::Constant* __restrict__ pConstant)
 {
   const int x = blockIdx.x * blockDim.x + threadIdx.x;
   const int y = blockIdx.y * blockDim.y + threadIdx.y;
   float* pixel;
 
-  if (x >= width || y >= height) return;
+  if (x >= width || y >= height)
+    return;
 
   // get a pointer to the pixel at (x,y)
-  pixel = (float*) (surface + y * pitch) + 4 * x;
+  pixel = (float*)(surface + y * pitch) + 4 * x;
 
   glm::vec2 ndc = PixelToNDCSpace(x, y, width, height);
-  glm::vec2 ss = NDCToScreenSpace(ndc, (float) width / height);
-  glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(45.0f));
+  glm::vec2 ss  = NDCToScreenSpace(ndc, (float)width / height);
+  glm::vec2 cs  = ScreenToCameraSpace(ss, glm::radians(45.0f));
 
   mj::rt::Ray ray;
-  glm::vec3 p = pConstant->mat * glm::vec4(cs, 1, 1);
-  ray.origin = pConstant->s_Camera.position;
-  ray.length = FLT_MAX;
+  glm::vec3 p   = pConstant->mat * glm::vec4(cs, 1, 1);
+  ray.origin    = pConstant->s_Camera.position;
+  ray.length    = FLT_MAX;
   ray.direction = glm::normalize(p - pConstant->s_Camera.position);
 
   const mj::rt::Shape* pShape = nullptr;
-  float t = FLT_MAX;
+  float t                     = FLT_MAX;
   for (const auto& shape : pConstant->s_Shapes)
   {
     switch (shape.type)
@@ -136,7 +136,7 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
     if (t >= 0.0f && t < ray.length)
     {
       ray.length = t;
-      pShape = &shape;
+      pShape     = &shape;
     }
   }
   if (pShape)
@@ -144,7 +144,7 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
     glm::vec3 light = glm::normalize(glm::vec3(0.3f, 0.6f, -1.0f));
 
     // Get intersection normal
-    glm::vec3 normal = glm::zero<glm::vec3>();
+    glm::vec3 normal             = glm::zero<glm::vec3>();
     const glm::vec3 intersection = ray.origin + ray.length * ray.direction;
     switch (pShape->type)
     {
@@ -158,13 +158,12 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
     {
       // https://blog.johnnovak.net/2016/10/22/the-nim-raytracer-project-part-4-calculating-box-normals/
       glm::vec3 c = (pShape->aabb.min + pShape->aabb.max) * 0.5f; // aabb center
-      glm::vec3 p = intersection - c; // vector from intersection to center
+      glm::vec3 p = intersection - c;                             // vector from intersection to center
       glm::vec3 d = (pShape->aabb.max - pShape->aabb.min) * 0.5f; //??
-      float bias = 1.0001f;
+      float bias  = 1.0001f;
 
-      normal = glm::normalize(glm::vec3((float) ((int) (p.x / glm::abs(d.x) * bias)),
-        (float) ((int) (p.y / d.y * bias)),
-        (float) ((int) (p.z / d.z * bias))));
+      normal = glm::normalize(glm::vec3((float)((int)(p.x / glm::abs(d.x) * bias)), (float)((int)(p.y / d.y * bias)),
+                                        (float)((int)(p.z / d.z * bias))));
     }
     break;
     case mj::rt::Shape::Shape_Octree:
@@ -176,7 +175,7 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
 
     glm::vec3 color = pShape->color;
     color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
-    color = glm::sqrt(color);
+    color    = glm::sqrt(color);
     pixel[0] = color.x;
     pixel[1] = color.y;
     pixel[2] = color.z;
@@ -191,15 +190,14 @@ __global__ void cuda_raytracer(unsigned char* surface, int width, int height, si
   }
 }
 
-extern "C"
-void cuda_texture_2d(void* surface, int width, int height, size_t pitch, const mj::cuda::Constant* pConstant)
+extern "C" void cuda_texture_2d(void* surface, int width, int height, size_t pitch, const mj::cuda::Constant* pConstant)
 {
   cudaError_t error = cudaSuccess;
 
-  dim3 Db = dim3(16, 16);   // block dimensions are fixed to be 256 threads
+  dim3 Db = dim3(16, 16); // block dimensions are fixed to be 256 threads
   dim3 Dg = dim3((width + Db.x - 1) / Db.x, (height + Db.y - 1) / Db.y);
 
-  cuda_raytracer << <Dg, Db >> > ((unsigned char*) surface, width, height, pitch, pConstant);
+  cuda_raytracer<<<Dg, Db>>>((unsigned char*)surface, width, height, pitch, pConstant);
 
   error = cudaGetLastError();
 

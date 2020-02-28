@@ -15,35 +15,35 @@ static const float s_FieldOfView = 45.0f; // Degrees
 
 bool mj::rt::Init()
 {
-  s_Shapes[DemoShape_RedSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_RedSphere].type          = Shape::Shape_Sphere;
   s_Shapes[DemoShape_RedSphere].sphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
   s_Shapes[DemoShape_RedSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_RedSphere].color = glm::vec3(1.0f, 0.0f, 0.0f);
+  s_Shapes[DemoShape_RedSphere].color         = glm::vec3(1.0f, 0.0f, 0.0f);
 
-  s_Shapes[DemoShape_YellowSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_YellowSphere].type          = Shape::Shape_Sphere;
   s_Shapes[DemoShape_YellowSphere].sphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
   s_Shapes[DemoShape_YellowSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_YellowSphere].color = glm::vec3(1.0f, 1.0f, 0.0f);
+  s_Shapes[DemoShape_YellowSphere].color         = glm::vec3(1.0f, 1.0f, 0.0f);
 
-  s_Shapes[DemoShape_BlueSphere].type = Shape::Shape_Sphere;
+  s_Shapes[DemoShape_BlueSphere].type          = Shape::Shape_Sphere;
   s_Shapes[DemoShape_BlueSphere].sphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
   s_Shapes[DemoShape_BlueSphere].sphere.radius = 1.0f;
-  s_Shapes[DemoShape_BlueSphere].color = glm::vec3(0.0f, 0.0f, 1.0f);
+  s_Shapes[DemoShape_BlueSphere].color         = glm::vec3(0.0f, 0.0f, 1.0f);
 
-  s_Shapes[DemoShape_GreenAABB].type = Shape::Shape_AABB;
+  s_Shapes[DemoShape_GreenAABB].type     = Shape::Shape_AABB;
   s_Shapes[DemoShape_GreenAABB].aabb.min = glm::vec3(0.0f, 0.0f, 0.0f);
   s_Shapes[DemoShape_GreenAABB].aabb.max = glm::vec3(1.0f, 1.0f, 1.0f);
-  s_Shapes[DemoShape_GreenAABB].color = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Shapes[DemoShape_GreenAABB].color    = glm::vec3(0.0f, 1.0f, 0.0f);
 
-  s_Shapes[DemoShape_WhitePlane].type = Shape::Shape_Plane;
-  s_Shapes[DemoShape_WhitePlane].plane.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+  s_Shapes[DemoShape_WhitePlane].type           = Shape::Shape_Plane;
+  s_Shapes[DemoShape_WhitePlane].plane.normal   = glm::vec3(0.0f, -1.0f, 0.0f);
   s_Shapes[DemoShape_WhitePlane].plane.distance = 5.0f;
-  s_Shapes[DemoShape_WhitePlane].color = glm::vec3(1.0f, 1.0f, 1.0f);
+  s_Shapes[DemoShape_WhitePlane].color          = glm::vec3(1.0f, 1.0f, 1.0f);
 
-  s_Shapes[DemoShape_CyanPlane].type = Shape::Shape_Plane;
-  s_Shapes[DemoShape_CyanPlane].plane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Shapes[DemoShape_CyanPlane].type           = Shape::Shape_Plane;
+  s_Shapes[DemoShape_CyanPlane].plane.normal   = glm::vec3(0.0f, 1.0f, 0.0f);
   s_Shapes[DemoShape_CyanPlane].plane.distance = 3.0f;
-  s_Shapes[DemoShape_CyanPlane].color = glm::vec3(0.0f, 1.0f, 1.0f);
+  s_Shapes[DemoShape_CyanPlane].color          = glm::vec3(0.0f, 1.0f, 1.0f);
 
   s_Camera.position = glm::vec3(0.0f, 0.0f, 0.0f);
   s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
@@ -55,8 +55,8 @@ bool mj::rt::Init()
 static float IntersectRaySphere(const Ray& ray, const Sphere& sphere)
 {
   glm::vec3 m = ray.origin - sphere.origin;
-  float b = glm::dot(m, ray.direction);
-  float c = glm::dot(m, m) - sphere.radius * sphere.radius;
+  float b     = glm::dot(m, ray.direction);
+  float c     = glm::dot(m, m) - sphere.radius * sphere.radius;
   if (c > 0.0f && b > 0.0f)
   {
     return -1.0f;
@@ -79,8 +79,7 @@ static float IntersectRayPlane(const Ray& ray, const Plane& plane)
 
 static glm::vec2 PixelToNDCSpace(uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 {
-  return glm::vec2(((float) x + 0.5f) / width,
-    ((float) y + 0.5f) / height);
+  return glm::vec2(((float)x + 0.5f) / width, ((float)y + 0.5f) / height);
 }
 
 // aspect is x/y
@@ -95,12 +94,13 @@ static glm::vec2 ScreenToCameraSpace(const glm::vec2& ss, float fov)
   return ss * glm::tan(fov * 0.5f);
 }
 
+#if 0
 static float DoSoftShadowSphere(const glm::vec3& ro, const glm::vec3 rd, const glm::vec3 sph, float radius, float k)
 {
   glm::vec3 oc = ro - sph;
-  float b = glm::dot(oc, rd);
-  float c = glm::dot(oc, oc) - radius * radius;
-  float h = b * b - c;
+  float b      = glm::dot(oc, rd);
+  float c      = glm::dot(oc, oc) - radius * radius;
+  float h      = b * b - c;
 
 #if 0
   // physically plausible shadow
@@ -110,16 +110,17 @@ static float DoSoftShadowSphere(const glm::vec3& ro, const glm::vec3 rd, const g
 #else
   // cheap but not plausible alternative
   return (b > 0.0) ? glm::step(-0.0001f, c) : glm::smoothstep(0.0f, 1.0f, h * k / b);
-#endif    
+#endif
 }
+#endif
 
 void mj::rt::Update()
 {
   CameraMovement(MJ_REF s_Camera);
 
   MJ_UNINITIALIZED Ray ray;
-  auto mat = glm::identity<glm::mat4>();
-  mat = glm::translate(mat, s_Camera.position) * glm::mat4_cast(s_Camera.rotation);
+  auto mat   = glm::identity<glm::mat4>();
+  mat        = glm::translate(mat, s_Camera.position) * glm::mat4_cast(s_Camera.rotation);
   ray.origin = s_Camera.position;
 
   // Reset button
@@ -133,15 +134,15 @@ void mj::rt::Update()
     for (uint16_t y = 0; y < MJ_RT_HEIGHT; y++)
     {
       glm::vec2 ndc = PixelToNDCSpace(x, y, MJ_RT_WIDTH, MJ_RT_HEIGHT);
-      glm::vec2 ss = NDCToScreenSpace(ndc, (float) MJ_RT_WIDTH / MJ_RT_HEIGHT);
-      glm::vec2 cs = ScreenToCameraSpace(ss, glm::radians(s_FieldOfView));
+      glm::vec2 ss  = NDCToScreenSpace(ndc, (float)MJ_RT_WIDTH / MJ_RT_HEIGHT);
+      glm::vec2 cs  = ScreenToCameraSpace(ss, glm::radians(s_FieldOfView));
 
-      glm::vec3 p = mat * glm::vec4(cs, 1, 1);
-      ray.length = FLT_MAX;
+      glm::vec3 p   = mat * glm::vec4(cs, 1, 1);
+      ray.length    = FLT_MAX;
       ray.direction = glm::normalize(p - s_Camera.position);
 
       const Shape* pShape = nullptr;
-      float t = FLT_MAX;
+      float t             = FLT_MAX;
       for (const auto& shape : s_Shapes)
       {
         switch (shape.type)
@@ -158,7 +159,7 @@ void mj::rt::Update()
         if (t >= 0.0f && t < ray.length)
         {
           ray.length = t;
-          pShape = &shape;
+          pShape     = &shape;
         }
       }
       if (pShape)
@@ -166,7 +167,7 @@ void mj::rt::Update()
         glm::vec3 light = glm::normalize(glm::vec3(0.3f, 0.6f, -1.0f));
 
         // Get intersection normal
-        glm::vec3 normal = glm::zero<glm::vec3>();
+        glm::vec3 normal             = glm::zero<glm::vec3>();
         const glm::vec3 intersection = ray.origin + ray.length * ray.direction;
         switch (pShape->type)
         {
@@ -182,7 +183,7 @@ void mj::rt::Update()
 
         glm::vec3 color = pShape->color;
         color *= glm::clamp(glm::dot(normal, light), 0.0f, 1.0f);
-        color = glm::sqrt(color);
+        color                          = glm::sqrt(color);
         s_Image.p[y * MJ_RT_WIDTH + x] = glm::vec4(color, 1.0f);
       }
       else
@@ -200,5 +201,4 @@ const Image& mj::rt::GetImage()
 
 void mj::rt::Destroy()
 {
-
 }

@@ -1,0 +1,72 @@
+
+  float4x4 mat;
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding1[8];
+
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding2[8];
+
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding3[8];
+
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding4[8];
+
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding5[8];
+
+int type;
+  float3 color;
+
+  float3 originOrNormalOrMinXyz;
+  float radiusOrDistanceOrMaxX;
+  float maxY;
+  float maxZ;
+float padding6[8];
+
+  float3 camposition;
+float pad
+  float4 camrotation;
+
+  float3 topLeft;
+float pad;
+  float3 topRight;
+float pad;
+  float3 bottomLeft;
+float pad;
+  float3 bottomRight;
+float pad;
+  float s_FieldOfView;
+  int width;
+  int height;
+float padding;

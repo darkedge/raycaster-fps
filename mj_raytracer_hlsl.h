@@ -5,11 +5,14 @@
 #include "camera.h"
 #include "glm/glm.hpp"
 
+struct ID3D11Device;
 struct ID3D11Texture2D;
+struct ID3D11DeviceContext;
+struct ID3D11ShaderResourceView;
 
 namespace mj
 {
-  namespace cuda
+  namespace hlsl
   {
     struct Constant
     {
@@ -17,10 +20,13 @@ namespace mj
       rt::Shape s_Shapes[rt::DemoShape_Count];
       Camera s_Camera;
       const float s_FieldOfView = 45.0f; // Degrees
+      int width;
+      int height;
+      char padding[4];
     };
 
-    void Init(ID3D11Texture2D* s_pTexture);
-    void Update();
+    [[nodiscard]] bool Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture);
+    void Update(ID3D11DeviceContext* device_context);
     void Destroy();
-  } // namespace cuda
+  } // namespace hlsl
 } // namespace mj

@@ -2,9 +2,9 @@
 #include <queue>
 
 // Multiple of 32 (32-bit integer flags)
-constexpr auto INPUT_NUM_KEYS = Key::Count;
+constexpr auto INPUT_NUM_KEYS          = Key::Count;
 constexpr auto INPUT_NUM_MOUSE_BUTTONS = MouseButton::Count;
-constexpr auto INPUT_NUM_INTS = ((INPUT_NUM_KEYS + 32 - 1) / 32);
+constexpr auto INPUT_NUM_INTS          = ((INPUT_NUM_KEYS + 32 - 1) / 32);
 
 static int32_t mouseDXNext;
 static int32_t mouseDYNext;
@@ -34,7 +34,6 @@ static bool mouseBreak[INPUT_NUM_MOUSE_BUTTONS];
 static bool s_MouseLock;
 static glm::ivec3 s_MousePosition;
 
-
 /**
  * @brief      Imported from bgfx.
  */
@@ -51,7 +50,6 @@ private:
   int32_t m_axis[GamepadAxis::Count];
 };
 
-
 /**
  * @brief      { struct_description }
  */
@@ -65,9 +63,7 @@ struct GamepadState
   int32_t m_axis[GamepadAxis::Count];
 };
 
-
-//static Gamepad m_gamepad[ENTRY_CONFIG_MAX_GAMEPADS];
-
+// static Gamepad m_gamepad[ENTRY_CONFIG_MAX_GAMEPADS];
 
 /**
  * @brief      Constructs the object.
@@ -77,7 +73,6 @@ Gamepad::Gamepad()
   reset();
 }
 
-
 /**
  * @brief      { function_description }
  */
@@ -85,7 +80,6 @@ void Gamepad::reset()
 {
   memset(m_axis, 0, sizeof(m_axis));
 }
-
 
 /**
  * @brief      Sets the axis.
@@ -97,7 +91,6 @@ void Gamepad::setAxis(GamepadAxis::Enum _axis, int32_t _value)
 {
   m_axis[_axis] = _value;
 }
-
 
 /**
  * @brief      Gets the axis.
@@ -111,7 +104,6 @@ int32_t Gamepad::getAxis(GamepadAxis::Enum _axis)
   return m_axis[_axis];
 }
 
-
 /**
  * @brief      Gets the control.
  *
@@ -123,11 +115,10 @@ bool mj::input::GetControl(const Control& control)
 {
   assert(control.key >= 0);
   assert(control.key < INPUT_NUM_KEYS);
-  bool key = ((keyActive[control.key / 32] & (1 << (control.key % 32))) != 0);
+  bool key           = ((keyActive[control.key / 32] & (1 << (control.key % 32))) != 0);
   bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
   return key && modifiersDown;
 }
-
 
 /**
  * @brief      Gets the control down.
@@ -140,11 +131,10 @@ bool mj::input::GetControlDown(const Control& control)
 {
   assert(control.key >= 0);
   assert(control.key < INPUT_NUM_KEYS);
-  bool keyDown = ((keyMake[control.key / 32] & (1 << (control.key % 32))) != 0);
+  bool keyDown       = ((keyMake[control.key / 32] & (1 << (control.key % 32))) != 0);
   bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
   return keyDown && modifiersDown;
 }
-
 
 /**
  * @brief      Gets the control up.
@@ -157,11 +147,10 @@ bool mj::input::GetControlUp(const Control& control)
 {
   assert(control.key >= 0);
   assert(control.key < INPUT_NUM_KEYS);
-  bool keyUp = ((keyBreak[control.key / 32] & (1 << (control.key % 32))) != 0);
+  bool keyUp         = ((keyBreak[control.key / 32] & (1 << (control.key % 32))) != 0);
   bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
   return keyUp && modifiersDown;
 }
-
 
 /**
  * @brief      Checks if a key is currently held down.
@@ -177,7 +166,6 @@ bool mj::input::GetKey(Key::Enum key)
   return ((keyActive[key / 32] & (1 << (key % 32))) != 0);
 }
 
-
 /**
  * @brief      Checks if a key was pressed on this frame.
  *
@@ -192,7 +180,6 @@ bool mj::input::GetKeyDown(Key::Enum key)
   return ((keyMake[key / 32] & (1 << (key % 32))) != 0);
 }
 
-
 /**
  * @brief      Checks if a key was released on this frame.
  *
@@ -206,7 +193,6 @@ bool mj::input::GetKeyUp(Key::Enum key)
   assert(key < INPUT_NUM_KEYS);
   return ((keyBreak[key / 32] & (1 << (key % 32))) != 0);
 }
-
 
 /**
  * @brief      Game thread event pump calls this function to set key state.
@@ -276,7 +262,6 @@ void mj::input::SetKey(Key::Enum key, bool active)
   }
 }
 
-
 /**
  * @brief      Queue an ASCII character for ImGui typing.
  *
@@ -286,7 +271,6 @@ void mj::input::AddAsciiTyped(char ascii)
 {
   s_Ascii.push(ascii);
 }
-
 
 /**
  * @brief      Get the next typed ASCII character. Should only be used by ImGui.
@@ -304,9 +288,7 @@ char mj::input::NextAsciiTyped()
   return result;
 }
 
-
 // Mouse
-
 
 /**
  * @brief      Gets the mouse button.
@@ -322,7 +304,6 @@ bool mj::input::GetMouseButton(MouseButton::Enum button)
   return mouseActive[button];
 }
 
-
 /**
  * @brief      Gets the mouse button down.
  *
@@ -336,7 +317,6 @@ bool mj::input::GetMouseButtonDown(MouseButton::Enum button)
   assert(button < INPUT_NUM_MOUSE_BUTTONS);
   return mouseMake[button];
 }
-
 
 /**
  * @brief      Gets the mouse button up.
@@ -352,7 +332,6 @@ bool mj::input::GetMouseButtonUp(MouseButton::Enum button)
   return mouseBreak[button];
 }
 
-
 /**
  * @brief      Sets the mouse button.
  *
@@ -366,7 +345,6 @@ void mj::input::SetMouseButton(MouseButton::Enum button, bool active)
   mouseActive[button] = active;
 }
 
-
 /**
  * @brief      Sets the mouse lock.
  *
@@ -378,13 +356,12 @@ bool mj::input::SetMouseLock(bool lock)
 {
   if (lock != s_MouseLock)
   {
-    //entry::setMouseLock({ 0 }, lock);
+    // entry::setMouseLock({ 0 }, lock);
     s_MouseLock = lock;
     return true;
   }
   return false;
 }
-
 
 /**
  * @brief      Determines if mouse locked.
@@ -396,7 +373,6 @@ bool mj::input::IsMouseLocked()
   return s_MouseLock;
 }
 
-
 /**
  * @brief      { function_description }
  */
@@ -404,7 +380,6 @@ void mj::input::Init()
 {
   ReleaseEverything();
 }
-
 
 /**
  * @brief      { function_description }
@@ -419,14 +394,13 @@ void mj::input::Reset()
 #endif
 }
 
-
 /**
  * @brief      Called after input polling
  */
 void mj::input::Update()
 {
-  mouseDX = mouseDXNext;
-  mouseDY = mouseDYNext;
+  mouseDX     = mouseDXNext;
+  mouseDY     = mouseDYNext;
   mouseDXNext = 0;
   mouseDYNext = 0;
 
@@ -443,7 +417,7 @@ void mj::input::Update()
 
   for (int32_t i = 0; i < INPUT_NUM_MOUSE_BUTTONS; i++)
   {
-    bool change = mouseActive[i] ^ mouseActivePrev[i];
+    bool change  = mouseActive[i] ^ mouseActivePrev[i];
     mouseMake[i] = change && mouseActive[i];
 
     mouseBreak[i] = change && !mouseActive[i];
@@ -453,7 +427,6 @@ void mj::input::Update()
   memcpy(keyActivePrev, keyActive, sizeof(keyActivePrev));
   memcpy(mouseActivePrev, mouseActive, sizeof(mouseActivePrev));
 }
-
 
 /**
  * @brief      { function_description }
@@ -471,12 +444,11 @@ void mj::input::ReleaseEverything()
   memset(mouseActivePrev, 0, sizeof(mouseActivePrev));
   memset(mouseBreak, 0, sizeof(mouseBreak));
   memset(mouseMake, 0, sizeof(mouseMake));
-  mouseDX = 0;
-  mouseDY = 0;
+  mouseDX     = 0;
+  mouseDY     = 0;
   mouseDXNext = 0;
   mouseDYNext = 0;
 }
-
 
 /**
  * @brief      Adds a relative mouse movement.
@@ -490,7 +462,6 @@ void mj::input::AddRelativeMouseMovement(int32_t dx, int32_t dy)
   mouseDYNext += dy;
 }
 
-
 /**
  * @brief      Gets the relative mouse movement.
  *
@@ -503,7 +474,6 @@ void mj::input::GetRelativeMouseMovement(int32_t* dx, int32_t* dy)
   *dy = mouseDY;
 }
 
-
 /**
  * @brief      Determines if escape pressed.
  *
@@ -513,7 +483,6 @@ bool mj::input::IsEscapePressed()
 {
   return GetKeyDown(Key::Esc);
 }
-
 
 #if 0
 /**
@@ -530,7 +499,6 @@ void mj::input::SetKeyName(Key::Enum key, const char* keyName)
 }
 #endif
 
-
 /**
  * @brief      Gets the key name.
  *
@@ -542,7 +510,6 @@ const char* mj::input::GetKeyName(Key::Enum key)
 {
   return s_keyNames[key];
 }
-
 
 #if 0
 /**
@@ -568,7 +535,6 @@ static bool AllocateString(mjm::StackAllocator& alloc, const char* str)
   return success;
 }
 #endif
-
 
 #if 0
 /**
@@ -643,7 +609,6 @@ const char* mj::input::GetControlName(const Control& control)
 }
 #endif
 
-
 /**
  * @brief      Sets the mouse position.
  *
@@ -654,7 +619,6 @@ void mj::input::SetMousePosition(const glm::ivec3& pos)
   s_MousePosition = pos;
 }
 
-
 /**
  * @brief      Gets the mouse position.
  *
@@ -664,7 +628,6 @@ const glm::ivec3& mj::input::GetMousePosition()
 {
   return s_MousePosition;
 }
-
 
 /**
  * @brief      Find a new control bind combination.
@@ -685,7 +648,7 @@ Control mj::input::GetNewControl()
     if (mj::input::GetKeyDown(key))
     {
       control.type = Control::KEYBOARD;
-      control.key = key;
+      control.key  = key;
       break;
     }
   }
@@ -698,7 +661,7 @@ Control mj::input::GetNewControl()
       MouseButton::Enum mouseButton = (MouseButton::Enum)i;
       if (mj::input::GetMouseButtonDown(mouseButton))
       {
-        control.type = Control::MOUSE;
+        control.type        = Control::MOUSE;
         control.mouseButton = mouseButton;
         break;
       }
@@ -714,7 +677,7 @@ Control mj::input::GetNewControl()
       if (mj::input::GetKeyUp(key))
       {
         control.type = Control::KEYBOARD;
-        control.key = key;
+        control.key  = key;
         break;
       }
     }
@@ -723,14 +686,22 @@ Control mj::input::GetNewControl()
   if (control.type != Control::NONE)
   {
     // Add all held modifier keys (unless it was the trigger key)
-    if (control.key != Key::LeftAlt    && mj::input::GetKey(Key::LeftAlt))    control.modifiers.LeftAlt    = true;
-    if (control.key != Key::RightAlt   && mj::input::GetKey(Key::RightAlt))   control.modifiers.RightAlt   = true;
-    if (control.key != Key::LeftCtrl   && mj::input::GetKey(Key::LeftCtrl))   control.modifiers.LeftCtrl   = true;
-    if (control.key != Key::RightCtrl  && mj::input::GetKey(Key::RightCtrl))  control.modifiers.RightCtrl  = true;
-    if (control.key != Key::LeftShift  && mj::input::GetKey(Key::LeftShift))  control.modifiers.LeftShift  = true;
-    if (control.key != Key::RightShift && mj::input::GetKey(Key::RightShift)) control.modifiers.RightShift = true;
-    if (control.key != Key::LeftMeta   && mj::input::GetKey(Key::LeftMeta))   control.modifiers.LeftMeta   = true;
-    if (control.key != Key::RightMeta  && mj::input::GetKey(Key::RightMeta))  control.modifiers.RightMeta  = true;
+    if (control.key != Key::LeftAlt && mj::input::GetKey(Key::LeftAlt))
+      control.modifiers.LeftAlt = true;
+    if (control.key != Key::RightAlt && mj::input::GetKey(Key::RightAlt))
+      control.modifiers.RightAlt = true;
+    if (control.key != Key::LeftCtrl && mj::input::GetKey(Key::LeftCtrl))
+      control.modifiers.LeftCtrl = true;
+    if (control.key != Key::RightCtrl && mj::input::GetKey(Key::RightCtrl))
+      control.modifiers.RightCtrl = true;
+    if (control.key != Key::LeftShift && mj::input::GetKey(Key::LeftShift))
+      control.modifiers.LeftShift = true;
+    if (control.key != Key::RightShift && mj::input::GetKey(Key::RightShift))
+      control.modifiers.RightShift = true;
+    if (control.key != Key::LeftMeta && mj::input::GetKey(Key::LeftMeta))
+      control.modifiers.LeftMeta = true;
+    if (control.key != Key::RightMeta && mj::input::GetKey(Key::RightMeta))
+      control.modifiers.RightMeta = true;
   }
 
   return control;

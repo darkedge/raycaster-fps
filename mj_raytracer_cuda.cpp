@@ -11,17 +11,17 @@
 // This will output the proper error string when calling cudaGetLastError
 #define getLastCudaError(msg) __getLastCudaError(msg, __FILE__, __LINE__)
 
-inline void __getLastCudaError(const char* errorMessage, const char* file,
-  const int line) {
+inline void __getLastCudaError(const char* errorMessage, const char* file, const int line)
+{
   cudaError_t err = cudaGetLastError();
 
-  if (cudaSuccess != err) {
+  if (cudaSuccess != err)
+  {
     fprintf(stderr,
-      "%s(%i) : getLastCudaError() CUDA error :"
-      " %s : (%d) %s.\n",
-      file, line, errorMessage, static_cast<int>(err),
-      cudaGetErrorString(err));
-    //exit(EXIT_FAILURE);
+            "%s(%i) : getLastCudaError() CUDA error :"
+            " %s : (%d) %s.\n",
+            file, line, errorMessage, static_cast<int>(err), cudaGetErrorString(err));
+    // exit(EXIT_FAILURE);
   }
 }
 
@@ -53,40 +53,40 @@ void mj::cuda::Init(ID3D11Texture2D* s_pTexture)
   getLastCudaError("cudaMallocPitch (g_texture_2d) failed");
   cudaMemset(s_pCudaLinearMemory, 1, s_Pitch * MJ_RT_HEIGHT);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].type = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].type          = mj::rt::Shape::Shape_Sphere;
   s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].sphere.origin = glm::vec3(2.0f, 0.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].color = glm::vec3(1.0f, 0.0f, 0.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_RedSphere].color         = glm::vec3(1.0f, 0.0f, 0.0f);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].type = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].type          = mj::rt::Shape::Shape_Sphere;
   s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].sphere.origin = glm::vec3(0.0f, -2.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].color = glm::vec3(1.0f, 1.0f, 0.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_YellowSphere].color         = glm::vec3(1.0f, 1.0f, 0.0f);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].type = mj::rt::Shape::Shape_Sphere;
+  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].type          = mj::rt::Shape::Shape_Sphere;
   s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].sphere.origin = glm::vec3(0.0f, 2.0f, 10.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].sphere.radius = 1.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].color = glm::vec3(0.0f, 0.0f, 1.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_BlueSphere].color         = glm::vec3(0.0f, 0.0f, 1.0f);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].type = mj::rt::Shape::Shape_AABB;
+  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].type     = mj::rt::Shape::Shape_AABB;
   s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].aabb.min = glm::vec3(-2.5f, -0.5f, 9.5f);
   s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].aabb.max = glm::vec3(-1.5f, 0.5f, 10.5f);
-  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].color = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_GreenAABB].color    = glm::vec3(0.0f, 1.0f, 0.0f);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].type = mj::rt::Shape::Shape_Plane;
-  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].plane.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].type           = mj::rt::Shape::Shape_Plane;
+  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].plane.normal   = glm::vec3(0.0f, -1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].plane.distance = 5.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].color = glm::vec3(1.0f, 1.0f, 1.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_WhitePlane].color          = glm::vec3(1.0f, 1.0f, 1.0f);
 
-  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].type = mj::rt::Shape::Shape_Plane;
-  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].type           = mj::rt::Shape::Shape_Plane;
+  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.normal   = glm::vec3(0.0f, 1.0f, 0.0f);
   s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].plane.distance = 3.0f;
-  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].color = glm::vec3(0.0f, 1.0f, 1.0f);
+  s_Constant.s_Shapes[mj::rt::DemoShape_CyanPlane].color          = glm::vec3(0.0f, 1.0f, 1.0f);
 
   Reset();
 
   size_t numBytes = sizeof(s_Constant);
-  cudaMalloc((void**) &s_pDevicePtr, numBytes);
+  cudaMalloc((void**)&s_pDevicePtr, numBytes);
   cudaMemcpy(s_pDevicePtr, &s_Constant, numBytes, cudaMemcpyHostToDevice);
 }
 
@@ -100,7 +100,7 @@ void mj::cuda::Update()
     Reset();
   }
 
-  auto mat = glm::identity<glm::mat4>();
+  auto mat       = glm::identity<glm::mat4>();
   s_Constant.mat = glm::translate(mat, s_Constant.s_Camera.position) * glm::mat4_cast(s_Constant.s_Camera.rotation);
 
   cudaMemcpy(s_pDevicePtr, &s_Constant, sizeof(s_Constant), cudaMemcpyHostToDevice);
@@ -114,17 +114,17 @@ void mj::cuda::Update()
     cudaGraphicsSubResourceGetMappedArray(&cuArray, s_pCudaResource, 0, 0);
     getLastCudaError("cudaGraphicsSubResourceGetMappedArray (cuda_texture_2d) failed");
 
-    // kick off the kernel and send the staging buffer cudaLinearMemory as an argument to allow the kernel to write to it
+    // kick off the kernel and send the staging buffer cudaLinearMemory as an argument to allow the kernel to write to
+    // it
     cuda_texture_2d(s_pCudaLinearMemory, MJ_RT_WIDTH, MJ_RT_HEIGHT, s_Pitch, s_pDevicePtr);
     getLastCudaError("cuda_texture_2d failed");
 
     // then we want to copy cudaLinearMemory to the D3D texture, via its mapped form : cudaArray
-    cudaMemcpy2DToArray(
-      cuArray, // dst array
-      0, 0,    // offset
-      s_pCudaLinearMemory, s_Pitch,       // src
-      MJ_RT_WIDTH * sizeof(glm::vec4), MJ_RT_HEIGHT, // extent
-      cudaMemcpyDeviceToDevice); // kind
+    cudaMemcpy2DToArray(cuArray,                                       // dst array
+                        0, 0,                                          // offset
+                        s_pCudaLinearMemory, s_Pitch,                  // src
+                        MJ_RT_WIDTH * sizeof(glm::vec4), MJ_RT_HEIGHT, // extent
+                        cudaMemcpyDeviceToDevice);                     // kind
     getLastCudaError("cudaMemcpy2DToArray failed");
   }
 

@@ -6,9 +6,9 @@
 #define MJ_REF
 
 // Raytracer resolution
-static constexpr uint16_t MJ_RT_WIDTH = 320;
+static constexpr uint16_t MJ_RT_WIDTH  = 320;
 static constexpr uint16_t MJ_RT_HEIGHT = 200;
 
 // Window resolution
-static constexpr uint16_t MJ_WND_WIDTH = 1280;
+static constexpr uint16_t MJ_WND_WIDTH  = 1280;
 static constexpr uint16_t MJ_WND_HEIGHT = 800;

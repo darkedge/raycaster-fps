@@ -7,12 +7,10 @@ struct GamepadHandle
   uint16_t idx;
 };
 
-
 inline bool isValid(GamepadHandle _handle)
 {
   return UINT16_MAX != _handle.idx;
 }
-
 
 struct MouseButton
 {
@@ -27,7 +25,6 @@ struct MouseButton
     Count
   };
 };
-
 
 struct GamepadAxis
 {
@@ -49,20 +46,19 @@ struct Modifier
 {
   enum Enum
   {
-    None = 0,
-    LeftAlt = 0x01,
-    RightAlt = 0x02,
-    LeftCtrl = 0x04,
-    RightCtrl = 0x08,
-    LeftShift = 0x10,
+    None       = 0,
+    LeftAlt    = 0x01,
+    RightAlt   = 0x02,
+    LeftCtrl   = 0x04,
+    RightCtrl  = 0x08,
+    LeftShift  = 0x10,
     RightShift = 0x20,
-    LeftMeta = 0x40,
-    RightMeta = 0x80,
+    LeftMeta   = 0x40,
+    RightMeta  = 0x80,
   };
 };
 
-union ModifierMask
-{
+union ModifierMask {
   uint8_t all;
   struct
   {
@@ -76,7 +72,6 @@ union ModifierMask
     uint8_t RightMeta : 1;
   };
 };
-
 
 /**
  * @brief      Virtual keys. Platform maps physical keys to these.
@@ -196,7 +191,7 @@ struct Key
     RightCtrl,
     LeftShift,
     RightShift,
-    LeftMeta, // "Left GUI" (windows, command (apple), meta)
+    LeftMeta,  // "Left GUI" (windows, command (apple), meta)
     RightMeta, // "Right GUI" (windows, command (apple), meta)
 
     ModifierLast,
@@ -204,7 +199,6 @@ struct Key
     Count = ModifierLast
   };
 };
-
 
 // This should probably be moved to Control.h
 struct Control
@@ -221,7 +215,6 @@ struct Control
   ModifierMask modifiers;
   MouseButton::Enum mouseButton;
 };
-
 
 namespace mj
 {
@@ -266,5 +259,5 @@ namespace mj
     void Reset();
     void Update();
     void ReleaseEverything();
-  }
-}
+  } // namespace input
+} // namespace mj

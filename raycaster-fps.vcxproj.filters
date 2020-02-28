@@ -26,7 +26,7 @@
     <ClCompile Include="mj_input.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="game.cpp" />
-    <ClCompile Include="mj_raytracer_cuda.cpp" />
+    <ClCompile Include="mj_raytracer_hlsl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-docking\imconfig.h">
@@ -61,6 +61,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="mj_raytracer_cuda.h" />
+    <ClInclude Include="mj_raytracer_hlsl.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -70,8 +71,12 @@
   <ItemGroup>
     <FxCompile Include="VSQuadOut.hlsl" />
     <FxCompile Include="PSQuadOut.hlsl" />
+    <FxCompile Include="CSRaytracer.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="raytracer.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mj_raytracer_cuda.cpp" />
   </ItemGroup>
 </Project>
