@@ -168,4 +168,9 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
 
 void mj::hlsl::Destroy()
 {
+  SAFE_RELEASE(s_pComputeShader);
+  SAFE_RELEASE(s_pUnorderedAccessView);
+  SAFE_RELEASE(s_pConstantBuffer);
+  SAFE_RELEASE(s_pShaderResourceView);
+  SAFE_RELEASE(s_pShapeBuffer);
 }
