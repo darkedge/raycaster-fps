@@ -37,11 +37,11 @@ void CameraMovement(Camera& camera)
   }
   if (mj::input::GetKey(Key::Space))
   {
-    camera.position += camera.rotation * glm::vec3(0, 1, 0) * dt * s_MovementFactor;
+    camera.position += glm::vec3(0, 1, 0) * dt * s_MovementFactor;
   }
   if (mj::input::GetKey(Key::LeftCtrl))
   {
-    camera.position += camera.rotation * glm::vec3(0, -1, 0) * dt * s_MovementFactor;
+    camera.position += glm::vec3(0, -1, 0) * dt * s_MovementFactor;
   }
 
   int32_t dx, dy;
