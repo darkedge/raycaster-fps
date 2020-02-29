@@ -120,9 +120,7 @@
     <ClCompile Include="imgui_impl_win32.cpp" />
     <ClCompile Include="mj_d3d11.cpp" />
     <ClCompile Include="mj_input.cpp" />
-    <ClCompile Include="mj_raytracer.cpp" />
     <ClCompile Include="main.cpp" />
-    <None Include="mj_raytracer_cuda.cpp" />
     <ClCompile Include="mj_raytracer_hlsl.cpp" />
     <ClCompile Include="mj_win32_utils.cpp" />
   </ItemGroup>
@@ -141,7 +139,6 @@
     <ClInclude Include="mj_d3d11.h" />
     <ClInclude Include="mj_input.h" />
     <ClInclude Include="mj_raytracer.h" />
-    <ClInclude Include="mj_raytracer_cuda.h" />
     <ClInclude Include="mj_raytracer_hlsl.h" />
     <ClInclude Include="mj_win32_utils.h" />
   </ItemGroup>
@@ -160,9 +157,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <CudaCompile Include="raytracer.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

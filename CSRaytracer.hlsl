@@ -111,7 +111,7 @@ static inline float2 ScreenToCameraSpace(const float2 ss, float fov)
 }
 
 // clang-format off
-[numthreads((320 + 16 - 1) / 16, (200 + 16 - 1) / 16, 1)]
+[numthreads(16,16,1)]
 void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 // clang-format on
 {
@@ -200,10 +200,6 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
     color = sqrt(color);
 
     s_Texture[dispatchThreadId.xy] = float4(color, 1.0f);
-    //s_Texture[dispatchThreadId.xy] = float4(ray.origin, 1.0f);
-    //s_Texture[dispatchThreadId.xy] = float4(ray.length / 8.0f, ray.length / 8.0f, ray.length / 8.0f, 1.0f);
-    // s_Texture[dispatchThreadId.xy] = float4(shapeId / 1.0f, shapeId / 2.0f, shapeId / 4.0f, 1.0f);
-    // s_Texture[dispatchThreadId.xy] = float4(dispatchThreadId.x / 320.0f, dispatchThreadId.y / 200.0f, color.z, 1.0f);
   }
   else
   {

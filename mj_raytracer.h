@@ -60,15 +60,5 @@ namespace mj
       DemoShape_CyanPlane,
       DemoShape_Count
     };
-
-    struct Image
-    {
-      glm::vec4 p[MJ_RT_WIDTH * MJ_RT_HEIGHT];
-    };
-
-    bool Init();
-    void Update();
-    const Image& GetImage();
-    void Destroy();
   } // namespace rt
 } // namespace mj

@@ -24,8 +24,10 @@ static mj::hlsl::Constant* s_pDevicePtr;
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
 {
-  if (child != nullptr && name != nullptr)
+  if (child && name)
+  {
     child->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)strlen(name), name);
+  }
 }
 
 static void Reset()
@@ -154,7 +156,8 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   pDeviceContext->CSSetShaderResources(0, 1, &s_pShaderResourceView);
 
   // Run compute shader
-  pDeviceContext->Dispatch(16, 16, 1);
+  const UINT GRID_DIM = 16;
+  pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
   // Unbind
   ID3D11ShaderResourceView* ppSrvNull[1] = { nullptr };
