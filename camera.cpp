@@ -5,14 +5,14 @@
 static const float s_MovementFactor = 5.0f;
 static const float ROT_SPEED        = 0.0025f;
 
-static glm::vec2 lastMousePos;
-static glm::vec2 currentMousePos;
+static float lastMousePos;
+static float currentMousePos;
 
 void CameraInit(Camera& camera)
 {
-  lastMousePos    = glm::zero<glm::vec2>();
-  currentMousePos = glm::zero<glm::vec2>();
-  camera.rotation = glm::quat(glm::vec3(-currentMousePos.y, -currentMousePos.x, 0));
+  lastMousePos    = 0.0f;
+  currentMousePos = 0.0f;
+  camera.rotation = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
 }
 
 void CameraMovement(Camera& camera)
@@ -46,19 +46,10 @@ void CameraMovement(Camera& camera)
 
   int32_t dx, dy;
   mj::input::GetRelativeMouseMovement(&dx, &dy);
-  currentMousePos -= ROT_SPEED * glm::vec2(dx, dy);
-
-  if (currentMousePos.y < glm::radians(-89.0f))
+  currentMousePos -= ROT_SPEED * dx;
+  if (currentMousePos != lastMousePos)
   {
-    currentMousePos.y = glm::radians(-89.0f);
-  }
-  if (currentMousePos.y > glm::radians(89.0f))
-  {
-    currentMousePos.y = glm::radians(89.0f);
-  }
-  if (currentMousePos.x != lastMousePos.x || currentMousePos.y != lastMousePos.y)
-  {
-    camera.rotation = glm::quat(glm::vec3(-currentMousePos.y, -currentMousePos.x, 0));
+    camera.rotation = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
     lastMousePos    = currentMousePos;
   }
 }
