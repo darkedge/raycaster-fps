@@ -10,6 +10,8 @@
 #include "intermediate/VSQuadOut.h"
 #include "intermediate/PSQuadOut.h"
 
+#include "resource.h"
+
 static ID3D11VertexShader* s_pVertexShader;
 static ID3D11PixelShader* s_pPixelShader;
 static ID3D11Texture2D* s_pTexture;

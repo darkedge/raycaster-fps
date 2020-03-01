@@ -24,7 +24,8 @@ struct Shape
   float maxZ;
 };
 
-StructuredBuffer<Shape> s_Shapes : register(t0); // Shader resource binding
+StructuredBuffer<Shape> s_Shapes : register(t0);
+StructuredBuffer<uint> s_Grid : register(t1);
 
 cbuffer Constants : register(b0)
 {
@@ -68,6 +69,55 @@ static inline float IntersectRayAABB(const Ray ray, const float3 amin, const flo
   {
     return -1.0f;
   }
+}
+
+static inline float IntersectRayGrid(const Ray ray)
+{
+  // Step values
+  int stepX = ray.direction.x < 0 ? -1 : 1;
+  int stepZ = ray.direction.z < 0 ? -1 : 1;
+
+  // Inverse direction
+  float tDeltaX = abs(1.0f / ray.direction.x);
+  float tDeltaZ = abs(1.0f / ray.direction.z);
+
+  // t values
+  float tMax = 0.0f;
+  float tMaxX =
+      (ray.direction.x > 0 ? ceil(ray.origin.x) - ray.origin.x : ray.origin.x - floor(ray.origin.x)) * tDeltaX;
+  float tMaxZ =
+      (ray.direction.z > 0 ? ceil(ray.origin.z) - ray.origin.z : ray.origin.z - floor(ray.origin.z)) * tDeltaZ;
+
+  int blockPosX = floor(ray.origin.x);
+  int blockPosZ = floor(ray.origin.z);
+
+  while (blockPosX >= 0 && blockPosX < 64 && blockPosZ >= 0 && blockPosZ < 64)
+  {
+    uint block = s_Grid[blockPosZ * 64 + blockPosX];
+
+    if (block == 1)
+    {
+      //result->block = block;
+      return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1));
+    }
+
+    if (tMaxX < tMaxZ)
+    {
+      blockPosX += stepX;
+      //result->face = stepX > 0 ? EFace_West : EFace_East;
+      tMaxX += tDeltaX;
+      tMax = tMaxX;
+    }
+    else
+    {
+      blockPosZ += stepZ;
+      //result->face = stepZ > 0 ? EFace_South : EFace_North;
+      tMaxZ += tDeltaZ;
+      tMax = tMaxZ;
+    }
+  }
+
+  return -1.0f;
 }
 
 static inline float IntersectRaySphere(const Ray ray, const float3 origin, float radius)
@@ -160,44 +210,60 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
       shapeId    = i;
     }
   }
+
+  // Do grid intersection
+  t = IntersectRayGrid(ray);
+  if (t >= 0.0f && t < ray.length)
+  {
+    ray.length = t;
+    shapeId    = 6;
+  }
+
   if (shapeId != -1)
   {
-    float3 light = normalize(float3(0.3f, 0.6f, -1.0f));
-
-    // Get intersection normal
-    float3 normal             = float3(0.0f, 0.0f, 0.0f);
-    const float3 intersection = ray.origin + ray.length * ray.direction;
-    switch (s_Shapes[shapeId].type)
+    float3 color = float3(1.0f, 1.0f, 1.0f);
+    if (shapeId == 6)
     {
-    case 0:
-      normal = (intersection - s_Shapes[shapeId].originOrNormalOrMinXyz) / s_Shapes[shapeId].radiusOrDistanceOrMaxX;
-      break;
-    case 1:
-      normal = s_Shapes[shapeId].originOrNormalOrMinXyz;
-      break;
-    case 2:
+    }
+    else
     {
-      float3 max = { s_Shapes[shapeId].radiusOrDistanceOrMaxX, s_Shapes[shapeId].maxY, s_Shapes[shapeId].maxZ };
-      // https://blog.johnnovak.net/2016/10/22/the-nim-raytracer-project-part-4-calculating-box-normals/
-      float3 c   = (s_Shapes[shapeId].originOrNormalOrMinXyz + max) * 0.5f; // aabb center
-      float3 p   = intersection - c;                                        // vector from intersection to center
-      float3 d   = (max - s_Shapes[shapeId].originOrNormalOrMinXyz) * 0.5f; //??
-      float bias = 1.0001f;
+      float3 light = normalize(float3(0.3f, 0.6f, -1.0f));
 
-      normal = normalize(float3((float)((int)(p.x / abs(d.x) * bias)), (float)((int)(p.y / d.y * bias)),
-                                (float)((int)(p.z / d.z * bias))));
-    }
-    break;
-    case 3:
-      // TODO
-      break;
-    default:
-      break;
-    }
+      // Get intersection normal
+      float3 normal             = float3(0.0f, 0.0f, 0.0f);
+      const float3 intersection = ray.origin + ray.length * ray.direction;
+      switch (s_Shapes[shapeId].type)
+      {
+      case 0:
+        normal = (intersection - s_Shapes[shapeId].originOrNormalOrMinXyz) / s_Shapes[shapeId].radiusOrDistanceOrMaxX;
+        break;
+      case 1:
+        normal = s_Shapes[shapeId].originOrNormalOrMinXyz;
+        break;
+      case 2:
+      {
+        float3 max = { s_Shapes[shapeId].radiusOrDistanceOrMaxX, s_Shapes[shapeId].maxY, s_Shapes[shapeId].maxZ };
+        // https://blog.johnnovak.net/2016/10/22/the-nim-raytracer-project-part-4-calculating-box-normals/
+        float3 c   = (s_Shapes[shapeId].originOrNormalOrMinXyz + max) * 0.5f; // aabb center
+        float3 p   = intersection - c;                                        // vector from intersection to center
+        float3 d   = (max - s_Shapes[shapeId].originOrNormalOrMinXyz) * 0.5f; //??
+        float bias = 1.0001f;
 
-    float3 color = s_Shapes[shapeId].color;
-    color *= clamp(dot(normal, light), 0.0f, 1.0f);
-    color = sqrt(color);
+        normal = normalize(float3((float)((int)(p.x / abs(d.x) * bias)), (float)((int)(p.y / d.y * bias)),
+                                  (float)((int)(p.z / d.z * bias))));
+      }
+      break;
+      case 3:
+        // TODO
+        break;
+      default:
+        break;
+      }
+
+      color = s_Shapes[shapeId].color;
+      color *= clamp(dot(normal, light), 0.0f, 1.0f);
+      color = sqrt(color);
+    }
 
     s_Texture[dispatchThreadId.xy] = float4(color, 1.0f);
   }

@@ -60,6 +60,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="mj_raytracer_hlsl.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -70,5 +71,8 @@
     <FxCompile Include="VSQuadOut.hlsl" />
     <FxCompile Include="PSQuadOut.hlsl" />
     <FxCompile Include="CSRaytracer.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="raycaster-fps.rc" />
   </ItemGroup>
 </Project>
