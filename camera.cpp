@@ -21,27 +21,27 @@ void CameraMovement(Camera& camera)
 
   if (mj::input::GetKey(Key::KeyW))
   {
-    camera.position += camera.rotation * glm::vec3(0, 0, 1) * dt * s_MovementFactor;
+    glm::vec3 vec = camera.rotation * glm::vec3(0, 0, 1);
+    vec.y         = 0.0f;
+    camera.position += glm::normalize(vec) * dt * s_MovementFactor;
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    camera.position += camera.rotation * glm::vec3(-1, 0, 0) * dt * s_MovementFactor;
+    glm::vec3 vec = camera.rotation * glm::vec3(-1, 0, 0);
+    vec.y         = 0.0f;
+    camera.position += glm::normalize(vec) * dt * s_MovementFactor;
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    camera.position += camera.rotation * glm::vec3(0, 0, -1) * dt * s_MovementFactor;
+    glm::vec3 vec = camera.rotation * glm::vec3(0, 0, -1);
+    vec.y         = 0.0f;
+    camera.position += glm::normalize(vec) * dt * s_MovementFactor;
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    camera.position += camera.rotation * glm::vec3(1, 0, 0) * dt * s_MovementFactor;
-  }
-  if (mj::input::GetKey(Key::Space))
-  {
-    camera.position += glm::vec3(0, 1, 0) * dt * s_MovementFactor;
-  }
-  if (mj::input::GetKey(Key::LeftCtrl))
-  {
-    camera.position += glm::vec3(0, -1, 0) * dt * s_MovementFactor;
+    glm::vec3 vec = camera.rotation * glm::vec3(1, 0, 0);
+    vec.y         = 0.0f;
+    camera.position += glm::normalize(vec) * dt * s_MovementFactor;
   }
 
   int32_t dx, dy;
