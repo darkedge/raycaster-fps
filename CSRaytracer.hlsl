@@ -79,6 +79,7 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
   const float tDeltaZ = abs(1.0f / ray.direction.z);
 
   // t values
+  float tMax = 0.0f;
   float tMaxX =
       (ray.direction.x > 0 ? ceil(ray.origin.x) - ray.origin.x : ray.origin.x - floor(ray.origin.x)) * tDeltaX;
   float tMaxY =
@@ -95,9 +96,8 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
 
     if (block == 1)
     {
-      //return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1), result);
-      result.uv = float2(1.0f, 0.0f);
-      return true;
+      // result->block = block;
+      return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1), result);
     }
 
     if (tMaxX < tMaxY)
@@ -106,23 +106,20 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
       {
         blockPosX += stepX;
         tMaxX += tDeltaX;
-        result.t = tMaxX;
+        tMax = tMaxX;
       }
       else
       {
         blockPosZ += stepZ;
         tMaxZ += tDeltaZ;
-        result.t = tMaxZ;
+        tMax = tMaxZ;
       }
     }
     else
     {
       if (tMaxY < tMaxZ)
       {
-        tMaxY += tDeltaY;
         result.t = tMaxY;
-        //result.uv.x = floor(ray.origin.x + tMaxY * ray.direction.x);
-        //result.uv.y = floor(ray.origin.z + tMaxY * ray.direction.z);
         result.uv = float2(0.0f, 1.0f);
         return true;
       }
@@ -130,7 +127,7 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
       {
         blockPosZ += stepZ;
         tMaxZ += tDeltaZ;
-        result.t = tMaxZ;
+        tMax = tMaxZ;
       }
     }
   }
