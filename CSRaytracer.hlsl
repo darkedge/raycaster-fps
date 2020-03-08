@@ -57,7 +57,7 @@ static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const floa
 
   if (tmax >= tmin)
   {
-    result.t = tmin;
+    result.t  = tmin;
     result.uv = float2(1.0f, 0.0f);
     return true;
   }
@@ -96,8 +96,21 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
 
     if (block == 1)
     {
-      // result->block = block;
-      return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1), result);
+      if (tMax == tMaxZ)
+      {
+        tMax -= tDeltaZ;
+        result.t    = tMax;
+        result.uv.x = ray.origin.x + tMax * ray.direction.x - blockPosX;
+        result.uv.y = ray.origin.y + tMax * ray.direction.y;
+      }
+      else
+      {
+        tMax -= tDeltaX;
+        result.t    = tMax;
+        result.uv.x = ray.origin.z + tMax * ray.direction.z - blockPosZ;
+        result.uv.y = ray.origin.y + tMax * ray.direction.y;
+      }
+      return true;
     }
 
     if (tMaxX < tMaxY)
@@ -119,8 +132,9 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
     {
       if (tMaxY < tMaxZ)
       {
-        result.t = tMaxY;
-        result.uv = float2(0.0f, 1.0f);
+        result.t    = tMaxY;
+        result.uv.x = ray.origin.x + result.t * ray.direction.x - blockPosX;
+        result.uv.y = ray.origin.z + result.t * ray.direction.z - blockPosZ;
         return true;
       }
       else
@@ -204,7 +218,7 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
     float3 color = float3(1.0f, 1.0f, 1.0f);
 
-    s_Texture[dispatchThreadId.xy] = float4(hit.uv, 1.0f, 1.0f);
+    s_Texture[dispatchThreadId.xy] = float4(hit.uv, 0.0f, 1.0f);
   }
   else
   {
