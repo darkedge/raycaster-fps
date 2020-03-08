@@ -13,6 +13,12 @@ struct Ray
   float length;
 };
 
+struct RaycastHit
+{
+  float t;
+  float2 uv;
+};
+
 StructuredBuffer<uint> s_Grid : register(t0);
 
 cbuffer Constants : register(b0)
@@ -27,7 +33,7 @@ cbuffer Constants : register(b0)
 RWTexture2D<float4> s_Texture;
 
 // https://gamedev.stackexchange.com/a/146362
-static inline float IntersectRayAABB(const Ray ray, const float3 amin, const float3 amax)
+static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const float3 amax, out RaycastHit result)
 {
   float3 dirInv = 1.0f / ray.direction;
 
@@ -51,28 +57,33 @@ static inline float IntersectRayAABB(const Ray ray, const float3 amin, const flo
 
   if (tmax >= tmin)
   {
-    return tmin;
+    result.t = tmin;
+    result.uv = float2(1.0f, 0.0f);
+    return true;
   }
   else
   {
-    return -1.0f;
+    return false;
   }
 }
 
-static inline float IntersectRayGrid(const Ray ray)
+static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
 {
   // Step values
-  int stepX = ray.direction.x < 0 ? -1 : 1;
-  int stepZ = ray.direction.z < 0 ? -1 : 1;
+  const int stepX = ray.direction.x < 0 ? -1 : 1;
+  const int stepZ = ray.direction.z < 0 ? -1 : 1;
 
   // Inverse direction
-  float tDeltaX = abs(1.0f / ray.direction.x);
-  float tDeltaZ = abs(1.0f / ray.direction.z);
+  const float tDeltaX = abs(1.0f / ray.direction.x);
+  const float tDeltaY = abs(1.0f / ray.direction.y);
+  const float tDeltaZ = abs(1.0f / ray.direction.z);
 
   // t values
   float tMax = 0.0f;
   float tMaxX =
       (ray.direction.x > 0 ? ceil(ray.origin.x) - ray.origin.x : ray.origin.x - floor(ray.origin.x)) * tDeltaX;
+  float tMaxY =
+      (ray.direction.y > 0 ? ceil(ray.origin.y) - ray.origin.y : ray.origin.y - floor(ray.origin.y)) * tDeltaY;
   float tMaxZ =
       (ray.direction.z > 0 ? ceil(ray.origin.z) - ray.origin.z : ray.origin.z - floor(ray.origin.z)) * tDeltaZ;
 
@@ -86,26 +97,42 @@ static inline float IntersectRayGrid(const Ray ray)
     if (block == 1)
     {
       // result->block = block;
-      return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1));
+      return IntersectRayAABB(ray, float3(blockPosX, 0.0f, blockPosZ), float3(blockPosX + 1, 1.0f, blockPosZ + 1), result);
     }
 
-    if (tMaxX < tMaxZ)
+    if (tMaxX < tMaxY)
     {
-      blockPosX += stepX;
-      // result->face = stepX > 0 ? EFace_West : EFace_East;
-      tMaxX += tDeltaX;
-      tMax = tMaxX;
+      if (tMaxX < tMaxZ)
+      {
+        blockPosX += stepX;
+        tMaxX += tDeltaX;
+        tMax = tMaxX;
+      }
+      else
+      {
+        blockPosZ += stepZ;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
     }
     else
     {
-      blockPosZ += stepZ;
-      // result->face = stepZ > 0 ? EFace_South : EFace_North;
-      tMaxZ += tDeltaZ;
-      tMax = tMaxZ;
+      if (tMaxY < tMaxZ)
+      {
+        result.t = tMaxY;
+        result.uv = float2(0.0f, 1.0f);
+        return true;
+      }
+      else
+      {
+        blockPosZ += stepZ;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
     }
   }
 
-  return -1.0f;
+  return false;
 }
 
 static inline float IntersectRaySphere(const Ray ray, const float3 origin, float radius)
@@ -170,14 +197,14 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
   ray.direction = normalize(p - s_Camera.position);
 
   // Do grid intersection
-  float t = IntersectRayGrid(ray);
-  if (t >= 0.0f && t < ray.length)
+  RaycastHit hit;
+  if (IntersectRayGrid(ray, hit))
   {
-    ray.length = t;
+    ray.length = hit.t;
 
     float3 color = float3(1.0f, 1.0f, 1.0f);
 
-    s_Texture[dispatchThreadId.xy] = float4(color, 1.0f);
+    s_Texture[dispatchThreadId.xy] = float4(hit.uv, 1.0f, 1.0f);
   }
   else
   {
