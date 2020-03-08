@@ -99,15 +99,29 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
       if (tMax == tMaxZ)
       {
         tMax -= tDeltaZ;
-        result.t    = tMax;
-        result.uv.x = ray.origin.x + tMax * ray.direction.x - blockPosX;
+        result.t = tMax;
+        if (stepZ > 0)
+        {
+          result.uv.x = ray.origin.x + tMax * ray.direction.x - blockPosX;
+        }
+        else
+        {
+          result.uv.x = 1.0f - (ray.origin.x + tMax * ray.direction.x - blockPosX);
+        }
         result.uv.y = ray.origin.y + tMax * ray.direction.y;
       }
       else
       {
         tMax -= tDeltaX;
-        result.t    = tMax;
-        result.uv.x = ray.origin.z + tMax * ray.direction.z - blockPosZ;
+        result.t = tMax;
+        if (stepX > 0)
+        {
+          result.uv.x = 1.0f - (ray.origin.z + tMax * ray.direction.z - blockPosZ);
+        }
+        else
+        {
+          result.uv.x = ray.origin.z + tMax * ray.direction.z - blockPosZ;
+        }
         result.uv.y = ray.origin.y + tMax * ray.direction.y;
       }
       return true;
