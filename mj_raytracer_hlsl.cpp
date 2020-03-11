@@ -284,7 +284,10 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   pDeviceContext->CSSetShader(s_pComputeShader, nullptr, 0);
   assert(s_pUnorderedAccessView);
   pDeviceContext->CSSetUnorderedAccessViews(0, 1, &s_pUnorderedAccessView, nullptr);
+  assert(s_pConstantBuffer);
   pDeviceContext->CSSetConstantBuffers(0, 1, &s_pConstantBuffer);
+  assert(s_pSamplerState);
+  pDeviceContext->CSSetSamplers(0, 1, &s_pSamplerState);
   ID3D11ShaderResourceView* ppSrv[2] = { s_pGridSrv, s_pShaderResourceView };
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
@@ -295,6 +298,8 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   // Unbind
   ID3D11ShaderResourceView* ppSrvNull[2] = {};
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrvNull), ppSrvNull);
+  ID3D11SamplerState* ppSsNull[1] = {};
+  pDeviceContext->CSSetSamplers(0, MJ_COUNTOF(ppSsNull), ppSsNull);
   ID3D11Buffer* ppCbNull[1] = { nullptr };
   pDeviceContext->CSSetConstantBuffers(0, 1, ppCbNull);
   ID3D11UnorderedAccessView* ppUavNull[1] = {};

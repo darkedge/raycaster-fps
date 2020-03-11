@@ -13,14 +13,9 @@ struct Ray
   float length;
 };
 
-struct RaycastHit
-{
-  float t;
-  float2 uv;
-};
-
 StructuredBuffer<uint> s_Grid : register(t0);
 Texture2DArray s_TextureArray : register(t1);
+sampler Sampler : register(s0);
 
 cbuffer Constants : register(b0)
 {
@@ -33,6 +28,7 @@ cbuffer Constants : register(b0)
 
 RWTexture2D<float4> s_Texture;
 
+#if 0
 // https://gamedev.stackexchange.com/a/146362
 static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const float3 amax, out RaycastHit result)
 {
@@ -67,9 +63,14 @@ static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const floa
     return false;
   }
 }
+#endif
 
-static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
+static inline float4 IntersectRayGrid(const Ray ray)
 {
+  float t;
+  float u;
+  float v;
+
   // Step values
   const int stepX = ray.direction.x < 0 ? -1 : 1;
   const int stepZ = ray.direction.z < 0 ? -1 : 1;
@@ -95,37 +96,38 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
   {
     uint block = s_Grid[blockPosZ * 64 + blockPosX];
 
-    if (block == 1)
+    if (block == 1) // Wall hit
     {
       if (tMax == tMaxZ)
       {
         tMax -= tDeltaZ;
-        result.t = tMax;
+        t = tMax;
         if (stepZ > 0)
         {
-          result.uv.x = ray.origin.x + tMax * ray.direction.x - blockPosX;
+          u = ray.origin.x + tMax * ray.direction.x - blockPosX;
         }
         else
         {
-          result.uv.x = 1.0f - (ray.origin.x + tMax * ray.direction.x - blockPosX);
+          u = 1.0f - (ray.origin.x + tMax * ray.direction.x - blockPosX);
         }
-        result.uv.y = ray.origin.y + tMax * ray.direction.y;
+        v = ray.origin.y + tMax * ray.direction.y;
       }
       else
       {
         tMax -= tDeltaX;
-        result.t = tMax;
+        t = tMax;
         if (stepX > 0)
         {
-          result.uv.x = 1.0f - (ray.origin.z + tMax * ray.direction.z - blockPosZ);
+          u = 1.0f - (ray.origin.z + tMax * ray.direction.z - blockPosZ);
         }
         else
         {
-          result.uv.x = ray.origin.z + tMax * ray.direction.z - blockPosZ;
+          u = ray.origin.z + tMax * ray.direction.z - blockPosZ;
         }
-        result.uv.y = ray.origin.y + tMax * ray.direction.y;
+        v = ray.origin.y + tMax * ray.direction.y;
       }
-      return true;
+
+      return s_TextureArray.SampleLevel(Sampler, float3(u, (1.0f - v), 0.0f), 0);
     }
 
     if (tMaxX < tMaxY)
@@ -145,12 +147,20 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
     }
     else
     {
-      if (tMaxY < tMaxZ)
+      if (tMaxY < tMaxZ) // Floor/ceiling hit
       {
-        result.t    = tMaxY;
-        result.uv.x = ray.origin.x + result.t * ray.direction.x - blockPosX;
-        result.uv.y = ray.origin.z + result.t * ray.direction.z - blockPosZ;
-        return true;
+        t = tMaxY;
+        u = ray.origin.x + t * ray.direction.x - blockPosX;
+        v = ray.origin.z + t * ray.direction.z - blockPosZ;
+
+        if (ray.direction.y > 0)
+        {
+          return s_TextureArray.SampleLevel(Sampler, float3(u, v, 2.0f), 0);
+        }
+        else
+        {
+          return s_TextureArray.SampleLevel(Sampler, float3(u, v, 1.0f), 0);
+        }
       }
       else
       {
@@ -161,7 +171,7 @@ static inline bool IntersectRayGrid(const Ray ray, out RaycastHit result)
     }
   }
 
-  return false;
+  return float4(1.0f, 0.0f, 1.0f, 1.0f);
 }
 
 static inline float IntersectRaySphere(const Ray ray, const float3 origin, float radius)
@@ -226,17 +236,5 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
   ray.direction = normalize(p - s_Camera.position);
 
   // Do grid intersection
-  RaycastHit hit;
-  if (IntersectRayGrid(ray, hit))
-  {
-    ray.length = hit.t;
-
-    float3 color = float3(1.0f, 1.0f, 1.0f);
-
-    s_Texture[dispatchThreadId.xy] = float4(hit.uv, 0.0f, 1.0f);
-  }
-  else
-  {
-    s_Texture[dispatchThreadId.xy] = float4(1.0f, 0.0f, 1.0f, 1.0f);
-  }
+  s_Texture[dispatchThreadId.xy] = IntersectRayGrid(ray);
 }
