@@ -7,6 +7,7 @@
 
 #include <d3d11.h>
 #include <assert.h>
+#include "dds.h"
 
 #include "intermediate/CSRaytracer.h"
 #include "resource.h"
@@ -23,6 +24,11 @@ static ID3D11ShaderResourceView* s_pGridSrv;
 static ID3D11Buffer* s_pGridBuffer;
 static uint32_t s_Grid[64 * 64];
 
+// Texture2DArray
+static ID3D11Texture2D* s_pTexture;
+static ID3D11SamplerState* s_pSamplerState;
+static ID3D11ShaderResourceView* s_pShaderResourceView;
+
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
 {
@@ -37,6 +43,108 @@ static void Reset()
   s_Constant.s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
   s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
   CameraInit(MJ_REF s_Constant.s_Camera);
+}
+
+static bool InitTexture2DArray(ID3D11Device* pDevice)
+{
+  bool success = false;
+
+  HRSRC resourceHandle = FindResource(0, MAKEINTRESOURCE(MJ_RC_TEXTURE_ARRAY), RT_RCDATA);
+  if (resourceHandle)
+  {
+    HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
+    if (dataHandle)
+    {
+      void* resourceData = LockResource(dataHandle);
+      if (resourceData)
+      {
+        DWORD resourceSize = SizeofResource(nullptr, resourceHandle);
+        mj::IStream stream(resourceData, resourceSize);
+
+        // DDS header
+        MJ_UNINITIALIZED DWORD* dwMagic;
+        MJ_UNINITIALIZED DirectX::DDS_HEADER* header;
+        MJ_UNINITIALIZED DirectX::DDS_HEADER_DXT10* header10;
+
+        stream.Fetch(dwMagic).Fetch(header).Fetch(header10);
+
+        if (stream.Good())
+        {
+          D3D11_TEXTURE2D_DESC desc = {};
+          desc.Width                = header->width;
+          desc.Height               = header->height;
+          desc.MipLevels            = header->mipMapCount;
+          desc.ArraySize            = header10->arraySize;
+          desc.Format               = header10->dxgiFormat;
+          desc.SampleDesc.Count     = 1;
+          desc.Usage                = D3D11_USAGE_IMMUTABLE;
+          desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
+
+          UINT numDesc = desc.MipLevels * desc.ArraySize;
+          D3D11_SUBRESOURCE_DATA* pSubResourceData =
+              (D3D11_SUBRESOURCE_DATA*)alloca(numDesc * sizeof(D3D11_SUBRESOURCE_DATA));
+          if (pSubResourceData)
+          {
+            char* pData = stream.Position();
+            for (size_t i = 0; i < numDesc; i++)
+            {
+              pSubResourceData[i].pSysMem          = pData;
+              pSubResourceData[i].SysMemPitch      = header->pitchOrLinearSize;
+              pSubResourceData[i].SysMemSlicePitch = 0;
+              pData += (size_t)header->height * header->pitchOrLinearSize;
+            }
+
+            assert(!s_pTexture);
+            WIN32_ASSERT(pDevice->CreateTexture2D(&desc, pSubResourceData, &s_pTexture));
+            SetDebugName(s_pTexture, "s_pTexture");
+
+            {
+              // Sampler
+              D3D11_SAMPLER_DESC samplerDesc = {};
+              samplerDesc.Filter             = D3D11_FILTER_MIN_MAG_MIP_POINT;
+              samplerDesc.AddressU           = D3D11_TEXTURE_ADDRESS_CLAMP;
+              samplerDesc.AddressV           = D3D11_TEXTURE_ADDRESS_CLAMP;
+              samplerDesc.AddressW           = D3D11_TEXTURE_ADDRESS_CLAMP;
+              samplerDesc.MipLODBias         = 0.0f;
+              samplerDesc.MaxAnisotropy      = 1;
+              samplerDesc.ComparisonFunc     = D3D11_COMPARISON_ALWAYS;
+              samplerDesc.BorderColor[0]     = 0.0f;
+              samplerDesc.BorderColor[1]     = 0.0f;
+              samplerDesc.BorderColor[2]     = 0.0f;
+              samplerDesc.BorderColor[3]     = 0.0f;
+              samplerDesc.MinLOD             = 0.0f;
+              samplerDesc.MaxLOD             = D3D11_FLOAT32_MAX;
+
+              // Create the texture sampler state.
+              assert(!s_pSamplerState);
+              WIN32_ASSERT(pDevice->CreateSamplerState(&samplerDesc, &s_pSamplerState));
+              SetDebugName(s_pSamplerState, "s_pSamplerState");
+            }
+
+            {
+              D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+              srvDesc.Format                          = desc.Format;
+              srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+              srvDesc.Texture2DArray.ArraySize        = header10->arraySize;
+              srvDesc.Texture2DArray.FirstArraySlice  = 0;
+              srvDesc.Texture2DArray.MipLevels        = 1;
+              srvDesc.Texture2DArray.MostDetailedMip  = 0;
+
+              // Create the shader resource view for the texture.
+              assert(!s_pShaderResourceView);
+              assert(s_pTexture);
+              WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pShaderResourceView));
+              SetDebugName(s_pShaderResourceView, "s_pShaderResourceView");
+            }
+
+            success = true;
+          }
+        }
+      }
+    }
+  }
+
+  return success;
 }
 
 static bool ParseLevel(ID3D11Device* pDevice, uint16_t* arr, DWORD arraySize)
@@ -106,7 +214,7 @@ static bool LoadLevel(ID3D11Device* pDevice)
   return success;
 }
 
-bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture)
+bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
 {
   assert(!s_pComputeShader);
   WIN32_ASSERT(pDevice->CreateComputeShader(CSRaytracer, sizeof(CSRaytracer), nullptr, &s_pComputeShader));
@@ -117,7 +225,7 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture)
   descView.ViewDimension                    = D3D11_UAV_DIMENSION_TEXTURE2D;
   descView.Format                           = DXGI_FORMAT_R32G32B32A32_FLOAT;
   descView.Texture2D.MipSlice               = 0;
-  WIN32_ASSERT(pDevice->CreateUnorderedAccessView(s_pTexture, &descView, &s_pUnorderedAccessView));
+  WIN32_ASSERT(pDevice->CreateUnorderedAccessView(pTexture, &descView, &s_pUnorderedAccessView));
   SetDebugName(s_pUnorderedAccessView, "mj_unordered_access_view");
 
   s_Constant.width  = MJ_RT_WIDTH;
@@ -141,6 +249,11 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture)
   SetDebugName(s_pConstantBuffer, "mj_constant_buffer");
 
   if (!LoadLevel(pDevice))
+  {
+    return false;
+  }
+
+  if (!InitTexture2DArray(pDevice))
   {
     return false;
   }
@@ -172,7 +285,7 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   assert(s_pUnorderedAccessView);
   pDeviceContext->CSSetUnorderedAccessViews(0, 1, &s_pUnorderedAccessView, nullptr);
   pDeviceContext->CSSetConstantBuffers(0, 1, &s_pConstantBuffer);
-  ID3D11ShaderResourceView* ppSrv[1] = { s_pGridSrv };
+  ID3D11ShaderResourceView* ppSrv[2] = { s_pGridSrv, s_pShaderResourceView };
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
   // Run compute shader
@@ -180,11 +293,11 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
   // Unbind
-  ID3D11ShaderResourceView* ppSrvNull[1] = { nullptr };
+  ID3D11ShaderResourceView* ppSrvNull[2] = {};
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrvNull), ppSrvNull);
   ID3D11Buffer* ppCbNull[1] = { nullptr };
   pDeviceContext->CSSetConstantBuffers(0, 1, ppCbNull);
-  ID3D11UnorderedAccessView* ppUavNull[1] = { nullptr };
+  ID3D11UnorderedAccessView* ppUavNull[1] = {};
   pDeviceContext->CSSetUnorderedAccessViews(0, 1, ppUavNull, nullptr);
   pDeviceContext->CSSetShader(nullptr, nullptr, 0);
 }

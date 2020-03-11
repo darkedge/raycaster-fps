@@ -20,6 +20,7 @@ struct RaycastHit
 };
 
 StructuredBuffer<uint> s_Grid : register(t0);
+Texture2DArray s_TextureArray : register(t1);
 
 cbuffer Constants : register(b0)
 {

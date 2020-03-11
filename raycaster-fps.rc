@@ -60,3 +60,4 @@ END
 #endif    // not APSTUDIO_INVOKED
 
 MJ_RC_RESOURCE RCDATA "E1M1.bin"
+MJ_RC_TEXTURE_ARRAY RCDATA "texture_array.dds"

@@ -11,3 +11,4 @@ BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel: true
 AlignEscapedNewlines: DontAlign
+AlwaysBreakTemplateDeclarations: Yes

@@ -61,6 +61,7 @@
     <ClInclude Include="game.h" />
     <ClInclude Include="mj_raytracer_hlsl.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="DDS.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

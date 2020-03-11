@@ -14,3 +14,4 @@
 #endif
 
 #define MJ_RC_RESOURCE 300
+#define MJ_RC_TEXTURE_ARRAY 301
