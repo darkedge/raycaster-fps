@@ -118,7 +118,7 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture)
   descView.Format                           = DXGI_FORMAT_R32G32B32A32_FLOAT;
   descView.Texture2D.MipSlice               = 0;
   WIN32_ASSERT(pDevice->CreateUnorderedAccessView(s_pTexture, &descView, &s_pUnorderedAccessView));
-  SetDebugName(s_pComputeShader, "mj_unordered_access_view");
+  SetDebugName(s_pUnorderedAccessView, "mj_unordered_access_view");
 
   s_Constant.width  = MJ_RT_WIDTH;
   s_Constant.height = MJ_RT_HEIGHT;
