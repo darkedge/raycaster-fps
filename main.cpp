@@ -193,7 +193,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
-  sd.BufferCount                        = 2;
+  sd.BufferCount                        = 1;
   sd.BufferDesc.Width                   = 0;
   sd.BufferDesc.Height                  = 0;
   sd.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -205,7 +205,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   sd.SampleDesc.Count                   = 1;
   sd.SampleDesc.Quality                 = 0;
   sd.Windowed                           = TRUE;
-  sd.SwapEffect                         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+  sd.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
 
   UINT createDeviceFlags = 0;
 #ifdef _DEBUG
