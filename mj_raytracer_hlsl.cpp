@@ -42,6 +42,7 @@ static void Reset()
 {
   s_Constant.s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
   s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
+  s_Constant.s_Camera.frame    = 0;
   CameraInit(MJ_REF s_Constant.s_Camera);
 }
 
@@ -273,6 +274,7 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
 
   auto mat       = glm::identity<glm::mat4>();
   s_Constant.mat = glm::translate(mat, s_Constant.s_Camera.position) * glm::mat4_cast(s_Constant.s_Camera.rotation);
+  s_Constant.s_Camera.frame++;
 
   MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedSubresource;
   WIN32_ASSERT(pDeviceContext->Map(s_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));

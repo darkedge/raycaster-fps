@@ -5,7 +5,7 @@
 struct Camera
 {
   glm::vec3 position;
-  float pad0;
+  int frame;
   glm::quat rotation;
 };
 

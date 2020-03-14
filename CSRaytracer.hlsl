@@ -3,6 +3,7 @@
 struct Camera
 {
   float3 position;
+  int frame;
   float4 rotation;
 };
 
@@ -27,6 +28,17 @@ cbuffer Constants : register(b0)
 };
 
 RWTexture2D<float4> s_Texture;
+
+static const uint k = 1664525U; // Numerical Recipes
+
+float3 hash(uint3 x)
+{
+  x = ((x >> 8U) ^ x.yzx) * k;
+  x = ((x >> 8U) ^ x.yzx) * k;
+  x = ((x >> 8U) ^ x.yzx) * k;
+
+  return float3(x) * (1.0 / float(0xffffffffU));
+}
 
 #if 0
 // https://gamedev.stackexchange.com/a/146362
@@ -225,6 +237,9 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
   if (x >= width || y >= height)
     return;
 
+  uint3 p                        = uint3(x, y, s_Camera.frame);
+  s_Texture[dispatchThreadId.xy] = float4(hash(p), 1.0f);
+#if 0
   float2 ndc = PixelToNDCSpace(x, y, width, height);
   float2 ss  = NDCToScreenSpace(ndc, (float)width / height);
   float2 cs  = ScreenToCameraSpace(ss, radians(s_FieldOfView));
@@ -237,4 +252,5 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
 
   // Do grid intersection
   s_Texture[dispatchThreadId.xy] = IntersectRayGrid(ray);
+#endif
 }
