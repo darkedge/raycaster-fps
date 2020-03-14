@@ -77,6 +77,11 @@ static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const floa
 }
 #endif
 
+static inline float4 AttenuateSample(in float t, in float4 smpl)
+{
+  return smpl / sqrt(t);
+}
+
 static inline float4 IntersectRayGrid(const Ray ray)
 {
   float t;
@@ -139,7 +144,7 @@ static inline float4 IntersectRayGrid(const Ray ray)
         v = ray.origin.y + tMax * ray.direction.y;
       }
 
-      return s_TextureArray.SampleLevel(Sampler, float3(u, (1.0f - v), 0.0f), 0);
+      return AttenuateSample(t, s_TextureArray.SampleLevel(Sampler, float3(u, (1.0f - v), 0.0f), 0));
     }
 
     if (tMaxX < tMaxY)
@@ -167,11 +172,11 @@ static inline float4 IntersectRayGrid(const Ray ray)
 
         if (ray.direction.y > 0)
         {
-          return s_TextureArray.SampleLevel(Sampler, float3(u, v, 2.0f), 0);
+          return AttenuateSample(t, s_TextureArray.SampleLevel(Sampler, float3(u, v, 2.0f), 0));
         }
         else
         {
-          return s_TextureArray.SampleLevel(Sampler, float3(u, v, 1.0f), 0);
+          return AttenuateSample(t, s_TextureArray.SampleLevel(Sampler, float3(u, v, 1.0f), 0));
         }
       }
       else
