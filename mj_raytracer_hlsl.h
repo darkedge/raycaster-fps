@@ -18,7 +18,7 @@ namespace mj
     {
       glm::mat4 mat;
       Camera s_Camera;
-      const float s_FieldOfView = 45.0f; // Degrees
+      float fovDeg;
       int width;
       int height;
       float padding;

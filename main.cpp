@@ -148,18 +148,11 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-    {
-      ImGui::Begin("Hello, world!");
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-                  ImGui::GetIO().Framerate);
-      ImGui::End();
-    }
+    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
+    mj::d3d11::Update(g_pd3dDeviceContext);
 
     // Rendering
     ImGui::Render();
-    g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
-    mj::d3d11::Update(g_pd3dDeviceContext);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
     // Update and Render additional Platform Windows

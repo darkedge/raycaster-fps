@@ -11,6 +11,7 @@
 
 #include "intermediate/CSRaytracer.h"
 #include "resource.h"
+#include "imgui.h"
 
 static ID3D11ComputeShader* s_pComputeShader;
 static ID3D11UnorderedAccessView* s_pUnorderedAccessView;
@@ -29,6 +30,8 @@ static ID3D11Texture2D* s_pTexture;
 static ID3D11SamplerState* s_pSamplerState;
 static ID3D11ShaderResourceView* s_pShaderResourceView;
 
+static bool s_MouseLook = true;
+
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
 {
@@ -43,6 +46,7 @@ static void Reset()
   s_Constant.s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
   s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
   s_Constant.s_Camera.frame    = 0;
+  s_Constant.fovDeg            = 45.0f;
   CameraInit(MJ_REF s_Constant.s_Camera);
 }
 
@@ -264,7 +268,14 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
 
 void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
 {
-  CameraMovement(MJ_REF s_Constant.s_Camera);
+  if (mj::input::GetKeyDown(Key::F3))
+  {
+    s_MouseLook = !s_MouseLook;
+  }
+  if (s_MouseLook)
+  {
+    CameraMovement(MJ_REF s_Constant.s_Camera);
+  }
 
   // Reset button
   if (mj::input::GetKeyDown(Key::KeyR))
@@ -275,6 +286,15 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   auto mat       = glm::identity<glm::mat4>();
   s_Constant.mat = glm::translate(mat, s_Constant.s_Camera.position) * glm::mat4_cast(s_Constant.s_Camera.rotation);
   s_Constant.s_Camera.frame++;
+
+  {
+    ImGui::Begin("Hello, world!");
+    ImGui::Text("R to reset, F3 toggles mouselook");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
+    ImGui::SliderFloat("Field of view", &s_Constant.fovDeg, 5.0f, 170.0f);
+    ImGui::End();
+  }
 
   MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedSubresource;
   WIN32_ASSERT(pDeviceContext->Map(s_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
