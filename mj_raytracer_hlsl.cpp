@@ -336,4 +336,7 @@ void mj::hlsl::Destroy()
   SAFE_RELEASE(s_pConstantBuffer);
   SAFE_RELEASE(s_pGridSrv);
   SAFE_RELEASE(s_pGridBuffer);
+  SAFE_RELEASE(s_pTexture);
+  SAFE_RELEASE(s_pSamplerState);
+  SAFE_RELEASE(s_pShaderResourceView);
 }
