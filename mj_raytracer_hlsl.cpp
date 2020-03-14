@@ -50,6 +50,105 @@ static void Reset()
   CameraInit(MJ_REF s_Constant.s_Camera);
 }
 
+static bool InitObjectPlaceholder()
+{
+  bool voxelData   = false;
+  bool paletteData = false;
+
+  constexpr int32_t ID_VOX  = 542658390;
+  constexpr int32_t ID_MAIN = 1313423693;
+  constexpr int32_t ID_SIZE = 1163544915;
+  constexpr int32_t ID_XYZI = 1230657880;
+  constexpr int32_t ID_RGBA = 1094862674;
+
+  HRSRC resourceHandle = FindResource(0, MAKEINTRESOURCE(MJ_RC_OBJ_PLACEHOLDER), RT_RCDATA);
+  if (resourceHandle)
+  {
+    HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
+    if (dataHandle)
+    {
+      void* resourceData = LockResource(dataHandle);
+      if (resourceData)
+      {
+        DWORD resourceSize = SizeofResource(nullptr, resourceHandle);
+        mj::IStream stream(resourceData, resourceSize);
+
+        MJ_UNINITIALIZED int32_t* pId;
+        MJ_UNINITIALIZED uint32_t* versionNumber;
+
+        // Check header
+        if (stream.Fetch(MJ_REF pId).Fetch(MJ_REF versionNumber).Good() && (*pId == ID_VOX) && (*versionNumber == 150))
+        {
+          MJ_UNINITIALIZED uint32_t* pNumBytesChunkContent;
+          MJ_UNINITIALIZED uint32_t* pNumBytesChildrenChunks;
+          while (stream.SizeLeft() > 0)
+          {
+            if (stream.Fetch(MJ_REF pId)
+                    .Fetch(MJ_REF pNumBytesChunkContent)
+                    .Fetch(MJ_REF pNumBytesChildrenChunks)
+                    .Good())
+            {
+              switch (*pId)
+              {
+              case ID_MAIN: // Root node
+                break;
+              case ID_SIZE:
+              {
+                MJ_UNINITIALIZED uint32_t* pSizeX;
+                MJ_UNINITIALIZED uint32_t* pSizeY;
+                MJ_UNINITIALIZED uint32_t* pSizeZ;
+                if (stream.Fetch(MJ_REF pSizeX).Fetch(MJ_REF pSizeY).Fetch(MJ_REF pSizeZ).Good())
+                {
+                }
+              }
+              break;
+              case ID_XYZI:
+              {
+                MJ_UNINITIALIZED uint32_t* pNumVoxels;
+                if (stream.Fetch(MJ_REF pNumVoxels).Good())
+                {
+                  struct Voxel
+                  {
+                    uint8_t x;
+                    uint8_t y;
+                    uint8_t z;
+                    uint8_t colorIndex;
+                  };
+                  auto pVoxels = (Voxel*)stream.Position();
+                  stream.Skip(*pNumVoxels * 4);
+                  voxelData = true;
+                }
+              }
+              break;
+              case ID_RGBA:
+              {
+                struct RGBA
+                {
+                  uint8_t R;
+                  uint8_t G;
+                  uint8_t B;
+                  uint8_t A;
+                };
+
+                auto pPalette = (RGBA*)stream.Position();
+                stream.Skip(256 * sizeof(RGBA));
+                paletteData = true;
+              }
+              break;
+              default: // Skip irrelevant nodes
+                stream.Skip(*pNumBytesChunkContent);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return voxelData && paletteData;
+}
+
 static bool InitTexture2DArray(ID3D11Device* pDevice)
 {
   bool success = false;
@@ -71,7 +170,7 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
         MJ_UNINITIALIZED DirectX::DDS_HEADER* header;
         MJ_UNINITIALIZED DirectX::DDS_HEADER_DXT10* header10;
 
-        stream.Fetch(dwMagic).Fetch(header).Fetch(header10);
+        stream.Fetch(MJ_REF dwMagic).Fetch(MJ_REF header).Fetch(MJ_REF header10);
 
         if (stream.Good())
         {
@@ -259,6 +358,11 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
   }
 
   if (!InitTexture2DArray(pDevice))
+  {
+    return false;
+  }
+
+  if (!InitObjectPlaceholder())
   {
     return false;
   }

@@ -69,6 +69,20 @@ namespace mj
       return *this;
     }
 
+    IStream& Skip(size_t numBytes)
+    {
+      if (SizeLeft() >= numBytes)
+      {
+        this->position += numBytes;
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+      }
+      return *this;
+    }
+
     template <typename T>
     void Fetch(T*&&) = delete;
     template <typename T>
