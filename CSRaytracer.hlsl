@@ -209,9 +209,9 @@ static inline float IntersectRayPlane(const Ray ray, float3 normal, float distan
   return -(dot(ray.origin, normal) + distance) / dot(ray.direction, normal);
 }
 
-static inline float2 PixelToNDCSpace(float x, float y, uint width, uint height)
+static inline float2 PixelToNDCSpace(uint x, uint y, uint width, uint height)
 {
-  return float2((x + 0.5f) / width, (y + 0.5f) / height);
+  return float2(((float)x + 0.5f) / width, ((float)y + 0.5f) / height);
 }
 
 // aspect is x/y
@@ -226,8 +226,6 @@ static inline float2 ScreenToCameraSpace(const float2 ss, float fov)
   return ss * tan(fov * 0.5f);
 }
 
-static const int numSamples = 16; // samples per pixel
-
 // clang-format off
 [numthreads(16,16,1)]
 void main(uint3 dispatchThreadId : SV_DispatchThreadID)
@@ -239,31 +237,8 @@ void main(uint3 dispatchThreadId : SV_DispatchThreadID)
   if (x >= width || y >= height)
     return;
 
-  float4 sum = float4(0.0f, 0.0f, 0.0f, 0.0f);
-  for (int i = 0; i < numSamples; i++)
-  {
-    float3 h  = hash(uint3(x + i, y, s_Camera.frame));
-    float fx = (float)x + h.x;
-    float fy  = (float)y + h.y;
-
-    float2 ndc = PixelToNDCSpace(fx, fy, width, height);
-    float2 ss  = NDCToScreenSpace(ndc, (float)width / height);
-    float2 cs  = ScreenToCameraSpace(ss, radians(s_FieldOfView));
-
-    Ray ray;
-    float3 p      = mul(mat, float4(cs, 1, 1)).xyz;
-    ray.origin    = s_Camera.position;
-    ray.length    = FLT_MAX;
-    ray.direction = normalize(p - s_Camera.position);
-
-    // Do grid intersection
-    sum += IntersectRayGrid(ray);
-  }
-
-  sum /= numSamples;
-  sum.w = 1.0f;
-  s_Texture[dispatchThreadId.xy] = sum;
-
+  uint3 p                        = uint3(x, y, s_Camera.frame);
+  s_Texture[dispatchThreadId.xy] = float4(hash(p), 1.0f);
 #if 0
   float2 ndc = PixelToNDCSpace(x, y, width, height);
   float2 ss  = NDCToScreenSpace(ndc, (float)width / height);
