@@ -25,10 +25,20 @@ static ID3D11ShaderResourceView* s_pGridSrv;
 static ID3D11Buffer* s_pGridBuffer;
 static uint32_t s_Grid[64 * 64];
 
+// Object placeholder
+static ID3D11ShaderResourceView* s_pObjectSrv;
+static ID3D11Buffer* s_pObjectBuffer;
+static uint32_t s_Object[64 * 64 * 64];
+
+// Palette
+static ID3D11ShaderResourceView* s_pPaletteSrv;
+static ID3D11Buffer* s_pPaletteBuffer;
+static uint32_t s_Palette[256];
+
 // Texture2DArray
 static ID3D11Texture2D* s_pTexture;
-static ID3D11SamplerState* s_pSamplerState;
-static ID3D11ShaderResourceView* s_pShaderResourceView;
+static ID3D11SamplerState* s_pTextureSamplerState;
+static ID3D11ShaderResourceView* s_pTextureSrv;
 
 static bool s_MouseLook = true;
 
@@ -50,10 +60,11 @@ static void Reset()
   CameraInit(MJ_REF s_Constant.s_Camera);
 }
 
-static bool InitObjectPlaceholder()
+static bool InitObjectPlaceholder(ID3D11Device* pDevice)
 {
   bool voxelData   = false;
   bool paletteData = false;
+  bool sizeData    = false;
 
   constexpr int32_t ID_VOX  = 542658390;
   constexpr int32_t ID_MAIN = 1313423693;
@@ -83,9 +94,10 @@ static bool InitObjectPlaceholder()
           MJ_UNINITIALIZED uint32_t* pNumBytesChildrenChunks;
           while (stream.SizeLeft() > 0)
           {
-            if (stream.Fetch(MJ_REF pId)
-                    .Fetch(MJ_REF pNumBytesChunkContent)
-                    .Fetch(MJ_REF pNumBytesChildrenChunks)
+            if (stream
+                    .Fetch(MJ_REF pId)                     //
+                    .Fetch(MJ_REF pNumBytesChunkContent)   //
+                    .Fetch(MJ_REF pNumBytesChildrenChunks) //
                     .Good())
             {
               switch (*pId)
@@ -97,42 +109,131 @@ static bool InitObjectPlaceholder()
                 MJ_UNINITIALIZED uint32_t* pSizeX;
                 MJ_UNINITIALIZED uint32_t* pSizeY;
                 MJ_UNINITIALIZED uint32_t* pSizeZ;
-                if (stream.Fetch(MJ_REF pSizeX).Fetch(MJ_REF pSizeY).Fetch(MJ_REF pSizeZ).Good())
+                if (stream
+                        .Fetch(MJ_REF pSizeX) //
+                        .Fetch(MJ_REF pSizeY) //
+                        .Fetch(MJ_REF pSizeZ) //
+                        .Good())
                 {
+                  if ((*pSizeX == 64) && (*pSizeY == 64) && (*pSizeZ == 64))
+                  {
+                    sizeData = true;
+                  }
                 }
               }
               break;
               case ID_XYZI:
               {
                 MJ_UNINITIALIZED uint32_t* pNumVoxels;
-                if (stream.Fetch(MJ_REF pNumVoxels).Good())
+                if (stream
+                        .Fetch(MJ_REF pNumVoxels) //
+                        .Good())
                 {
-                  struct Voxel
+                  for (uint32_t i = 0; i < *pNumVoxels; i++)
                   {
-                    uint8_t x;
-                    uint8_t y;
-                    uint8_t z;
-                    uint8_t colorIndex;
-                  };
-                  auto pVoxels = (Voxel*)stream.Position();
-                  stream.Skip(*pNumVoxels * 4);
-                  voxelData = true;
+                    uint8_t* pX;
+                    uint8_t* pY;
+                    uint8_t* pZ;
+                    uint8_t* pColorIndex;
+                    if (stream
+                            .Fetch(MJ_REF pX)          //
+                            .Fetch(MJ_REF pY)          //
+                            .Fetch(MJ_REF pZ)          //
+                            .Fetch(MJ_REF pColorIndex) //
+                            .Good())
+                    {
+                      // Flip MagicaVoxel's right-handed Z-up to left-handed Y-up
+                      s_Object[*pY * 64 * 64 + *pZ * 64 + *pX] = *pColorIndex;
+                    }
+                  }
+                  {
+                    D3D11_BUFFER_DESC bufferDesc   = {};
+                    bufferDesc.ByteWidth           = *pNumVoxels * 4;
+                    bufferDesc.Usage               = D3D11_USAGE_IMMUTABLE;
+                    bufferDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE;
+                    bufferDesc.CPUAccessFlags      = 0;
+                    bufferDesc.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+                    bufferDesc.StructureByteStride = 4; // (x, y, z, colorIndex) : 1 byte for each component
+
+                    {
+                      D3D11_SUBRESOURCE_DATA subresourceData = {};
+                      subresourceData.pSysMem                = s_Object;
+                      subresourceData.SysMemPitch            = 0;
+                      subresourceData.SysMemSlicePitch       = 0;
+
+                      assert(!s_pObjectBuffer);
+                      WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData, &s_pObjectBuffer));
+                      SetDebugName(s_pObjectBuffer, "s_pObjectBuffer");
+                    }
+                  }
+
+                  {
+                    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                    srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_BUFFER;
+                    srvDesc.Format                          = DXGI_FORMAT_UNKNOWN;
+                    srvDesc.Buffer.FirstElement             = 0;
+                    srvDesc.Buffer.NumElements              = *pNumVoxels;
+
+                    assert(!s_pObjectSrv);
+                    WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pObjectBuffer, &srvDesc, &s_pObjectSrv));
+                    SetDebugName(s_pObjectSrv, "s_pObjectSrv");
+                  }
+                  if (s_pObjectBuffer && s_pObjectSrv)
+                  {
+                    voxelData = true;
+                  }
+                  else
+                  {
+                    SAFE_RELEASE(s_pObjectBuffer);
+                    SAFE_RELEASE(s_pObjectSrv);
+                  }
                 }
               }
               break;
               case ID_RGBA:
               {
-                struct RGBA
                 {
-                  uint8_t R;
-                  uint8_t G;
-                  uint8_t B;
-                  uint8_t A;
-                };
+                  D3D11_BUFFER_DESC bufferDesc   = {};
+                  bufferDesc.ByteWidth           = *pNumBytesChunkContent;
+                  bufferDesc.Usage               = D3D11_USAGE_IMMUTABLE;
+                  bufferDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE;
+                  bufferDesc.CPUAccessFlags      = 0;
+                  bufferDesc.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+                  bufferDesc.StructureByteStride = 4; // (R, G, B, A) : 1 byte for each component
 
-                auto pPalette = (RGBA*)stream.Position();
-                stream.Skip(256 * sizeof(RGBA));
-                paletteData = true;
+                  {
+                    D3D11_SUBRESOURCE_DATA subresourceData = {};
+                    subresourceData.pSysMem                = stream.Position();
+                    subresourceData.SysMemPitch            = 0;
+                    subresourceData.SysMemSlicePitch       = 0;
+
+                    assert(!s_pPaletteBuffer);
+                    WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData, &s_pPaletteBuffer));
+                    SetDebugName(s_pPaletteBuffer, "s_pPaletteBuffer");
+                  }
+                }
+
+                {
+                  D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+                  srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_BUFFER;
+                  srvDesc.Format                          = DXGI_FORMAT_UNKNOWN;
+                  srvDesc.Buffer.FirstElement             = 0;
+                  srvDesc.Buffer.NumElements              = 256;
+
+                  assert(!s_pPaletteSrv);
+                  WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pPaletteBuffer, &srvDesc, &s_pPaletteSrv));
+                  SetDebugName(s_pPaletteSrv, "s_pPaletteSrv");
+                }
+                stream.Skip(*pNumBytesChunkContent);
+                if (s_pPaletteBuffer && s_pPaletteSrv)
+                {
+                  paletteData = true;
+                }
+                else
+                {
+                  SAFE_RELEASE(s_pPaletteBuffer);
+                  SAFE_RELEASE(s_pPaletteSrv);
+                }
               }
               break;
               default: // Skip irrelevant nodes
@@ -146,7 +247,7 @@ static bool InitObjectPlaceholder()
     }
   }
 
-  return voxelData && paletteData;
+  return voxelData && paletteData && sizeData;
 }
 
 static bool InitTexture2DArray(ID3D11Device* pDevice)
@@ -220,9 +321,9 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
               samplerDesc.MaxLOD             = D3D11_FLOAT32_MAX;
 
               // Create the texture sampler state.
-              assert(!s_pSamplerState);
-              WIN32_ASSERT(pDevice->CreateSamplerState(&samplerDesc, &s_pSamplerState));
-              SetDebugName(s_pSamplerState, "s_pSamplerState");
+              assert(!s_pTextureSamplerState);
+              WIN32_ASSERT(pDevice->CreateSamplerState(&samplerDesc, &s_pTextureSamplerState));
+              SetDebugName(s_pTextureSamplerState, "s_pTextureSamplerState");
             }
 
             {
@@ -235,10 +336,10 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
               srvDesc.Texture2DArray.MostDetailedMip  = 0;
 
               // Create the shader resource view for the texture.
-              assert(!s_pShaderResourceView);
+              assert(!s_pTextureSrv);
               assert(s_pTexture);
-              WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pShaderResourceView));
-              SetDebugName(s_pShaderResourceView, "s_pShaderResourceView");
+              WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pTextureSrv));
+              SetDebugName(s_pTextureSrv, "s_pTextureSrv");
             }
 
             success = true;
@@ -246,6 +347,13 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
         }
       }
     }
+  }
+
+  if (!success)
+  {
+    SAFE_RELEASE(s_pTexture);
+    SAFE_RELEASE(s_pTextureSamplerState);
+    SAFE_RELEASE(s_pTextureSrv);
   }
 
   return success;
@@ -277,6 +385,7 @@ static bool ParseLevel(ID3D11Device* pDevice, uint16_t* arr, DWORD arraySize)
       GridData.SysMemPitch            = 0;
       GridData.SysMemSlicePitch       = 0;
 
+      assert(!s_pGridBuffer);
       WIN32_ASSERT(pDevice->CreateBuffer(&gridBufferDesc, &GridData, &s_pGridBuffer));
       SetDebugName(s_pGridBuffer, "s_pGridBuffer");
     }
@@ -288,8 +397,17 @@ static bool ParseLevel(ID3D11Device* pDevice, uint16_t* arr, DWORD arraySize)
     srvDesc.Format                          = DXGI_FORMAT_UNKNOWN;
     srvDesc.Buffer.FirstElement             = 0;
     srvDesc.Buffer.NumElements              = MJ_COUNTOF(s_Grid);
+
+    assert(!s_pGridSrv);
     WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pGridBuffer, &srvDesc, &s_pGridSrv));
     SetDebugName(s_pGridSrv, "s_pGridSrv");
+  }
+
+  if (!(s_pGridBuffer && s_pGridSrv))
+  {
+    SAFE_RELEASE(s_pGridBuffer);
+    SAFE_RELEASE(s_pGridSrv);
+    return false;
   }
 
   return true;
@@ -362,7 +480,7 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
     return false;
   }
 
-  if (!InitObjectPlaceholder())
+  if (!InitObjectPlaceholder(pDevice))
   {
     return false;
   }
@@ -409,12 +527,19 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   assert(s_pComputeShader);
   pDeviceContext->CSSetShader(s_pComputeShader, nullptr, 0);
   assert(s_pUnorderedAccessView);
-  pDeviceContext->CSSetUnorderedAccessViews(0, 1, &s_pUnorderedAccessView, nullptr);
+  ID3D11UnorderedAccessView* ppUav[] = { s_pUnorderedAccessView };
+  pDeviceContext->CSSetUnorderedAccessViews(0, MJ_COUNTOF(ppUav), ppUav, nullptr);
   assert(s_pConstantBuffer);
-  pDeviceContext->CSSetConstantBuffers(0, 1, &s_pConstantBuffer);
-  assert(s_pSamplerState);
-  pDeviceContext->CSSetSamplers(0, 1, &s_pSamplerState);
-  ID3D11ShaderResourceView* ppSrv[2] = { s_pGridSrv, s_pShaderResourceView };
+  ID3D11Buffer* ppCb[] = { s_pConstantBuffer };
+  pDeviceContext->CSSetConstantBuffers(0, MJ_COUNTOF(ppCb), ppCb);
+  assert(s_pTextureSamplerState);
+  ID3D11SamplerState* ppSs[] = { s_pTextureSamplerState };
+  pDeviceContext->CSSetSamplers(0, MJ_COUNTOF(ppSs), ppSs);
+  assert(s_pGridSrv);
+  assert(s_pTextureSrv);
+  assert(s_pObjectSrv);
+  assert(s_pPaletteSrv);
+  ID3D11ShaderResourceView* ppSrv[] = { s_pGridSrv, s_pTextureSrv, s_pObjectSrv, s_pPaletteSrv };
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
   // Run compute shader
@@ -422,13 +547,13 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
   // Unbind
-  ID3D11ShaderResourceView* ppSrvNull[2] = {};
+  ID3D11ShaderResourceView* ppSrvNull[MJ_COUNTOF(ppSrv)] = {};
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrvNull), ppSrvNull);
-  ID3D11SamplerState* ppSsNull[1] = {};
+  ID3D11SamplerState* ppSsNull[MJ_COUNTOF(ppSs)] = {};
   pDeviceContext->CSSetSamplers(0, MJ_COUNTOF(ppSsNull), ppSsNull);
-  ID3D11Buffer* ppCbNull[1] = { nullptr };
+  ID3D11Buffer* ppCbNull[MJ_COUNTOF(ppCb)] = {};
   pDeviceContext->CSSetConstantBuffers(0, 1, ppCbNull);
-  ID3D11UnorderedAccessView* ppUavNull[1] = {};
+  ID3D11UnorderedAccessView* ppUavNull[MJ_COUNTOF(ppUav)] = {};
   pDeviceContext->CSSetUnorderedAccessViews(0, 1, ppUavNull, nullptr);
   pDeviceContext->CSSetShader(nullptr, nullptr, 0);
 }
@@ -441,6 +566,10 @@ void mj::hlsl::Destroy()
   SAFE_RELEASE(s_pGridSrv);
   SAFE_RELEASE(s_pGridBuffer);
   SAFE_RELEASE(s_pTexture);
-  SAFE_RELEASE(s_pSamplerState);
-  SAFE_RELEASE(s_pShaderResourceView);
+  SAFE_RELEASE(s_pTextureSamplerState);
+  SAFE_RELEASE(s_pTextureSrv);
+  SAFE_RELEASE(s_pObjectSrv);
+  SAFE_RELEASE(s_pObjectBuffer);
+  SAFE_RELEASE(s_pPaletteSrv);
+  SAFE_RELEASE(s_pPaletteBuffer);
 }

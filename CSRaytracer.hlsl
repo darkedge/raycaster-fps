@@ -1,4 +1,5 @@
 #define FLT_MAX 3.402823466e+38F
+#define EPSILON 0.001f
 
 struct Camera
 {
@@ -14,8 +15,12 @@ struct Ray
   float length;
 };
 
+// Shader Resource Views
 StructuredBuffer<uint> s_Grid : register(t0);
 Texture2DArray s_TextureArray : register(t1);
+StructuredBuffer<uint> s_Object : register(t2);
+StructuredBuffer<uint> s_Palette : register(t3);
+
 sampler Sampler : register(s0);
 
 cbuffer Constants : register(b0)
@@ -77,9 +82,98 @@ static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const floa
 }
 #endif
 
-static inline float4 AttenuateSample(in float t, in float4 smpl)
+static inline float4 AttenuateSample(float t, float4 smpl)
 {
   return smpl / sqrt(t);
+}
+
+// https://www.gamedev.net/forums/topic/662529-converting-uint-to-float4-in-hlsl/
+float4 MGetVertexColour(uint inCol)
+{
+  if (inCol == 0xffffffff)
+    return float4(1, 1, 1, 1);
+
+  float a = ((inCol & 0xff000000) >> 24);
+  float b = ((inCol & 0xff0000) >> 16);
+  float g = ((inCol & 0xff00) >> 8);
+  float r = ((inCol & 0xff));
+  return float4(r, g, b, a) / 255.0;
+}
+
+static inline bool IntersectObject(float3 pos, float3 dir, out float4 objectColor)
+{
+  // objectColor = float4(frac(pos), 1.0f);
+  // return true;
+
+  // Remap ray position to object space
+  pos = frac(pos) * 64.0f;
+
+  // TODO: reuse values from IntersectRayGridfloat t;
+
+  // Step values
+  const int stepX = dir.x < 0.0f ? -1 : 1;
+  const int stepY = dir.y < 0.0f ? -1 : 1;
+  const int stepZ = dir.z < 0.0f ? -1 : 1;
+
+  // Inverse direction
+  const float tDeltaX = abs(1.0f / dir.x);
+  const float tDeltaY = abs(1.0f / dir.y);
+  const float tDeltaZ = abs(1.0f / dir.z);
+
+  // t values
+  float tMax  = 0.0f;
+  float tMaxX = (dir.x > 0 ? ceil(pos.x) - pos.x : pos.x - floor(pos.x)) * tDeltaX;
+  float tMaxY = (dir.y > 0 ? ceil(pos.y) - pos.y : pos.y - floor(pos.y)) * tDeltaY;
+  float tMaxZ = (dir.z > 0 ? ceil(pos.z) - pos.z : pos.z - floor(pos.z)) * tDeltaZ;
+
+  int blockPosX = floor(pos.x);
+  int blockPosY = floor(pos.y);
+  int blockPosZ = floor(pos.z);
+
+  while ((blockPosX >= 0) && (blockPosX < 64) && (blockPosY >= 0) && (blockPosY < 64) && (blockPosZ >= 0) &&
+         (blockPosZ < 64))
+  {
+    uint color = s_Object[blockPosZ * 64 * 64 + blockPosY * 64 + blockPosX];
+
+    if (color != 0) // Wall hit
+    {
+      objectColor = MGetVertexColour(s_Palette[color - 1]);
+      return true;
+    }
+
+    if (tMaxX < tMaxY)
+    {
+      if (tMaxX < tMaxZ)
+      {
+        blockPosX += stepX;
+        tMaxX += tDeltaX;
+        tMax = tMaxX;
+      }
+      else
+      {
+        blockPosZ += stepZ;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
+    }
+    else
+    {
+      if (tMaxY < tMaxZ)
+      {
+        blockPosY += stepY;
+        tMaxY += tDeltaY;
+        tMax = tMaxY;
+      }
+      else
+      {
+        blockPosZ += stepZ;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
+    }
+  }
+
+  return false;
 }
 
 static inline float4 IntersectRayGrid(const Ray ray)
@@ -89,8 +183,8 @@ static inline float4 IntersectRayGrid(const Ray ray)
   float v;
 
   // Step values
-  const int stepX = ray.direction.x < 0 ? -1 : 1;
-  const int stepZ = ray.direction.z < 0 ? -1 : 1;
+  const int stepX = ray.direction.x < 0.0f ? -1 : 1;
+  const int stepZ = ray.direction.z < 0.0f ? -1 : 1;
 
   // Inverse direction
   const float tDeltaX = abs(1.0f / ray.direction.x);
@@ -109,8 +203,35 @@ static inline float4 IntersectRayGrid(const Ray ray)
   int blockPosX = floor(ray.origin.x);
   int blockPosZ = floor(ray.origin.z);
 
-  while (blockPosX >= 0 && blockPosX < 64 && blockPosZ >= 0 && blockPosZ < 64)
+  while ((blockPosX >= 0) && (blockPosX < 64) && (blockPosZ >= 0) && (blockPosZ < 64))
   {
+    if (blockPosX == 54 && blockPosZ == 37)
+    {
+      float t;
+      if (tMax == 0.0f)
+      {
+        t = tMax;
+      }
+      else if (tMax == tMaxZ)
+      {
+        t = tMax - tDeltaZ;
+      }
+      else if (tMax == tMaxY)
+      {
+        t = tMax - tDeltaY;
+      }
+      else
+      {
+        t = tMax - tDeltaX;
+      }
+
+      float4 objectColor;
+      if (IntersectObject(ray.origin + (t + EPSILON) * ray.direction, ray.direction, objectColor))
+      {
+        // TODO: adjust ray length, attenuate
+        return objectColor;
+      }
+    }
     uint block = s_Grid[blockPosZ * 64 + blockPosX];
 
     if (block == 1) // Wall hit
