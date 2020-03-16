@@ -1,5 +1,5 @@
 #define FLT_MAX 3.402823466e+38F
-#define EPSILON 0.001f
+#define EPSILON 0.00001f
 
 struct Camera
 {
@@ -100,22 +100,13 @@ float4 MGetVertexColour(uint inCol)
   return float4(r, g, b, a) * 0.00392156862f; // 1/255
 }
 
-static inline float IntersectObject(float3 pos, float3 dir, out float4 objectColor)
+static inline float IntersectObject(float3 pos, float3 dir, out float4 objectColor, int stepX, int stepY, int stepZ,
+                                    float tDeltaX, float tDeltaY, float tDeltaZ, out float t)
 {
   // Remap ray position to object space
   pos = frac(pos) * 64.0f;
 
   // TODO: reuse values from IntersectRayGridfloat t;
-
-  // Step values
-  const int stepX = dir.x < 0.0f ? -1 : 1;
-  const int stepY = dir.y < 0.0f ? -1 : 1;
-  const int stepZ = dir.z < 0.0f ? -1 : 1;
-
-  // Inverse direction
-  const float tDeltaX = abs(1.0f / dir.x);
-  const float tDeltaY = abs(1.0f / dir.y);
-  const float tDeltaZ = abs(1.0f / dir.z);
 
   // t values
   float tMax  = 0.0f;
@@ -136,7 +127,8 @@ static inline float IntersectObject(float3 pos, float3 dir, out float4 objectCol
     if (color != 0)
     {
       objectColor = MGetVertexColour(s_Palette[color - 1]);
-      return tMax * 0.015625f;
+      t = tMax * 0.015625f;
+      return true;
     }
 
     if (tMaxX < tMaxY)
@@ -171,7 +163,7 @@ static inline float IntersectObject(float3 pos, float3 dir, out float4 objectCol
     }
   }
 
-  return -1.0f;
+  return false;
 }
 
 static inline float4 IntersectRayGrid(const Ray ray)
@@ -182,6 +174,7 @@ static inline float4 IntersectRayGrid(const Ray ray)
 
   // Step values
   const int stepX = ray.direction.x < 0.0f ? -1 : 1;
+  const int stepY = ray.direction.y < 0.0f ? -1 : 1;
   const int stepZ = ray.direction.z < 0.0f ? -1 : 1;
 
   // Inverse direction
@@ -224,8 +217,9 @@ static inline float4 IntersectRayGrid(const Ray ray)
       }
 
       float4 objectColor;
-      float tObj = IntersectObject(ray.origin + (t + EPSILON) * ray.direction, ray.direction, objectColor);
-      if (tObj > 0.0f)
+      float tObj;
+      if (IntersectObject(ray.origin + (t + EPSILON) * ray.direction, ray.direction, objectColor, stepX, stepY,
+                                   stepZ, tDeltaX, tDeltaY, tDeltaZ, tObj))
       {
         return AttenuateSample(t + tObj, objectColor);
       }

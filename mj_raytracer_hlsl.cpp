@@ -56,7 +56,7 @@ static void Reset()
   s_Constant.s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
   s_Constant.s_Camera.rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
   s_Constant.s_Camera.frame    = 0;
-  s_Constant.fovDeg            = 45.0f;
+  s_Constant.fovDeg            = 60.0f;
   CameraInit(MJ_REF s_Constant.s_Camera);
 }
 
