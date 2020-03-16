@@ -84,7 +84,7 @@ static inline bool IntersectRayAABB(const Ray ray, const float3 amin, const floa
 
 static inline float4 AttenuateSample(float t, float4 smpl)
 {
-  return smpl / sqrt(t);
+  return smpl * rsqrt(t);
 }
 
 // https://www.gamedev.net/forums/topic/662529-converting-uint-to-float4-in-hlsl/
@@ -97,14 +97,11 @@ float4 MGetVertexColour(uint inCol)
   float b = ((inCol & 0xff0000) >> 16);
   float g = ((inCol & 0xff00) >> 8);
   float r = ((inCol & 0xff));
-  return float4(r, g, b, a) / 255.0;
+  return float4(r, g, b, a) * 0.00392156862f; // 1/255
 }
 
-static inline bool IntersectObject(float3 pos, float3 dir, out float4 objectColor)
+static inline float IntersectObject(float3 pos, float3 dir, out float4 objectColor)
 {
-  // objectColor = float4(frac(pos), 1.0f);
-  // return true;
-
   // Remap ray position to object space
   pos = frac(pos) * 64.0f;
 
@@ -130,15 +127,16 @@ static inline bool IntersectObject(float3 pos, float3 dir, out float4 objectColo
   int blockPosY = floor(pos.y);
   int blockPosZ = floor(pos.z);
 
-  while ((blockPosX >= 0) && (blockPosX < 64) && (blockPosY >= 0) && (blockPosY < 64) && (blockPosZ >= 0) &&
-         (blockPosZ < 64))
+  while ((blockPosX >= 0) && (blockPosX < 64) && //
+         (blockPosY >= 0) && (blockPosY < 64) && //
+         (blockPosZ >= 0) && (blockPosZ < 64))
   {
     uint color = s_Object[blockPosZ * 64 * 64 + blockPosY * 64 + blockPosX];
 
-    if (color != 0) // Wall hit
+    if (color != 0)
     {
       objectColor = MGetVertexColour(s_Palette[color - 1]);
-      return true;
+      return tMax * 0.015625f;
     }
 
     if (tMaxX < tMaxY)
@@ -146,14 +144,14 @@ static inline bool IntersectObject(float3 pos, float3 dir, out float4 objectColo
       if (tMaxX < tMaxZ)
       {
         blockPosX += stepX;
-        tMaxX += tDeltaX;
         tMax = tMaxX;
+        tMaxX += tDeltaX;
       }
       else
       {
         blockPosZ += stepZ;
-        tMaxZ += tDeltaZ;
         tMax = tMaxZ;
+        tMaxZ += tDeltaZ;
       }
     }
     else
@@ -161,19 +159,19 @@ static inline bool IntersectObject(float3 pos, float3 dir, out float4 objectColo
       if (tMaxY < tMaxZ)
       {
         blockPosY += stepY;
-        tMaxY += tDeltaY;
         tMax = tMaxY;
+        tMaxY += tDeltaY;
       }
       else
       {
         blockPosZ += stepZ;
-        tMaxZ += tDeltaZ;
         tMax = tMaxZ;
+        tMaxZ += tDeltaZ;
       }
     }
   }
 
-  return false;
+  return -1.0f;
 }
 
 static inline float4 IntersectRayGrid(const Ray ray)
@@ -226,10 +224,10 @@ static inline float4 IntersectRayGrid(const Ray ray)
       }
 
       float4 objectColor;
-      if (IntersectObject(ray.origin + (t + EPSILON) * ray.direction, ray.direction, objectColor))
+      float tObj = IntersectObject(ray.origin + (t + EPSILON) * ray.direction, ray.direction, objectColor);
+      if (tObj > 0.0f)
       {
-        // TODO: adjust ray length, attenuate
-        return objectColor;
+        return AttenuateSample(t + tObj, objectColor);
       }
     }
     uint block = s_Grid[blockPosZ * 64 + blockPosX];
