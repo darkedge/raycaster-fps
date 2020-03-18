@@ -148,12 +148,12 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                   }
                   {
                     D3D11_BUFFER_DESC bufferDesc   = {};
-                    bufferDesc.ByteWidth           = *pNumVoxels * 4;
+                    bufferDesc.ByteWidth           = sizeof(s_Object);
                     bufferDesc.Usage               = D3D11_USAGE_IMMUTABLE;
                     bufferDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE;
                     bufferDesc.CPUAccessFlags      = 0;
                     bufferDesc.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-                    bufferDesc.StructureByteStride = 4; // (x, y, z, colorIndex) : 1 byte for each component
+                    bufferDesc.StructureByteStride = sizeof(*s_Object);
 
                     {
                       D3D11_SUBRESOURCE_DATA subresourceData = {};
@@ -172,7 +172,7 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                     srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_BUFFER;
                     srvDesc.Format                          = DXGI_FORMAT_UNKNOWN;
                     srvDesc.Buffer.FirstElement             = 0;
-                    srvDesc.Buffer.NumElements              = *pNumVoxels;
+                    srvDesc.Buffer.NumElements              = MJ_COUNTOF(s_Object);
 
                     assert(!s_pObjectSrv);
                     WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pObjectBuffer, &srvDesc, &s_pObjectSrv));
