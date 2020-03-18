@@ -2,7 +2,7 @@
 #include "mj_input.h"
 #include "game.h"
 
-static const float s_MovementFactor = 5.0f;
+static const float s_MovementFactor = 3.0f;
 static const float ROT_SPEED        = 0.0025f;
 
 static float lastMousePos;
