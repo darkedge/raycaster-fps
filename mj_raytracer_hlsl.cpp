@@ -13,6 +13,8 @@
 #include "resource.h"
 #include "imgui.h"
 
+static constexpr UINT GRID_DIM = 16;
+
 static ID3D11ComputeShader* s_pComputeShader;
 static ID3D11UnorderedAccessView* s_pUnorderedAccessView;
 
@@ -510,11 +512,21 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   s_Constant.s_Camera.frame++;
 
   {
+    // Get thread group and index
+    POINT point = {};
+    MJ_DISCARD(GetCursorPos(&point));
+    MJ_DISCARD(ScreenToClient(GetActiveWindow(), &point));
+    int groupX  = point.x * MJ_RT_WIDTH / MJ_WND_WIDTH / GRID_DIM;
+    int groupY  = point.y * MJ_RT_HEIGHT / MJ_WND_HEIGHT / GRID_DIM;
+    int threadX = point.x * MJ_RT_WIDTH / MJ_WND_WIDTH % GRID_DIM;
+    int threadY = point.y * MJ_RT_HEIGHT / MJ_WND_HEIGHT % GRID_DIM;
+
     ImGui::Begin("Hello, world!");
     ImGui::Text("R to reset, F3 toggles mouselook");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
     ImGui::SliderFloat("Field of view", &s_Constant.fovDeg, 5.0f, 170.0f);
+    ImGui::Text("Group: [%d, %d, 0], Thread: [%d, %d, 0]", groupX, groupY, threadX, threadY);
     ImGui::End();
   }
 
@@ -543,7 +555,6 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
   // Run compute shader
-  const UINT GRID_DIM = 16;
   pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
   // Unbind

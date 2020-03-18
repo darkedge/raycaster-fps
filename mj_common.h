@@ -2,8 +2,13 @@
 #include <stdint.h>
 
 // Annotation macros
+
+// Variable is uninitialized
 #define MJ_UNINITIALIZED
+// Argument is passed by reference
 #define MJ_REF
+// Return value is discarded
+#define MJ_DISCARD(x) x
 
 #define MJ_COUNTOF(arr) sizeof(arr) / sizeof(arr[0])
 
