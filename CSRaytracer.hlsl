@@ -103,9 +103,6 @@ float4 MGetVertexColour(uint inCol)
 static inline float IntersectObject(float3 pos, float3 dir, out float4 objectColor, int stepX, int stepY, int stepZ,
                                     float tDeltaX, float tDeltaY, float tDeltaZ, out float t)
 {
-
-  // TODO: reuse values from IntersectRayGridfloat t;
-
   // t values
   float tMax  = 0.0f;
   float tMaxX = (dir.x > 0 ? ceil(pos.x) - pos.x : pos.x - floor(pos.x)) * tDeltaX;
@@ -181,32 +178,28 @@ static inline float4 IntersectRayGrid(const Ray ray)
   const float tDeltaZ = abs(1.0f / ray.direction.z);
 
   // t values
-  float tMax = 0.0f;
-  float tMaxX =
-      (ray.direction.x > 0 ? ceil(ray.origin.x) - ray.origin.x : ray.origin.x - floor(ray.origin.x)) * tDeltaX;
-  float tMaxY =
-      (ray.direction.y > 0 ? ceil(ray.origin.y) - ray.origin.y : ray.origin.y - floor(ray.origin.y)) * tDeltaY;
-  float tMaxZ =
-      (ray.direction.z > 0 ? ceil(ray.origin.z) - ray.origin.z : ray.origin.z - floor(ray.origin.z)) * tDeltaZ;
+  float tMax  = 0.0f;
+  float tMaxX = (((stepX + 1) >> 1) - stepX * frac(ray.origin.x)) * tDeltaX;
+  float tMaxY = (((stepY + 1) >> 1) - stepY * frac(ray.origin.y)) * tDeltaY;
+  float tMaxZ = (((stepZ + 1) >> 1) - stepZ * frac(ray.origin.z)) * tDeltaZ;
 
-  int blockPosX = floor(ray.origin.x);
-  int blockPosZ = floor(ray.origin.z);
+  int blockPosX   = floor(ray.origin.x);
+  int blockPosZ   = floor(ray.origin.z);
   bool horizontal = false;
 
   while ((blockPosX >= 0) && (blockPosX < 64) && (blockPosZ >= 0) && (blockPosZ < 64))
   {
     if (blockPosX == 54 && blockPosZ == 37)
     {
-      float t = tMax;
       float3 pos;
       if (horizontal)
       {
-        pos = frac(ray.origin + t * ray.direction) * 64.0f;
+        pos = frac(ray.origin + tMax * ray.direction) * 64.0f;
         pos.z = ((-stepZ + 1) >> 1) * 63.999996f;
       }
       else
       {
-        pos   = frac(ray.origin + t * ray.direction) * 64.0f;
+        pos   = frac(ray.origin + tMax * ray.direction) * 64.0f;
         pos.x = ((-stepX + 1) >> 1) * 63.999996f;
       }
 
@@ -214,7 +207,7 @@ static inline float4 IntersectRayGrid(const Ray ray)
       float tObj;
       if (IntersectObject(pos, ray.direction, objectColor, stepX, stepY, stepZ, tDeltaX, tDeltaY, tDeltaZ, tObj))
       {
-        return AttenuateSample(t + tObj, objectColor);
+        return AttenuateSample(tMax + tObj, objectColor);
       }
     }
     uint block = s_Grid[blockPosZ * 64 + blockPosX];
