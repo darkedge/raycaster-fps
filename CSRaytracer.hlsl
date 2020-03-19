@@ -191,17 +191,7 @@ static inline float4 IntersectRayGrid(const Ray ray)
   {
     if (blockPosX == 54 && blockPosZ == 37)
     {
-      float3 pos;
-      if (horizontal)
-      {
-        pos = frac(ray.origin + tMax * ray.direction) * 64.0f;
-        pos.z = ((-stepZ + 1) >> 1) * 63.999996f;
-      }
-      else
-      {
-        pos   = frac(ray.origin + tMax * ray.direction) * 64.0f;
-        pos.x = ((-stepX + 1) >> 1) * 63.999996f;
-      }
+      float3 pos = (ray.origin + (tMax + EPSILON) * ray.direction - float3(blockPosX, 0.0f, blockPosZ)) * 64.0f;
 
       float4 objectColor;
       float tObj;
