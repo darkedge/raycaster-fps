@@ -12,6 +12,8 @@
 #include "mj_win32_utils.h"
 #include "game.h"
 
+#include "tracy/Tracy.hpp"
+
 // Data
 static ID3D11Device* g_pd3dDevice                     = nullptr;
 static ID3D11DeviceContext* g_pd3dDeviceContext       = nullptr;
@@ -117,6 +119,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   WIN32_FAIL_IF_ZERO(QueryPerformanceFrequency(&perfFreq));
   while (msg.message != WM_QUIT)
   {
+    ZoneScoped;
     // Poll and handle messages (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your
     // inputs.
@@ -162,8 +165,12 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       ImGui::RenderPlatformWindowsDefault();
     }
 
-    g_pSwapChain->Present(1, 0); // Present with vsync
-    // g_pSwapChain->Present(0, 0); // Present without vsync
+    {
+      ZoneScopedN("Present");
+      g_pSwapChain->Present(1, 0); // Present with vsync
+      // g_pSwapChain->Present(0, 0); // Present without vsync
+    }
+    FrameMark;
   }
 
   // Cleanup

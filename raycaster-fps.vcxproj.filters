@@ -26,6 +26,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="mj_raytracer_hlsl.cpp" />
+    <ClCompile Include="tracy\TracyClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui-docking\imconfig.h">

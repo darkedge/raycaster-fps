@@ -12,6 +12,8 @@
 
 #include "resource.h"
 
+#include "tracy/Tracy.hpp"
+
 static ID3D11VertexShader* s_pVertexShader;
 static ID3D11PixelShader* s_pPixelShader;
 static ID3D11Texture2D* s_pTexture;
@@ -108,6 +110,7 @@ void mj::d3d11::Resize(float width, float height)
 
 void mj::d3d11::Update(ID3D11DeviceContext* pDeviceContext)
 {
+  ZoneScoped;
   pDeviceContext->RSSetViewports(1, &s_Viewport);
 
   mj::hlsl::Update(pDeviceContext);

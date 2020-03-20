@@ -1,5 +1,6 @@
 #include "mj_input.h"
 #include <queue>
+#include "tracy/Tracy.hpp"
 
 // Multiple of 32 (32-bit integer flags)
 constexpr auto INPUT_NUM_KEYS          = Key::Count;
@@ -399,6 +400,7 @@ void mj::input::Reset()
  */
 void mj::input::Update()
 {
+  ZoneScoped;
   mouseDX     = mouseDXNext;
   mouseDY     = mouseDYNext;
   mouseDXNext = 0;

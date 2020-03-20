@@ -13,6 +13,8 @@
 #include "resource.h"
 #include "imgui.h"
 
+#include "tracy/Tracy.hpp"
+
 static constexpr UINT GRID_DIM = 16;
 
 static ID3D11ComputeShader* s_pComputeShader;
@@ -492,6 +494,7 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
 
 void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
 {
+  ZoneScoped;
   if (mj::input::GetKeyDown(Key::F3))
   {
     s_MouseLook = !s_MouseLook;
