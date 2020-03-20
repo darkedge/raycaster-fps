@@ -13,8 +13,8 @@
 #define MJ_COUNTOF(arr) sizeof(arr) / sizeof(arr[0])
 
 // Raytracer resolution
-static constexpr uint16_t MJ_RT_WIDTH  = 320;
-static constexpr uint16_t MJ_RT_HEIGHT = 200;
+static constexpr uint16_t MJ_RT_WIDTH  = 640;
+static constexpr uint16_t MJ_RT_HEIGHT = 400;
 
 // Window resolution
 static constexpr uint16_t MJ_WND_WIDTH  = 1600;
