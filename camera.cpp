@@ -2,6 +2,8 @@
 #include "mj_input.h"
 #include "game.h"
 
+#include "tracy/Tracy.hpp"
+
 static const float s_MovementFactor = 3.0f;
 static const float ROT_SPEED        = 0.0025f;
 
@@ -17,6 +19,7 @@ void CameraInit(Camera& camera)
 
 void CameraMovement(Camera& camera)
 {
+  ZoneScoped;
   const float dt = GetDeltaTime();
 
   if (mj::input::GetKey(Key::KeyW))
