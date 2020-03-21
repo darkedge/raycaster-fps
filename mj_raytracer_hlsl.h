@@ -24,8 +24,9 @@ namespace mj
       float padding;
     };
 
-    [[nodiscard]] bool Init(ID3D11Device* pDevice, ID3D11Texture2D* s_pTexture);
-    void Update(ID3D11DeviceContext* device_context);
+    void SetTexture(ID3D11Device* pDevice, ID3D11Texture2D* pTexture);
+    [[nodiscard]] bool Init(ID3D11Device* pDevice);
+    void Update(ID3D11DeviceContext* pDeviceContext, uint16_t width, uint16_t height);
     void Destroy();
   } // namespace hlsl
 } // namespace mj

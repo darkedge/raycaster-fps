@@ -20,6 +20,9 @@ static constexpr uint16_t MJ_RT_HEIGHT = 400;
 static constexpr uint16_t MJ_WND_WIDTH  = 1280;
 static constexpr uint16_t MJ_WND_HEIGHT = 800;
 
+static constexpr uint16_t MJ_FS_WIDTH  = 1920;
+static constexpr uint16_t MJ_FS_HEIGHT = 1080;
+
 namespace mj
 {
   // stream for reading

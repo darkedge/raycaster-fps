@@ -14,35 +14,38 @@
 #include "imgui.h"
 
 #include "tracy/Tracy.hpp"
+#include <wrl/client.h>
+
+using Microsoft::WRL::ComPtr;
 
 static constexpr UINT GRID_DIM = 16;
 
-static ID3D11ComputeShader* s_pComputeShader;
-static ID3D11UnorderedAccessView* s_pUnorderedAccessView;
+static ComPtr<ID3D11ComputeShader> s_pComputeShader;
+static ComPtr<ID3D11UnorderedAccessView> s_pUnorderedAccessView;
 
 // Constant buffer
-static ID3D11Buffer* s_pConstantBuffer;
+static ComPtr<ID3D11Buffer> s_pConstantBuffer;
 static mj::hlsl::Constant s_Constant;
 
 // Grid
-static ID3D11ShaderResourceView* s_pGridSrv;
-static ID3D11Buffer* s_pGridBuffer;
+static ComPtr<ID3D11ShaderResourceView> s_pGridSrv;
+static ComPtr<ID3D11Buffer> s_pGridBuffer;
 static uint32_t s_Grid[64 * 64];
 
 // Object placeholder
-static ID3D11ShaderResourceView* s_pObjectSrv;
-static ID3D11Buffer* s_pObjectBuffer;
+static ComPtr<ID3D11ShaderResourceView> s_pObjectSrv;
+static ComPtr<ID3D11Buffer> s_pObjectBuffer;
 static uint32_t s_Object[64 * 64 * 64];
 
 // Palette
-static ID3D11ShaderResourceView* s_pPaletteSrv;
-static ID3D11Buffer* s_pPaletteBuffer;
+static ComPtr<ID3D11ShaderResourceView> s_pPaletteSrv;
+static ComPtr<ID3D11Buffer> s_pPaletteBuffer;
 static uint32_t s_Palette[256];
 
 // Texture2DArray
-static ID3D11Texture2D* s_pTexture;
-static ID3D11SamplerState* s_pTextureSamplerState;
-static ID3D11ShaderResourceView* s_pTextureSrv;
+static ComPtr<ID3D11Texture2D> s_pTexture;
+static ComPtr<ID3D11SamplerState> s_pTextureSamplerState;
+static ComPtr<ID3D11ShaderResourceView> s_pTextureSrv;
 
 static bool s_MouseLook = true;
 
@@ -166,8 +169,9 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                       subresourceData.SysMemSlicePitch       = 0;
 
                       assert(!s_pObjectBuffer);
-                      WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData, &s_pObjectBuffer));
-                      SetDebugName(s_pObjectBuffer, "s_pObjectBuffer");
+                      WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData,
+                                                         s_pObjectBuffer.ReleaseAndGetAddressOf()));
+                      SetDebugName(s_pObjectBuffer.Get(), "s_pObjectBuffer");
                     }
                   }
 
@@ -179,8 +183,9 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                     srvDesc.Buffer.NumElements              = MJ_COUNTOF(s_Object);
 
                     assert(!s_pObjectSrv);
-                    WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pObjectBuffer, &srvDesc, &s_pObjectSrv));
-                    SetDebugName(s_pObjectSrv, "s_pObjectSrv");
+                    WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pObjectBuffer.Get(), &srvDesc,
+                                                                   s_pObjectSrv.ReleaseAndGetAddressOf()));
+                    SetDebugName(s_pObjectSrv.Get(), "s_pObjectSrv");
                   }
                   if (s_pObjectBuffer && s_pObjectSrv)
                   {
@@ -188,8 +193,9 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                   }
                   else
                   {
-                    SAFE_RELEASE(s_pObjectBuffer);
-                    SAFE_RELEASE(s_pObjectSrv);
+                    s_pObjectBuffer.Reset();
+                    s_pObjectSrv.Reset();
+                    ;
                   }
                 }
               }
@@ -212,8 +218,9 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                     subresourceData.SysMemSlicePitch       = 0;
 
                     assert(!s_pPaletteBuffer);
-                    WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData, &s_pPaletteBuffer));
-                    SetDebugName(s_pPaletteBuffer, "s_pPaletteBuffer");
+                    WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData,
+                                                       s_pPaletteBuffer.ReleaseAndGetAddressOf()));
+                    SetDebugName(s_pPaletteBuffer.Get(), "s_pPaletteBuffer");
                   }
                 }
 
@@ -225,8 +232,9 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                   srvDesc.Buffer.NumElements              = 256;
 
                   assert(!s_pPaletteSrv);
-                  WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pPaletteBuffer, &srvDesc, &s_pPaletteSrv));
-                  SetDebugName(s_pPaletteSrv, "s_pPaletteSrv");
+                  WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pPaletteBuffer.Get(), &srvDesc,
+                                                                 s_pPaletteSrv.ReleaseAndGetAddressOf()));
+                  SetDebugName(s_pPaletteSrv.Get(), "s_pPaletteSrv");
                 }
                 stream.Skip(*pNumBytesChunkContent);
                 if (s_pPaletteBuffer && s_pPaletteSrv)
@@ -235,8 +243,8 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                 }
                 else
                 {
-                  SAFE_RELEASE(s_pPaletteBuffer);
-                  SAFE_RELEASE(s_pPaletteSrv);
+                  s_pPaletteBuffer.Reset();
+                  s_pPaletteSrv.Reset();
                 }
               }
               break;
@@ -304,8 +312,8 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
             }
 
             assert(!s_pTexture);
-            WIN32_ASSERT(pDevice->CreateTexture2D(&desc, pSubResourceData, &s_pTexture));
-            SetDebugName(s_pTexture, "s_pTexture");
+            WIN32_ASSERT(pDevice->CreateTexture2D(&desc, pSubResourceData, s_pTexture.ReleaseAndGetAddressOf()));
+            SetDebugName(s_pTexture.Get(), "s_pTexture");
 
             {
               // Sampler
@@ -326,8 +334,8 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
 
               // Create the texture sampler state.
               assert(!s_pTextureSamplerState);
-              WIN32_ASSERT(pDevice->CreateSamplerState(&samplerDesc, &s_pTextureSamplerState));
-              SetDebugName(s_pTextureSamplerState, "s_pTextureSamplerState");
+              WIN32_ASSERT(pDevice->CreateSamplerState(&samplerDesc, s_pTextureSamplerState.ReleaseAndGetAddressOf()));
+              SetDebugName(s_pTextureSamplerState.Get(), "s_pTextureSamplerState");
             }
 
             {
@@ -342,8 +350,9 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
               // Create the shader resource view for the texture.
               assert(!s_pTextureSrv);
               assert(s_pTexture);
-              WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pTexture, &srvDesc, &s_pTextureSrv));
-              SetDebugName(s_pTextureSrv, "s_pTextureSrv");
+              WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pTexture.Get(), &srvDesc,
+                                                             s_pTextureSrv.ReleaseAndGetAddressOf()));
+              SetDebugName(s_pTextureSrv.Get(), "s_pTextureSrv");
             }
 
             success = true;
@@ -355,9 +364,9 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
 
   if (!success)
   {
-    SAFE_RELEASE(s_pTexture);
-    SAFE_RELEASE(s_pTextureSamplerState);
-    SAFE_RELEASE(s_pTextureSrv);
+    s_pTexture.Reset();
+    s_pTextureSamplerState.Reset();
+    s_pTextureSrv.Reset();
   }
 
   return success;
@@ -390,8 +399,8 @@ static bool ParseLevel(ID3D11Device* pDevice, uint16_t* arr, DWORD arraySize)
       GridData.SysMemSlicePitch       = 0;
 
       assert(!s_pGridBuffer);
-      WIN32_ASSERT(pDevice->CreateBuffer(&gridBufferDesc, &GridData, &s_pGridBuffer));
-      SetDebugName(s_pGridBuffer, "s_pGridBuffer");
+      WIN32_ASSERT(pDevice->CreateBuffer(&gridBufferDesc, &GridData, s_pGridBuffer.ReleaseAndGetAddressOf()));
+      SetDebugName(s_pGridBuffer.Get(), "s_pGridBuffer");
     }
   }
 
@@ -403,14 +412,14 @@ static bool ParseLevel(ID3D11Device* pDevice, uint16_t* arr, DWORD arraySize)
     srvDesc.Buffer.NumElements              = MJ_COUNTOF(s_Grid);
 
     assert(!s_pGridSrv);
-    WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pGridBuffer, &srvDesc, &s_pGridSrv));
-    SetDebugName(s_pGridSrv, "s_pGridSrv");
+    WIN32_ASSERT(pDevice->CreateShaderResourceView(s_pGridBuffer.Get(), &srvDesc, s_pGridSrv.ReleaseAndGetAddressOf()));
+    SetDebugName(s_pGridSrv.Get(), "s_pGridSrv");
   }
 
   if (!(s_pGridBuffer && s_pGridSrv))
   {
-    SAFE_RELEASE(s_pGridBuffer);
-    SAFE_RELEASE(s_pGridSrv);
+    s_pGridBuffer.Get();
+    s_pGridSrv.Reset();
     return false;
   }
 
@@ -440,19 +449,23 @@ static bool LoadLevel(ID3D11Device* pDevice)
   return success;
 }
 
-bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
+void mj::hlsl::SetTexture(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
 {
-  assert(!s_pComputeShader);
-  WIN32_ASSERT(pDevice->CreateComputeShader(CSRaytracer, sizeof(CSRaytracer), nullptr, &s_pComputeShader));
-  SetDebugName(s_pComputeShader, "mj_compute_shader");
-
   // Texture2D UAV
   D3D11_UNORDERED_ACCESS_VIEW_DESC descView = {};
   descView.ViewDimension                    = D3D11_UAV_DIMENSION_TEXTURE2D;
   descView.Format                           = DXGI_FORMAT_R32G32B32A32_FLOAT;
   descView.Texture2D.MipSlice               = 0;
-  WIN32_ASSERT(pDevice->CreateUnorderedAccessView(pTexture, &descView, &s_pUnorderedAccessView));
-  SetDebugName(s_pUnorderedAccessView, "mj_unordered_access_view");
+  WIN32_ASSERT(
+      pDevice->CreateUnorderedAccessView(pTexture, &descView, s_pUnorderedAccessView.ReleaseAndGetAddressOf()));
+  SetDebugName(s_pUnorderedAccessView.Get(), "mj_unordered_access_view");
+}
+
+bool mj::hlsl::Init(ID3D11Device* pDevice)
+{
+  WIN32_ASSERT(pDevice->CreateComputeShader(CSRaytracer, sizeof(CSRaytracer), nullptr,
+                                            s_pComputeShader.ReleaseAndGetAddressOf()));
+  SetDebugName(s_pComputeShader.Get(), "mj_compute_shader");
 
   s_Constant.width  = MJ_RT_WIDTH;
   s_Constant.height = MJ_RT_HEIGHT;
@@ -471,8 +484,8 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
   InitData.SysMemPitch            = 0;
   InitData.SysMemSlicePitch       = 0;
 
-  WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &InitData, &s_pConstantBuffer));
-  SetDebugName(s_pConstantBuffer, "mj_constant_buffer");
+  WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &InitData, s_pConstantBuffer.ReleaseAndGetAddressOf()));
+  SetDebugName(s_pConstantBuffer.Get(), "mj_constant_buffer");
 
   if (!LoadLevel(pDevice))
   {
@@ -492,7 +505,7 @@ bool mj::hlsl::Init(ID3D11Device* pDevice, ID3D11Texture2D* pTexture)
   return true;
 }
 
-void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
+void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext, uint16_t width, uint16_t height)
 {
   ZoneScoped;
   if (mj::input::GetKeyDown(Key::F3))
@@ -519,10 +532,10 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
     POINT point = {};
     MJ_DISCARD(GetCursorPos(&point));
     MJ_DISCARD(ScreenToClient(GetActiveWindow(), &point));
-    int groupX  = point.x * MJ_RT_WIDTH / MJ_WND_WIDTH / GRID_DIM;
-    int groupY  = point.y * MJ_RT_HEIGHT / MJ_WND_HEIGHT / GRID_DIM;
-    int threadX = point.x * MJ_RT_WIDTH / MJ_WND_WIDTH % GRID_DIM;
-    int threadY = point.y * MJ_RT_HEIGHT / MJ_WND_HEIGHT % GRID_DIM;
+    int32_t groupX  = point.x * MJ_RT_WIDTH / width / GRID_DIM;
+    int32_t groupY  = point.y * MJ_RT_HEIGHT / height / GRID_DIM;
+    int32_t threadX = point.x * MJ_RT_WIDTH / width % GRID_DIM;
+    int32_t threadY = point.y * MJ_RT_HEIGHT / height % GRID_DIM;
 
     ImGui::Begin("Hello, world!");
     ImGui::Text("R to reset, F3 toggles mouselook");
@@ -534,34 +547,35 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
   }
 
   MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedSubresource;
-  WIN32_ASSERT(pDeviceContext->Map(s_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
+  WIN32_ASSERT(pDeviceContext->Map(s_pConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource));
   memcpy(mappedSubresource.pData, &s_Constant, sizeof(s_Constant));
-  pDeviceContext->Unmap(s_pConstantBuffer, 0);
+  pDeviceContext->Unmap(s_pConstantBuffer.Get(), 0);
 
   // Bind
   assert(s_pComputeShader);
-  pDeviceContext->CSSetShader(s_pComputeShader, nullptr, 0);
+  pDeviceContext->CSSetShader(s_pComputeShader.Get(), nullptr, 0);
   assert(s_pUnorderedAccessView);
-  ID3D11UnorderedAccessView* ppUav[] = { s_pUnorderedAccessView };
+  ID3D11UnorderedAccessView* ppUav[] = { s_pUnorderedAccessView.Get() };
   pDeviceContext->CSSetUnorderedAccessViews(0, MJ_COUNTOF(ppUav), ppUav, nullptr);
   assert(s_pConstantBuffer);
-  ID3D11Buffer* ppCb[] = { s_pConstantBuffer };
+  ID3D11Buffer* ppCb[] = { s_pConstantBuffer.Get() };
   pDeviceContext->CSSetConstantBuffers(0, MJ_COUNTOF(ppCb), ppCb);
   assert(s_pTextureSamplerState);
-  ID3D11SamplerState* ppSs[] = { s_pTextureSamplerState };
+  ID3D11SamplerState* ppSs[] = { s_pTextureSamplerState.Get() };
   pDeviceContext->CSSetSamplers(0, MJ_COUNTOF(ppSs), ppSs);
   assert(s_pGridSrv);
   assert(s_pTextureSrv);
   assert(s_pObjectSrv);
   assert(s_pPaletteSrv);
-  ID3D11ShaderResourceView* ppSrv[] = { s_pGridSrv, s_pTextureSrv, s_pObjectSrv, s_pPaletteSrv };
+  ID3D11ShaderResourceView* ppSrv[] = { s_pGridSrv.Get(), s_pTextureSrv.Get(), s_pObjectSrv.Get(),
+                                        s_pPaletteSrv.Get() };
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
   // Run compute shader
   if (mj::input::GetMouseButton(MouseButton::Left))
   {
     const UINT values[4] = { 0, 0, 0, 0 };
-    pDeviceContext->ClearUnorderedAccessViewUint(s_pUnorderedAccessView, values);
+    pDeviceContext->ClearUnorderedAccessViewUint(s_pUnorderedAccessView.Get(), values);
   }
   else
   {
@@ -582,16 +596,16 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext)
 
 void mj::hlsl::Destroy()
 {
-  SAFE_RELEASE(s_pComputeShader);
-  SAFE_RELEASE(s_pUnorderedAccessView);
-  SAFE_RELEASE(s_pConstantBuffer);
-  SAFE_RELEASE(s_pGridSrv);
-  SAFE_RELEASE(s_pGridBuffer);
-  SAFE_RELEASE(s_pTexture);
-  SAFE_RELEASE(s_pTextureSamplerState);
-  SAFE_RELEASE(s_pTextureSrv);
-  SAFE_RELEASE(s_pObjectSrv);
-  SAFE_RELEASE(s_pObjectBuffer);
-  SAFE_RELEASE(s_pPaletteSrv);
-  SAFE_RELEASE(s_pPaletteBuffer);
+  s_pComputeShader.Reset();
+  s_pUnorderedAccessView.Reset();
+  s_pConstantBuffer.Reset();
+  s_pGridSrv.Reset();
+  s_pGridBuffer.Reset();
+  s_pTexture.Reset();
+  s_pTextureSamplerState.Reset();
+  s_pTextureSrv.Reset();
+  s_pObjectSrv.Reset();
+  s_pObjectBuffer.Reset();
+  s_pPaletteSrv.Reset();
+  s_pPaletteBuffer.Reset();
 }

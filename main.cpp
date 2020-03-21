@@ -25,6 +25,9 @@ static UINT g_SwapChainFlags;
 static Microsoft::WRL::ComPtr<IDXGIFactory3> g_pFactory;
 static bool g_FullScreen;
 
+static uint16_t g_Width;
+static uint16_t g_Height;
+
 // Forward declarations of helper functions
 static bool CreateDeviceD3D(HWND hWnd);
 static void CleanupDeviceD3D();
@@ -47,8 +50,8 @@ static void CreateSwapChainFullscreen(HWND hWnd)
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC1 sd = {};
   sd.BufferCount           = 2;
-  sd.Width                 = 0;
-  sd.Height                = 0;
+  sd.Width                 = MJ_FS_WIDTH;
+  sd.Height                = MJ_FS_HEIGHT;
   sd.Format                = DXGI_FORMAT_R8G8B8A8_UNORM;
   sd.Stereo                = FALSE;
   sd.SampleDesc.Count      = 1;
@@ -83,8 +86,8 @@ static void CreateSwapChainWindowed(HWND hWnd)
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC1 sd = {};
   sd.BufferCount           = 2;
-  sd.Width                 = 0;
-  sd.Height                = 0;
+  sd.Width                 = MJ_WND_WIDTH;
+  sd.Height                = MJ_WND_HEIGHT;
   sd.Format                = DXGI_FORMAT_R8G8B8A8_UNORM;
   sd.Stereo                = FALSE;
   sd.SampleDesc.Count      = 1;
@@ -723,8 +726,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     if (g_pd3dDevice && g_pSwapChain && wParam != SIZE_MINIMIZED)
     {
       SAFE_RELEASE(g_mainRenderTargetView);
-      g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
-      mj::d3d11::Resize((float)LOWORD(lParam), (float)HIWORD(lParam));
+      g_Width = (uint16_t)LOWORD(lParam);
+      g_Height = (uint16_t)HIWORD(lParam);
+      g_pSwapChain->ResizeBuffers(0, g_Width, g_Height, DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
+      mj::d3d11::Resize(g_pd3dDevice, (uint16_t)LOWORD(lParam), (uint16_t)HIWORD(lParam));
       CreateRenderTarget();
     }
     return 0;
