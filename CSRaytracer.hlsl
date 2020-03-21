@@ -90,9 +90,6 @@ static inline float4 AttenuateSample(float t, float4 smpl)
 // https://www.gamedev.net/forums/topic/662529-converting-uint-to-float4-in-hlsl/
 float4 MGetVertexColour(uint inCol)
 {
-  if (inCol == 0xffffffff)
-    return float4(1, 1, 1, 1);
-
   float a = ((inCol & 0xff000000) >> 24);
   float b = ((inCol & 0xff0000) >> 16);
   float g = ((inCol & 0xff00) >> 8);
@@ -122,7 +119,7 @@ static inline float IntersectObject(float3 pos, float3 dir, out float4 objectCol
     if (color != 0)
     {
       objectColor = MGetVertexColour(s_Palette[color - 1]);
-      t           = tMax * 0.015625f;
+      t           = tMax * 0.015625f; // (1.0f / 64.0f)
       return true;
     }
 
