@@ -1,7 +1,8 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
-#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dxgi1_6.h>
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <tchar.h>
@@ -15,10 +16,14 @@
 #include "tracy/Tracy.hpp"
 
 // Data
-static ID3D11Device* g_pd3dDevice                     = nullptr;
-static ID3D11DeviceContext* g_pd3dDeviceContext       = nullptr;
-static IDXGISwapChain* g_pSwapChain                   = nullptr;
-static ID3D11RenderTargetView* g_mainRenderTargetView = nullptr;
+static ID3D11Device* g_pd3dDevice                           = nullptr;
+static ID3D11DeviceContext* g_pd3dDeviceContext             = nullptr;
+static Microsoft::WRL::ComPtr<IDXGISwapChain2> g_pSwapChain = nullptr;
+static ID3D11RenderTargetView* g_mainRenderTargetView       = nullptr;
+static HANDLE g_WaitableObject;
+static UINT g_SwapChainFlags;
+static Microsoft::WRL::ComPtr<IDXGIFactory3> g_pFactory;
+static bool g_FullScreen;
 
 // Forward declarations of helper functions
 static bool CreateDeviceD3D(HWND hWnd);
@@ -28,10 +33,91 @@ static void CleanupRenderTarget();
 static void InitKeymap();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+static void ShowReferences()
+{
+  Microsoft::WRL::ComPtr<ID3D11Debug> pDebug;
+  WIN32_ASSERT(g_pd3dDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(pDebug.GetAddressOf())));
+  WIN32_ASSERT(pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL));
+  // D3D11_RLDO_SUMMARY | D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL
+}
+
+static void CreateSwapChainFullscreen(HWND hWnd)
+{
+  g_SwapChainFlags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+  // Setup swap chain
+  DXGI_SWAP_CHAIN_DESC1 sd = {};
+  sd.BufferCount           = 2;
+  sd.Width                 = 0;
+  sd.Height                = 0;
+  sd.Format                = DXGI_FORMAT_R8G8B8A8_UNORM;
+  sd.Stereo                = FALSE;
+  sd.SampleDesc.Count      = 1;
+  sd.SampleDesc.Quality    = 0;
+  sd.Scaling               = DXGI_SCALING_STRETCH;
+  sd.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+  sd.Flags                 = g_SwapChainFlags;
+  sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  sd.SampleDesc.Count      = 1;
+  sd.SampleDesc.Quality    = 0;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+  DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsd = {};
+  fsd.RefreshRate.Numerator           = 1000;
+  fsd.RefreshRate.Denominator         = 60000;
+  fsd.Scaling                         = DXGI_MODE_SCALING_UNSPECIFIED;
+  fsd.Windowed                        = false;
+
+  g_pd3dDeviceContext->ClearState();
+  g_pd3dDeviceContext->Flush();
+  ShowReferences();
+  MJ_UNINITIALIZED IDXGISwapChain1* pSwapChain;
+  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pd3dDevice, hWnd, &sd, &fsd, nullptr, &pSwapChain));
+  g_pSwapChain     = (IDXGISwapChain2*)pSwapChain;
+  g_WaitableObject = 0;
+}
+
+static void CreateSwapChainWindowed(HWND hWnd)
+{
+  g_SwapChainFlags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+
+  // Setup swap chain
+  DXGI_SWAP_CHAIN_DESC1 sd = {};
+  sd.BufferCount           = 2;
+  sd.Width                 = 0;
+  sd.Height                = 0;
+  sd.Format                = DXGI_FORMAT_R8G8B8A8_UNORM;
+  sd.Stereo                = FALSE;
+  sd.SampleDesc.Count      = 1;
+  sd.SampleDesc.Quality    = 0;
+  sd.Scaling               = DXGI_SCALING_STRETCH;
+  sd.AlphaMode             = DXGI_ALPHA_MODE_IGNORE;
+  sd.Flags                 = g_SwapChainFlags;
+  sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  sd.SampleDesc.Count      = 1;
+  sd.SampleDesc.Quality    = 0;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+  DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsd = {};
+  fsd.RefreshRate.Numerator           = 1000;
+  fsd.RefreshRate.Denominator         = 60000;
+  fsd.Scaling                         = DXGI_MODE_SCALING_UNSPECIFIED;
+  fsd.Windowed                        = true;
+
+  g_pd3dDeviceContext->ClearState();
+  g_pd3dDeviceContext->Flush();
+  ShowReferences();
+  MJ_UNINITIALIZED IDXGISwapChain1* pSwapChain;
+  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pd3dDevice, hWnd, &sd, &fsd, nullptr, &pSwapChain));
+  g_pSwapChain.Attach((IDXGISwapChain2*)pSwapChain);
+  g_WaitableObject = g_pSwapChain->GetFrameLatencyWaitableObject();
+}
+
 // Main code
 int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR /*pCmdLine*/,
                           int32_t /*nCmdShow*/)
 {
+  tracy::SetThreadName("Main Thread");
 #ifdef _DEBUG
   WIN32_FAIL_IF_ZERO(AllocConsole());
   freopen("CONIN$", "r", stdin);
@@ -133,7 +219,35 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       ::DispatchMessage(&msg);
       continue;
     }
+
+    MJ_DISCARD(WaitForSingleObjectEx(g_WaitableObject, 1000, true));
+
     mj::input::Update();
+
+    if (mj::input::GetKeyDown(Key::F1))
+    {
+      g_FullScreen = !g_FullScreen;
+
+      if (!g_FullScreen)
+      {
+        WIN32_ASSERT(g_pSwapChain->SetFullscreenState(FALSE, nullptr));
+      }
+
+      ID3D11RenderTargetView* ppRtvNull[] = { nullptr };
+      g_pd3dDeviceContext->OMSetRenderTargets(1, ppRtvNull, nullptr);
+      CleanupRenderTarget();
+      g_pSwapChain.Reset();
+      if (g_FullScreen)
+      {
+        CreateSwapChainFullscreen(hwnd);
+      }
+      else
+      {
+        CreateSwapChainWindowed(hwnd);
+      }
+      CreateRenderTarget();
+      // g_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
+    }
 
     LARGE_INTEGER now;
     WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&now));
@@ -186,41 +300,34 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   return 0;
 }
 
-// Helper functions
+static void CreateDevice()
+{
+  UINT createDeviceFlags = 0;
+  DWORD dxgiFactoryFlags = 0;
+#ifdef _DEBUG
+  createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+  dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
+  D3D_FEATURE_LEVEL featureLevel;
+  const D3D_FEATURE_LEVEL featureLevelArray[] = {
+    D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1,
+    D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0,
+  };
+
+  WIN32_ASSERT(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&g_pFactory)));
+  WIN32_ASSERT(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray,
+                                 MJ_COUNTOF(featureLevelArray), D3D11_SDK_VERSION, &g_pd3dDevice, &featureLevel,
+                                 &g_pd3dDeviceContext));
+
+  Microsoft::WRL::ComPtr<IDXGIDevice1> pDxgiDevice;
+  WIN32_ASSERT(g_pd3dDevice->QueryInterface(__uuidof(IDXGIDevice1), (void**)pDxgiDevice.GetAddressOf()));
+  pDxgiDevice->SetMaximumFrameLatency(1);
+}
 
 static bool CreateDeviceD3D(HWND hWnd)
 {
-  // Setup swap chain
-  DXGI_SWAP_CHAIN_DESC sd;
-  ZeroMemory(&sd, sizeof(sd));
-  sd.BufferCount                        = 1;
-  sd.BufferDesc.Width                   = 0;
-  sd.BufferDesc.Height                  = 0;
-  sd.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
-  sd.BufferDesc.RefreshRate.Numerator   = 60;
-  sd.BufferDesc.RefreshRate.Denominator = 1;
-  sd.Flags                              = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-  sd.BufferUsage                        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  sd.OutputWindow                       = hWnd;
-  sd.SampleDesc.Count                   = 1;
-  sd.SampleDesc.Quality                 = 0;
-  sd.Windowed                           = TRUE;
-  sd.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
-
-  UINT createDeviceFlags = 0;
-#ifdef _DEBUG
-  createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-  D3D_FEATURE_LEVEL featureLevel;
-  const D3D_FEATURE_LEVEL featureLevelArray[2] = {
-    D3D_FEATURE_LEVEL_11_0,
-    D3D_FEATURE_LEVEL_10_0,
-  };
-  if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2,
-                                    D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel,
-                                    &g_pd3dDeviceContext) != S_OK)
-    return false;
-
+  CreateDevice();
+  CreateSwapChainWindowed(hWnd);
   CreateRenderTarget();
   return true;
 }
@@ -235,10 +342,9 @@ static void CleanupDeviceD3D()
 
 static void CreateRenderTarget()
 {
-  ID3D11Texture2D* pBackBuffer;
+  Microsoft::WRL::ComPtr<ID3D11Texture2D> pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
-  pBackBuffer->Release();
+  WIN32_ASSERT(g_pd3dDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &g_mainRenderTargetView));
 }
 
 static void CleanupRenderTarget()
@@ -623,10 +729,10 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   switch (msg)
   {
   case WM_SIZE:
-    if (g_pd3dDevice != nullptr && wParam != SIZE_MINIMIZED)
+    if (g_pd3dDevice && g_pSwapChain && wParam != SIZE_MINIMIZED)
     {
       CleanupRenderTarget();
-      g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
+      g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
       mj::d3d11::Resize((float)LOWORD(lParam), (float)HIWORD(lParam));
       CreateRenderTarget();
     }
