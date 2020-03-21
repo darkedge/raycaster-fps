@@ -17,8 +17,8 @@ static constexpr uint16_t MJ_RT_WIDTH  = 640;
 static constexpr uint16_t MJ_RT_HEIGHT = 400;
 
 // Window resolution
-static constexpr uint16_t MJ_WND_WIDTH  = 1600;
-static constexpr uint16_t MJ_WND_HEIGHT = 1000;
+static constexpr uint16_t MJ_WND_WIDTH  = 1280;
+static constexpr uint16_t MJ_WND_HEIGHT = 800;
 
 namespace mj
 {
