@@ -29,7 +29,6 @@ static bool g_FullScreen;
 static bool CreateDeviceD3D(HWND hWnd);
 static void CleanupDeviceD3D();
 static void CreateRenderTarget();
-static void CleanupRenderTarget();
 static void InitKeymap();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -120,9 +119,9 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   tracy::SetThreadName("Main Thread");
 #ifdef _DEBUG
   WIN32_FAIL_IF_ZERO(AllocConsole());
-  freopen("CONIN$", "r", stdin);
-  freopen("CONOUT$", "w", stdout);
-  freopen("CONOUT$", "w", stderr);
+  MJ_DISCARD(freopen("CONIN$", "r", stdin));
+  MJ_DISCARD(freopen("CONOUT$", "w", stdout));
+  MJ_DISCARD(freopen("CONOUT$", "w", stderr));
 #endif
   ImGui_ImplWin32_EnableDpiAwareness();
 
@@ -235,7 +234,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
 
       ID3D11RenderTargetView* ppRtvNull[] = { nullptr };
       g_pd3dDeviceContext->OMSetRenderTargets(1, ppRtvNull, nullptr);
-      CleanupRenderTarget();
+      SAFE_RELEASE(g_mainRenderTargetView);
       g_pSwapChain.Reset();
       if (g_FullScreen)
       {
@@ -334,9 +333,10 @@ static bool CreateDeviceD3D(HWND hWnd)
 
 static void CleanupDeviceD3D()
 {
-  CleanupRenderTarget();
-  SAFE_RELEASE(g_pSwapChain);
+  SAFE_RELEASE(g_mainRenderTargetView);
+  g_pSwapChain.Reset();
   SAFE_RELEASE(g_pd3dDeviceContext);
+  g_pFactory.Reset();
   SAFE_RELEASE(g_pd3dDevice);
 }
 
@@ -345,15 +345,6 @@ static void CreateRenderTarget()
   Microsoft::WRL::ComPtr<ID3D11Texture2D> pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
   WIN32_ASSERT(g_pd3dDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &g_mainRenderTargetView));
-}
-
-static void CleanupRenderTarget()
-{
-  if (g_mainRenderTargetView)
-  {
-    g_mainRenderTargetView->Release();
-    g_mainRenderTargetView = nullptr;
-  }
 }
 
 #ifndef WM_DPICHANGED
@@ -731,7 +722,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_SIZE:
     if (g_pd3dDevice && g_pSwapChain && wParam != SIZE_MINIMIZED)
     {
-      CleanupRenderTarget();
+      SAFE_RELEASE(g_mainRenderTargetView);
       g_pSwapChain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
       mj::d3d11::Resize((float)LOWORD(lParam), (float)HIWORD(lParam));
       CreateRenderTarget();
