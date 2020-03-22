@@ -572,15 +572,7 @@ void mj::hlsl::Update(ID3D11DeviceContext* pDeviceContext, uint16_t width, uint1
   pDeviceContext->CSSetShaderResources(0, MJ_COUNTOF(ppSrv), ppSrv);
 
   // Run compute shader
-  if (mj::input::GetMouseButton(MouseButton::Left))
-  {
-    const UINT values[4] = { 0, 0, 0, 0 };
-    pDeviceContext->ClearUnorderedAccessViewUint(s_pUnorderedAccessView.Get(), values);
-  }
-  else
-  {
-    pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
-  }
+  pDeviceContext->Dispatch((MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM, (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
   // Unbind
   ID3D11ShaderResourceView* ppSrvNull[MJ_COUNTOF(ppSrv)] = {};
