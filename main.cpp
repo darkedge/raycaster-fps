@@ -66,7 +66,7 @@ static void CreateSwapChainFullscreen(HWND hWnd)
   sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   sd.SampleDesc.Count      = 1;
   sd.SampleDesc.Quality    = 0;
-  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
   DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsd = {};
   fsd.RefreshRate.Numerator           = 1000;
@@ -100,7 +100,7 @@ static void CreateSwapChainWindowed(HWND hWnd)
   sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   sd.SampleDesc.Count      = 1;
   sd.SampleDesc.Quality    = 0;
-  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
   ShowReferences();
   MJ_UNINITIALIZED IDXGISwapChain1* pSwapChain;
@@ -208,6 +208,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       ZoneScopedNC("WaitableObject", tracy::Color::Crimson);
       MJ_DISCARD(WaitForSingleObjectEx(g_WaitableObject, 1000, true));
     }
+    FrameMark;
 
     // Poll and handle messages (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your
@@ -306,7 +307,6 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       //g_pDeviceContext->OMSetRenderTargets(1, g_pRenderTargetView.GetAddressOf(), nullptr);
       // g_pSwapChain->Present(0, 0); // Present without vsync
     }
-    FrameMark;
   }
 
   // Cleanup
