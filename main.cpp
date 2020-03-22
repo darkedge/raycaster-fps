@@ -18,10 +18,10 @@
 using Microsoft::WRL::ComPtr;
 
 // Data
-static ComPtr<ID3D11Device> g_pd3dDevice;
-static ComPtr<ID3D11DeviceContext> g_pd3dDeviceContext;
+static ComPtr<ID3D11Device> g_pDevice;
+static ComPtr<ID3D11DeviceContext> g_pDeviceContext;
 static ComPtr<IDXGISwapChain2> g_pSwapChain;
-static ComPtr<ID3D11RenderTargetView> g_mainRenderTargetView;
+static ComPtr<ID3D11RenderTargetView> g_pRenderTargetView;
 static HANDLE g_WaitableObject;
 static UINT g_SwapChainFlags;
 static ComPtr<IDXGIFactory3> g_pFactory;
@@ -39,10 +39,12 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static void ShowReferences()
 {
+#ifdef _DEBUG
   ComPtr<ID3D11Debug> pDebug;
-  WIN32_ASSERT(g_pd3dDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(pDebug.GetAddressOf())));
+  WIN32_ASSERT(g_pDevice->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(pDebug.GetAddressOf())));
   WIN32_ASSERT(pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL));
   // D3D11_RLDO_SUMMARY | D3D11_RLDO_DETAIL | D3D11_RLDO_IGNORE_INTERNAL
+#endif
 }
 
 static void CreateSwapChainFullscreen(HWND hWnd)
@@ -64,7 +66,7 @@ static void CreateSwapChainFullscreen(HWND hWnd)
   sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   sd.SampleDesc.Count      = 1;
   sd.SampleDesc.Quality    = 0;
-  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
   DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsd = {};
   fsd.RefreshRate.Numerator           = 1000;
@@ -72,11 +74,9 @@ static void CreateSwapChainFullscreen(HWND hWnd)
   fsd.Scaling                         = DXGI_MODE_SCALING_UNSPECIFIED;
   fsd.Windowed                        = false;
 
-  g_pd3dDeviceContext->ClearState();
-  g_pd3dDeviceContext->Flush();
   ShowReferences();
   MJ_UNINITIALIZED IDXGISwapChain1* pSwapChain;
-  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pd3dDevice.Get(), hWnd, &sd, &fsd, nullptr, &pSwapChain));
+  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pDevice.Get(), hWnd, &sd, &fsd, nullptr, &pSwapChain));
   g_pSwapChain.Attach((IDXGISwapChain2*)pSwapChain);
   g_WaitableObject = 0;
 }
@@ -100,21 +100,14 @@ static void CreateSwapChainWindowed(HWND hWnd)
   sd.BufferUsage           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   sd.SampleDesc.Count      = 1;
   sd.SampleDesc.Quality    = 0;
-  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+  sd.SwapEffect            = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
-  DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsd = {};
-  fsd.RefreshRate.Numerator           = 1000;
-  fsd.RefreshRate.Denominator         = 60000;
-  fsd.Scaling                         = DXGI_MODE_SCALING_UNSPECIFIED;
-  fsd.Windowed                        = true;
-
-  g_pd3dDeviceContext->ClearState();
-  g_pd3dDeviceContext->Flush();
   ShowReferences();
   MJ_UNINITIALIZED IDXGISwapChain1* pSwapChain;
-  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pd3dDevice.Get(), hWnd, &sd, &fsd, nullptr, &pSwapChain));
+  WIN32_ASSERT(g_pFactory->CreateSwapChainForHwnd(g_pDevice.Get(), hWnd, &sd, nullptr, nullptr, &pSwapChain));
   g_pSwapChain.Attach((IDXGISwapChain2*)pSwapChain);
   g_WaitableObject = g_pSwapChain->GetFrameLatencyWaitableObject();
+  g_pSwapChain->SetMaximumFrameLatency(1);
 }
 
 // Main code
@@ -136,7 +129,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
 
   // Get window rectangle
   RECT windowRect = { 0, 0, MJ_WND_WIDTH, MJ_WND_HEIGHT };
-  auto dwStyle    = WS_OVERLAPPEDWINDOW;
+  auto dwStyle    = WS_POPUP;
   AdjustWindowRect(&windowRect, dwStyle, FALSE);
 
   // Calculate window dimensions
@@ -159,8 +152,8 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   }
 
   // Show the window
-  ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-  ::UpdateWindow(hwnd);
+  ShowWindow(hwnd, SW_SHOWDEFAULT);
+  UpdateWindow(hwnd);
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
@@ -192,24 +185,30 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
 
   // Setup Platform/Renderer bindings
   ImGui_ImplWin32_Init(hwnd);
-  ImGui_ImplDX11_Init(g_pd3dDevice.Get(), g_pd3dDeviceContext.Get());
+  ImGui_ImplDX11_Init(g_pDevice.Get(), g_pDeviceContext.Get());
 
-  if (!mj::d3d11::Init(g_pd3dDevice.Get()))
+  if (!mj::d3d11::Init(g_pDevice.Get()))
   {
     return EXIT_FAILURE;
   }
+  mj::d3d11::Resize(g_pDevice.Get(), MJ_WND_WIDTH, MJ_WND_HEIGHT);
   InitKeymap();
 
   // Main loop
-  MSG msg;
-  ZeroMemory(&msg, sizeof(msg));
+  MSG msg = {};
   mj::input::Init();
   LARGE_INTEGER lastTime, perfFreq;
   WIN32_FAIL_IF_ZERO(QueryPerformanceCounter(&lastTime));
   WIN32_FAIL_IF_ZERO(QueryPerformanceFrequency(&perfFreq));
-  while (msg.message != WM_QUIT)
+  while (true)
   {
-    ZoneScoped;
+    ZoneScopedN("Game Loop");
+    if (!g_FullScreen)
+    {
+      ZoneScopedNC("WaitableObject", tracy::Color::Crimson);
+      MJ_DISCARD(WaitForSingleObjectEx(g_WaitableObject, 1000, true));
+    }
+
     // Poll and handle messages (inputs, window resize, etc.)
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your
     // inputs.
@@ -217,14 +216,19 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
     // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
     // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two
     // flags.
-    if (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+    while (PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
     {
-      ::TranslateMessage(&msg);
-      ::DispatchMessage(&msg);
-      continue;
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      if (msg.message == WM_QUIT)
+      {
+        break;
+      }
     }
-
-    MJ_DISCARD(WaitForSingleObjectEx(g_WaitableObject, 1000, true));
+    if (msg.message == WM_QUIT)
+    {
+      break;
+    }
 
     mj::input::Update();
 
@@ -235,18 +239,19 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       if (!g_FullScreen)
       {
         WIN32_ASSERT(g_pSwapChain->SetFullscreenState(FALSE, nullptr));
+        g_pSwapChain->ResizeBuffers(0, g_Width, g_Height, DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
       }
 
       ID3D11RenderTargetView* ppRtvNull[] = { nullptr };
-      g_pd3dDeviceContext->OMSetRenderTargets(1, ppRtvNull, nullptr);
-      g_mainRenderTargetView.Reset();
+      g_pDeviceContext->OMSetRenderTargets(1, ppRtvNull, nullptr);
+      g_pRenderTargetView.Reset();
       g_pSwapChain.Reset();
       if (g_FullScreen)
       {
-        g_Width = MJ_FS_WIDTH;
+        g_Width  = MJ_FS_WIDTH;
         g_Height = MJ_FS_HEIGHT;
         CreateSwapChainFullscreen(hwnd);
-        mj::d3d11::Resize(g_pd3dDevice.Get(), g_Width, g_Height);
+        mj::d3d11::Resize(g_pDevice.Get(), g_Width, g_Height);
       }
       else
       {
@@ -266,28 +271,39 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
     SetDeltaTime(dt);
     lastTime = now;
 
-    // Start the Dear ImGui frame
-    ImGui_ImplDX11_NewFrame();
-    ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
-
-    g_pd3dDeviceContext->OMSetRenderTargets(1, g_mainRenderTargetView.GetAddressOf(), nullptr);
-    mj::d3d11::Update(g_pd3dDeviceContext.Get());
-
-    // Rendering
-    ImGui::Render();
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-
-    // Update and Render additional Platform Windows
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
+      ZoneScopedNC("ImGuiNewFrame", tracy::Color::CornflowerBlue);
+      // Start the Dear ImGui frame
+      ImGui_ImplDX11_NewFrame();
+      ImGui_ImplWin32_NewFrame();
+      ImGui::NewFrame();
+    }
+
+    g_pDeviceContext->OMSetRenderTargets(1, g_pRenderTargetView.GetAddressOf(), nullptr);
+    mj::d3d11::Update(g_pDeviceContext.Get());
+
+    {
+      ZoneScopedNC("ImGuiRender", tracy::Color::CornflowerBlue);
+      ImGui::Render();
+      ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+      // Update and Render additional Platform Windows
+      if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+      {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+      }
     }
 
     {
-      ZoneScopedN("Present");
-      g_pSwapChain->Present(1, 0); // Present with vsync
+      ZoneScopedNC("Present", tracy::Color::DarkRed);
+      DXGI_PRESENT_PARAMETERS presentParams = {};
+      presentParams.DirtyRectsCount         = 0;
+      presentParams.pDirtyRects             = nullptr;
+      presentParams.pScrollOffset           = nullptr;
+      presentParams.pScrollRect             = nullptr;
+      WIN32_ASSERT(g_pSwapChain->Present1(1, 0, &presentParams)); // Present with vsync
+      //g_pDeviceContext->OMSetRenderTargets(1, g_pRenderTargetView.GetAddressOf(), nullptr);
       // g_pSwapChain->Present(0, 0); // Present without vsync
     }
     FrameMark;
@@ -306,7 +322,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   return 0;
 }
 
-static void CreateDevice()
+static void CreateDevice(HWND hWnd)
 {
   UINT createDeviceFlags = 0;
   DWORD dxgiFactoryFlags = 0;
@@ -323,17 +339,14 @@ static void CreateDevice()
   WIN32_ASSERT(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(g_pFactory.ReleaseAndGetAddressOf())));
   WIN32_ASSERT(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray,
                                  MJ_COUNTOF(featureLevelArray), D3D11_SDK_VERSION,
-                                 g_pd3dDevice.ReleaseAndGetAddressOf(), &featureLevel,
-                                 g_pd3dDeviceContext.ReleaseAndGetAddressOf()));
-
-  ComPtr<IDXGIDevice1> pDxgiDevice;
-  WIN32_ASSERT(g_pd3dDevice->QueryInterface(__uuidof(IDXGIDevice1), (void**)pDxgiDevice.GetAddressOf()));
-  pDxgiDevice->SetMaximumFrameLatency(1);
+                                 g_pDevice.ReleaseAndGetAddressOf(), &featureLevel,
+                                 g_pDeviceContext.ReleaseAndGetAddressOf()));
+  WIN32_ASSERT(g_pFactory->MakeWindowAssociation(hWnd, 0));
 }
 
 static bool CreateDeviceD3D(HWND hWnd)
 {
-  CreateDevice();
+  CreateDevice(hWnd);
   CreateSwapChainWindowed(hWnd);
   CreateRenderTarget();
   return true;
@@ -341,19 +354,19 @@ static bool CreateDeviceD3D(HWND hWnd)
 
 static void CleanupDeviceD3D()
 {
-  g_mainRenderTargetView.Reset();
+  g_pRenderTargetView.Reset();
   g_pSwapChain.Reset();
-  g_pd3dDeviceContext.Reset();
+  g_pDeviceContext.Reset();
   g_pFactory.Reset();
-  g_pd3dDevice.Reset();
+  g_pDevice.Reset();
 }
 
 static void CreateRenderTarget()
 {
   ComPtr<ID3D11Texture2D> pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  WIN32_ASSERT(g_pd3dDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr,
-                                                    g_mainRenderTargetView.ReleaseAndGetAddressOf()));
+  WIN32_ASSERT(g_pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr,
+                                                    g_pRenderTargetView.ReleaseAndGetAddressOf()));
 }
 
 #ifndef WM_DPICHANGED
@@ -729,13 +742,13 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   switch (msg)
   {
   case WM_SIZE:
-    if (g_pd3dDevice && g_pSwapChain && wParam != SIZE_MINIMIZED)
+    g_Width  = (uint16_t)LOWORD(lParam);
+    g_Height = (uint16_t)HIWORD(lParam);
+    if (g_pDevice && g_pSwapChain && wParam != SIZE_MINIMIZED)
     {
-      g_mainRenderTargetView.Reset();
-      g_Width  = (uint16_t)LOWORD(lParam);
-      g_Height = (uint16_t)HIWORD(lParam);
+      g_pRenderTargetView.Reset();
       g_pSwapChain->ResizeBuffers(0, g_Width, g_Height, DXGI_FORMAT_UNKNOWN, g_SwapChainFlags);
-      mj::d3d11::Resize(g_pd3dDevice.Get(), (uint16_t)LOWORD(lParam), (uint16_t)HIWORD(lParam));
+      mj::d3d11::Resize(g_pDevice.Get(), (uint16_t)LOWORD(lParam), (uint16_t)HIWORD(lParam));
       CreateRenderTarget();
     }
     return 0;
