@@ -15,6 +15,7 @@
 
 #include "tracy/Tracy.hpp"
 #include <wrl/client.h>
+#include <string_view>
 
 using Microsoft::WRL::ComPtr;
 
@@ -48,6 +49,7 @@ static ComPtr<ID3D11SamplerState> s_pTextureSamplerState;
 static ComPtr<ID3D11ShaderResourceView> s_pTextureSrv;
 
 static bool s_MouseLook = true;
+static std::string_view s_Strings[2];
 
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
@@ -65,6 +67,47 @@ static void Reset()
   s_Constant.s_Camera.frame    = 0;
   s_Constant.fovDeg            = 60.0f;
   CameraInit(MJ_REF s_Constant.s_Camera);
+}
+
+static bool LoadStrings()
+{
+  bool success         = false;
+  HRSRC resourceHandle = FindResource(0, MAKEINTRESOURCE(MJ_RC_STRINGS), RT_RCDATA);
+  if (resourceHandle)
+  {
+    HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
+    if (dataHandle)
+    {
+      const char* pResourceData = (const char*)LockResource(dataHandle);
+      const char* pBegin        = pResourceData;
+      if (pResourceData)
+      {
+        DWORD resourceSize = SizeofResource(nullptr, resourceHandle);
+        size_t numStrings  = 0;
+        size_t length      = 0;
+        for (DWORD i = 0; i < resourceSize; i++)
+        {
+          length++;
+          if (pResourceData[i] == '\n')
+          {
+            length--;
+            if (i && pResourceData[i - 1] == '\r')
+            {
+              length--;
+            }
+            s_Strings[numStrings++] = std::string_view(pBegin, length);
+            length                  = 0;
+            pBegin                  = &pResourceData[i + 1];
+          }
+        }
+        if (numStrings == MJ_COUNTOF(s_Strings))
+        {
+          success = true;
+        }
+      }
+    }
+  }
+  return success;
 }
 
 static bool InitObjectPlaceholder(ID3D11Device* pDevice)
@@ -85,11 +128,11 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
     HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
     if (dataHandle)
     {
-      void* resourceData = LockResource(dataHandle);
-      if (resourceData)
+      void* pResourceData = LockResource(dataHandle);
+      if (pResourceData)
       {
         DWORD resourceSize = SizeofResource(nullptr, resourceHandle);
-        mj::IStream stream(resourceData, resourceSize);
+        mj::IStream stream(pResourceData, resourceSize);
 
         MJ_UNINITIALIZED int32_t* pId;
         MJ_UNINITIALIZED uint32_t* versionNumber;
@@ -163,13 +206,13 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                     bufferDesc.StructureByteStride = sizeof(*s_Object);
 
                     {
-                      D3D11_SUBRESOURCE_DATA subresourceData = {};
-                      subresourceData.pSysMem                = s_Object;
-                      subresourceData.SysMemPitch            = 0;
-                      subresourceData.SysMemSlicePitch       = 0;
+                      D3D11_SUBRESOURCE_DATA subpResourceData = {};
+                      subpResourceData.pSysMem                = s_Object;
+                      subpResourceData.SysMemPitch            = 0;
+                      subpResourceData.SysMemSlicePitch       = 0;
 
                       assert(!s_pObjectBuffer);
-                      WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData,
+                      WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subpResourceData,
                                                          s_pObjectBuffer.ReleaseAndGetAddressOf()));
                       SetDebugName(s_pObjectBuffer.Get(), "s_pObjectBuffer");
                     }
@@ -212,13 +255,13 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                   bufferDesc.StructureByteStride = 4; // (R, G, B, A) : 1 byte for each component
 
                   {
-                    D3D11_SUBRESOURCE_DATA subresourceData = {};
-                    subresourceData.pSysMem                = stream.Position();
-                    subresourceData.SysMemPitch            = 0;
-                    subresourceData.SysMemSlicePitch       = 0;
+                    D3D11_SUBRESOURCE_DATA subpResourceData = {};
+                    subpResourceData.pSysMem                = stream.Position();
+                    subpResourceData.SysMemPitch            = 0;
+                    subpResourceData.SysMemSlicePitch       = 0;
 
                     assert(!s_pPaletteBuffer);
-                    WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subresourceData,
+                    WIN32_ASSERT(pDevice->CreateBuffer(&bufferDesc, &subpResourceData,
                                                        s_pPaletteBuffer.ReleaseAndGetAddressOf()));
                     SetDebugName(s_pPaletteBuffer.Get(), "s_pPaletteBuffer");
                   }
@@ -272,11 +315,11 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
     HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
     if (dataHandle)
     {
-      void* resourceData = LockResource(dataHandle);
-      if (resourceData)
+      void* pResourceData = LockResource(dataHandle);
+      if (pResourceData)
       {
         DWORD resourceSize = SizeofResource(nullptr, resourceHandle);
-        mj::IStream stream(resourceData, resourceSize);
+        mj::IStream stream(pResourceData, resourceSize);
 
         // DDS header
         MJ_UNINITIALIZED DWORD* dwMagic;
@@ -298,21 +341,21 @@ static bool InitTexture2DArray(ID3D11Device* pDevice)
           desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
 
           UINT numDesc = desc.MipLevels * desc.ArraySize;
-          D3D11_SUBRESOURCE_DATA* pSubResourceData =
+          D3D11_SUBRESOURCE_DATA* pSubpResourceData =
               (D3D11_SUBRESOURCE_DATA*)alloca(numDesc * sizeof(D3D11_SUBRESOURCE_DATA));
-          if (pSubResourceData)
+          if (pSubpResourceData)
           {
             char* pData = stream.Position();
             for (size_t i = 0; i < numDesc; i++)
             {
-              pSubResourceData[i].pSysMem          = pData;
-              pSubResourceData[i].SysMemPitch      = header->pitchOrLinearSize;
-              pSubResourceData[i].SysMemSlicePitch = 0;
+              pSubpResourceData[i].pSysMem          = pData;
+              pSubpResourceData[i].SysMemPitch      = header->pitchOrLinearSize;
+              pSubpResourceData[i].SysMemSlicePitch = 0;
               pData += (size_t)header->height * header->pitchOrLinearSize;
             }
 
             assert(!s_pTexture);
-            WIN32_ASSERT(pDevice->CreateTexture2D(&desc, pSubResourceData, s_pTexture.ReleaseAndGetAddressOf()));
+            WIN32_ASSERT(pDevice->CreateTexture2D(&desc, pSubpResourceData, s_pTexture.ReleaseAndGetAddressOf()));
             SetDebugName(s_pTexture.Get(), "s_pTexture");
 
             {
@@ -436,10 +479,10 @@ static bool LoadLevel(ID3D11Device* pDevice)
     HGLOBAL dataHandle = LoadResource(nullptr, resourceHandle);
     if (dataHandle)
     {
-      uint16_t* resourceData = (uint16_t*)LockResource(dataHandle);
-      DWORD resourceSize     = SizeofResource(nullptr, resourceHandle) / sizeof(*resourceData);
+      uint16_t* pResourceData = (uint16_t*)LockResource(dataHandle);
+      DWORD resourceSize      = SizeofResource(nullptr, resourceHandle) / sizeof(*pResourceData);
 
-      if (ParseLevel(pDevice, resourceData, resourceSize))
+      if (ParseLevel(pDevice, pResourceData, resourceSize))
       {
         success = true;
       }
@@ -498,6 +541,11 @@ bool mj::hlsl::Init(ID3D11Device* pDevice)
   }
 
   if (!InitObjectPlaceholder(pDevice))
+  {
+    return false;
+  }
+
+  if (!LoadStrings())
   {
     return false;
   }

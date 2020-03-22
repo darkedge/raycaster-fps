@@ -100,6 +100,9 @@
     <CudaCompile>
       <FastMath>true</FastMath>
     </CudaCompile>
+    <PreBuildEvent>
+      <Command>powershell -file prebuild.ps1</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -131,6 +134,9 @@
     <CudaCompile>
       <FastMath>true</FastMath>
     </CudaCompile>
+    <PreBuildEvent>
+      <Command>powershell -file prebuild.ps1</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <ClCompile>
@@ -163,6 +169,9 @@
     <CudaCompile>
       <FastMath>true</FastMath>
     </CudaCompile>
+    <PreBuildEvent>
+      <Command>powershell -file prebuild.ps1</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />

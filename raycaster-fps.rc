@@ -62,3 +62,5 @@ END
 MJ_RC_RESOURCE RCDATA "E1M1.bin"
 MJ_RC_TEXTURE_ARRAY RCDATA "texture_array.dds"
 MJ_RC_OBJ_PLACEHOLDER RCDATA "obj_placeholder.vox"
+MJ_RC_DIFF RCDATA "wd.diff"
+MJ_RC_STRINGS RCDATA "strings.txt"
