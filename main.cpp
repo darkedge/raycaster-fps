@@ -301,8 +301,6 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       presentParams.pScrollOffset           = nullptr;
       presentParams.pScrollRect             = nullptr;
       WIN32_ASSERT(s_pSwapChain->Present1(1, 0, &presentParams)); // Present with vsync
-      // s_pDeviceContext->OMSetRenderTargets(1, s_pRenderTargetView.GetAddressOf(), nullptr);
-      // s_pSwapChain->Present(0, 0); // Present without vsync
     }
   }
 

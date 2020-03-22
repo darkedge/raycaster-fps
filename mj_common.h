@@ -17,8 +17,8 @@ static constexpr uint16_t MJ_RT_WIDTH  = 640;
 static constexpr uint16_t MJ_RT_HEIGHT = 400;
 
 // Window resolution
-static constexpr uint16_t MJ_WND_WIDTH  = 1600;
-static constexpr uint16_t MJ_WND_HEIGHT = 1000;
+static constexpr uint16_t MJ_WND_WIDTH  = 1280;
+static constexpr uint16_t MJ_WND_HEIGHT = 800;
 
 static constexpr uint16_t MJ_FS_WIDTH  = 1920;
 static constexpr uint16_t MJ_FS_HEIGHT = 1080;
