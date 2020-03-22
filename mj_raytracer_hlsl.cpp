@@ -49,7 +49,7 @@ static ComPtr<ID3D11SamplerState> s_pTextureSamplerState;
 static ComPtr<ID3D11ShaderResourceView> s_pTextureSrv;
 
 static bool s_MouseLook = true;
-static std::string_view s_Strings[2];
+static std::string_view s_Strings[3];
 
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
@@ -90,7 +90,7 @@ static void ShowBuildInfo()
                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
                        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
   {
-    ImGui::Text("Commit:     %.*s", s_Strings[0].size(), s_Strings[0].data());
+    ImGui::Text("Commit:     %.*s (v%.*s)", s_Strings[0].size(), s_Strings[0].data(), s_Strings[2].size(), s_Strings[2].data());
     ImGui::Text("Build date: %.*s", s_Strings[1].size(), s_Strings[1].data());
   }
   ImGui::End();
