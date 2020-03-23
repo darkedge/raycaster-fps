@@ -86,6 +86,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CallingConvention>VectorCall</CallingConvention>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dxgi.lib;d3d11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -97,9 +98,6 @@
       <VariableName>%(Filename)</VariableName>
       <ObjectFileOutput />
     </FxCompile>
-    <CudaCompile>
-      <FastMath>true</FastMath>
-    </CudaCompile>
     <PreBuildEvent>
       <Command>powershell -file prebuild.ps1</Command>
     </PreBuildEvent>
@@ -118,6 +116,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CallingConvention>VectorCall</CallingConvention>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -131,9 +130,6 @@
       <VariableName>%(Filename)</VariableName>
       <ObjectFileOutput />
     </FxCompile>
-    <CudaCompile>
-      <FastMath>true</FastMath>
-    </CudaCompile>
     <PreBuildEvent>
       <Command>powershell -file prebuild.ps1</Command>
     </PreBuildEvent>
@@ -152,6 +148,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CallingConvention>VectorCall</CallingConvention>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -166,9 +163,6 @@
       <ObjectFileOutput>
       </ObjectFileOutput>
     </FxCompile>
-    <CudaCompile>
-      <FastMath>true</FastMath>
-    </CudaCompile>
     <PreBuildEvent>
       <Command>powershell -file prebuild.ps1</Command>
     </PreBuildEvent>
