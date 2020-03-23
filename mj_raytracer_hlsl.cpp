@@ -49,7 +49,16 @@ static ComPtr<ID3D11SamplerState> s_pTextureSamplerState;
 static ComPtr<ID3D11ShaderResourceView> s_pTextureSrv;
 
 static bool s_MouseLook = true;
-static std::string_view s_Strings[3];
+enum EStrings
+{
+  EStrings_GitCommitId,
+  EStrings_GitCommitCount,
+  EStrings_GitBranch,
+  EStrings_BuildDate,
+  EStrings_Configuration,
+  EStringsCount
+};
+static std::string_view s_Strings[EStringsCount];
 
 #pragma comment(lib, "dxguid.lib")
 void SetDebugName(ID3D11DeviceChild* child, const char* name)
@@ -86,12 +95,16 @@ static void ShowBuildInfo()
   }
   ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
   if (ImGui::Begin("Overlay", nullptr,
-                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDocking | 
+                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDocking |
                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
                        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
   {
-    ImGui::Text("Commit:     %.*s (v%.*s)", s_Strings[0].size(), s_Strings[0].data(), s_Strings[2].size(), s_Strings[2].data());
-    ImGui::Text("Build date: %.*s", s_Strings[1].size(), s_Strings[1].data());
+    ImGui::Text("%.*s, %.*s (%.*s #%.*s), %.*s", s_Strings[EStrings_Configuration].size(),
+                s_Strings[EStrings_Configuration].data(), s_Strings[EStrings_GitCommitId].size(),
+                s_Strings[EStrings_GitCommitId].data(), s_Strings[EStrings_GitBranch].size(),
+                s_Strings[EStrings_GitBranch].data(), s_Strings[EStrings_GitCommitCount].size(),
+                s_Strings[EStrings_GitCommitCount].data(), s_Strings[EStrings_BuildDate].size(),
+                s_Strings[EStrings_BuildDate].data());
   }
   ImGui::End();
 }

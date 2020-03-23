@@ -99,7 +99,7 @@
       <ObjectFileOutput />
     </FxCompile>
     <PreBuildEvent>
-      <Command>powershell -file prebuild.ps1</Command>
+      <Command>powershell -File prebuild.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,7 +131,7 @@
       <ObjectFileOutput />
     </FxCompile>
     <PreBuildEvent>
-      <Command>powershell -file prebuild.ps1</Command>
+      <Command>powershell -File prebuild.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
@@ -164,7 +164,7 @@
       </ObjectFileOutput>
     </FxCompile>
     <PreBuildEvent>
-      <Command>powershell -file prebuild.ps1</Command>
+      <Command>powershell -File prebuild.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
