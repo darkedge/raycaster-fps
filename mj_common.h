@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <new>
 
 // Annotation macros
 
@@ -25,14 +26,39 @@ static constexpr uint16_t MJ_FS_HEIGHT = 1080;
 
 namespace mj
 {
+  template <typename T>
+  void swap(T& a, T& b)
+  {
+    T c = a;
+    a   = b;
+    b   = c;
+  }
+
   // stream for reading
   class IStream
   {
   public:
-    IStream(void* begin, size_t size)
+    IStream() : end(nullptr), position(nullptr)
     {
-      this->end      = (char*)begin + size;
-      this->position = (char*)begin;
+    }
+
+    IStream(void* begin, void* end) : end((char*)end), position((char*)begin)
+    {
+    }
+
+    IStream(void* begin, size_t size) : end((char*)begin + size), position((char*)begin)
+    {
+    }
+
+    IStream(const IStream& other) : end(other.end), position(other.position)
+    {
+    }
+
+    IStream& operator=(const IStream& rhs)
+    {
+      this->end      = rhs.end;
+      this->position = rhs.position;
+      return *this;
     }
 
     char* Position()
@@ -42,7 +68,7 @@ namespace mj
 
     size_t SizeLeft()
     {
-      return this->end - this->position;
+      return (this->end - this->position);
     }
 
     template <typename T>
@@ -51,6 +77,22 @@ namespace mj
       if (SizeLeft() >= sizeof(T))
       {
         memcpy(&t, this->position, sizeof(T));
+        this->position += sizeof(T);
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+      }
+      return *this;
+    }
+
+    template <typename T>
+    IStream& Write(T& t)
+    {
+      if (SizeLeft() >= sizeof(T))
+      {
+        memcpy(this->position, &t, sizeof(T));
         this->position += sizeof(T);
       }
       else
@@ -93,6 +135,7 @@ namespace mj
 
     template <typename T>
     void Fetch(T*&&) = delete;
+
     template <typename T>
     IStream& Fetch(T*& t)
     {
@@ -107,6 +150,61 @@ namespace mj
         this->position = nullptr;
       }
       return *this;
+    }
+
+    template <typename T>
+    T* ReserveArrayUnaligned(size_t numElements)
+    {
+      if (SizeLeft() >= (numElements * sizeof(T)))
+      {
+        T* t = (T*)this->position;
+        this->position += (numElements * sizeof(T));
+        return t;
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+        return nullptr;
+      }
+    }
+
+    template <typename T, typename... Args>
+    T* NewUnaligned(Args... args)
+    {
+      if (SizeLeft() >= sizeof(T))
+      {
+        T* t = (T*)this->position;
+        this->position += sizeof(T);
+        return new (t) T(args...);
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+        return nullptr;
+      }
+    }
+
+    template <typename T>
+    T* NewArrayUnaligned(size_t numElements)
+    {
+      if (SizeLeft() >= (numElements * sizeof(T)))
+      {
+        T* t = (T*)this->position;
+        this->position += (numElements * sizeof(T));
+        for (size_t i = 0; i < numElements; i++)
+        {
+          new (t + i) T();
+        }
+        return t;
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+        return nullptr;
+      }
     }
 
     bool Good()

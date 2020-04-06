@@ -181,6 +181,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mj_raytracer_hlsl.cpp" />
     <ClCompile Include="mj_win32_utils.cpp" />
+    <ClCompile Include="santorini.cpp" />
     <ClCompile Include="tracy\TracyClient.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -202,6 +203,7 @@
     <ClInclude Include="mj_raytracer_hlsl.h" />
     <ClInclude Include="mj_win32_utils.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="santorini.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PSQuadOut.hlsl">

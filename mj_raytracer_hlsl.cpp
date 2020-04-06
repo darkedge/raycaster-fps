@@ -48,7 +48,7 @@ static ComPtr<ID3D11Texture2D> s_pTexture;
 static ComPtr<ID3D11SamplerState> s_pTextureSamplerState;
 static ComPtr<ID3D11ShaderResourceView> s_pTextureSrv;
 
-static bool s_MouseLook = true;
+static bool s_MouseLook = false;
 enum EStrings
 {
   EStrings_GitCommitId,

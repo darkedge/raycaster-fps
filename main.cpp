@@ -12,6 +12,7 @@
 #include "mj_input.h"
 #include "mj_win32_utils.h"
 #include "game.h"
+#include "santorini.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -188,6 +189,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   {
     return EXIT_FAILURE;
   }
+  SantoriniInit();
   mj::d3d11::Resize(s_pDevice.Get(), MJ_WND_WIDTH, MJ_WND_HEIGHT);
   InitKeymap();
 
@@ -278,6 +280,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
     }
 
     s_pDeviceContext->OMSetRenderTargets(1, s_pRenderTargetView.GetAddressOf(), nullptr);
+    SantoriniUpdate();
     mj::d3d11::Update(s_pDeviceContext.Get());
 
     {
