@@ -1,3 +1,18 @@
 [submodule "tracy"]
-	path = tracy
+	path = 3rdparty/tracy
 	url = https://bitbucket.org/wolfpld/tracy.git
+[submodule "bgfx"]
+    path = 3rdparty/bgfx
+    url = https://github.com/bkaradzic/bgfx
+[submodule "bimg"]
+    path = 3rdparty/bimg
+    url = https://github.com/bkaradzic/bimg
+[submodule "bx"]
+    path = 3rdparty/bx
+    url = https://github.com/bkaradzic/bx
+[submodule "3rdparty/yojimbo"]
+    path = 3rdparty/yojimbo
+    url = https://github.com/networkprotocol/yojimbo
+[submodule "3rdparty/enkiTS"]
+    path = 3rdparty/enkiTS
+    url = https://github.com/dougbinks/enkiTS

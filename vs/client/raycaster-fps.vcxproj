@@ -74,7 +74,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>glm-0.9.9.7;imgui-docking</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\3rdparty\;..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui-docking</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <PreprocessorDefinitions>GLM_FORCE_INLINE;GLM_FORCE_LEFT_HANDED;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -95,7 +95,7 @@
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
-      <HeaderFileOutput>intermediate/%(Filename).h</HeaderFileOutput>
+      <HeaderFileOutput>..\..\src\client\intermediate\%(Filename).h</HeaderFileOutput>
       <VariableName>%(Filename)</VariableName>
       <ObjectFileOutput />
     </FxCompile>
@@ -110,7 +110,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>glm-0.9.9.7;imgui-docking</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\3rdparty\;..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui-docking</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>GLM_FORCE_INLINE;GLM_FORCE_LEFT_HANDED;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
@@ -128,7 +128,7 @@
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
-      <HeaderFileOutput>intermediate/%(Filename).h</HeaderFileOutput>
+      <HeaderFileOutput>..\..\src\client\intermediate\%(Filename).h</HeaderFileOutput>
       <VariableName>%(Filename)</VariableName>
       <ObjectFileOutput />
     </FxCompile>
@@ -143,7 +143,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>glm-0.9.9.7;imgui-docking</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\3rdparty\;..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui-docking</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>TRACY_ENABLE;GLM_FORCE_INLINE;GLM_FORCE_LEFT_HANDED;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
@@ -161,7 +161,7 @@
     </Link>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
-      <HeaderFileOutput>intermediate/%(Filename).h</HeaderFileOutput>
+      <HeaderFileOutput>..\..\src\client\intermediate\%(Filename).h</HeaderFileOutput>
       <VariableName>%(Filename)</VariableName>
       <ObjectFileOutput>
       </ObjectFileOutput>
@@ -171,45 +171,45 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="camera.cpp" />
-    <ClCompile Include="game.cpp" />
-    <ClCompile Include="imgui-docking\imgui.cpp" />
-    <ClCompile Include="imgui-docking\imgui_demo.cpp" />
-    <ClCompile Include="imgui-docking\imgui_draw.cpp" />
-    <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
-    <ClCompile Include="imgui_impl_dx11.cpp" />
-    <ClCompile Include="imgui_impl_win32.cpp" />
-    <ClCompile Include="mj_d3d11.cpp" />
-    <ClCompile Include="mj_input.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="mj_raytracer_hlsl.cpp" />
-    <ClCompile Include="mj_win32_utils.cpp" />
-    <ClCompile Include="santorini.cpp" />
-    <ClCompile Include="tracy\TracyClient.cpp" />
+    <ClCompile Include="..\..\src\client\camera.cpp" />
+    <ClCompile Include="..\..\src\client\game.cpp" />
+    <ClCompile Include="..\..\3rdparty\imgui-docking\imgui.cpp" />
+    <ClCompile Include="..\..\3rdparty\imgui-docking\imgui_demo.cpp" />
+    <ClCompile Include="..\..\3rdparty\imgui-docking\imgui_draw.cpp" />
+    <ClCompile Include="..\..\3rdparty\imgui-docking\imgui_widgets.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\..\src\client\mj_d3d11.cpp" />
+    <ClCompile Include="..\..\src\client\mj_input.cpp" />
+    <ClCompile Include="..\..\src\client\main.cpp" />
+    <ClCompile Include="..\..\src\client\mj_raytracer_hlsl.cpp" />
+    <ClCompile Include="..\..\src\client\mj_win32_utils.cpp" />
+    <ClCompile Include="..\..\src\client\santorini.cpp" />
+    <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="camera.h" />
-    <ClInclude Include="DDS.h" />
-    <ClInclude Include="game.h" />
-    <ClInclude Include="imgui-docking\imconfig.h" />
-    <ClInclude Include="imgui-docking\imgui.h" />
-    <ClInclude Include="imgui-docking\imgui_internal.h" />
-    <ClInclude Include="imgui-docking\imstb_rectpack.h" />
-    <ClInclude Include="imgui-docking\imstb_textedit.h" />
-    <ClInclude Include="imgui-docking\imstb_truetype.h" />
-    <ClInclude Include="imgui_impl_dx11.h" />
-    <ClInclude Include="imgui_impl_win32.h" />
-    <ClInclude Include="mj_common.h" />
-    <ClInclude Include="mj_d3d11.h" />
-    <ClInclude Include="mj_input.h" />
-    <ClInclude Include="mj_raytracer.h" />
-    <ClInclude Include="mj_raytracer_hlsl.h" />
-    <ClInclude Include="mj_win32_utils.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="santorini.h" />
+    <ClInclude Include="..\..\src\client\camera.h" />
+    <ClInclude Include="..\..\src\client\DDS.h" />
+    <ClInclude Include="..\..\src\client\game.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imconfig.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imgui.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imgui_internal.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imstb_rectpack.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imstb_textedit.h" />
+    <ClInclude Include="..\..\3rdparty\imgui-docking\imstb_truetype.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_win32.h" />
+    <ClInclude Include="..\..\src\client\mj_common.h" />
+    <ClInclude Include="..\..\src\client\mj_d3d11.h" />
+    <ClInclude Include="..\..\src\client\mj_input.h" />
+    <ClInclude Include="..\..\src\client\mj_raytracer.h" />
+    <ClInclude Include="..\..\src\client\mj_raytracer_hlsl.h" />
+    <ClInclude Include="..\..\src\client\mj_win32_utils.h" />
+    <ClInclude Include="..\..\src\client\resource.h" />
+    <ClInclude Include="..\..\src\client\santorini.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PSQuadOut.hlsl">
+    <FxCompile Include="..\..\src\client\PSQuadOut.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
@@ -217,12 +217,12 @@
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PSQuadOut</EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">PSQuadOut</EntryPointName>
     </FxCompile>
-    <FxCompile Include="CSRaytracer.hlsl">
+    <FxCompile Include="..\..\src\client\CSRaytracer.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Compute</ShaderType>
     </FxCompile>
-    <FxCompile Include="VSQuadOut.hlsl">
+    <FxCompile Include="..\..\src\client\VSQuadOut.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Vertex</ShaderType>
