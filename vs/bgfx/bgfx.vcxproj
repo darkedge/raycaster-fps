@@ -159,10 +159,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rdparty\bgfx\3rdparty\dear-imgui\imgui.cpp" />
-    <ClCompile Include="..\..\3rdparty\bgfx\3rdparty\dear-imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\..\3rdparty\bgfx\3rdparty\dear-imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\3rdparty\bgfx\3rdparty\dear-imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\3rdparty\bgfx\src\amalgamated.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
