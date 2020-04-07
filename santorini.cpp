@@ -82,12 +82,11 @@ static void NewGame()
 {
   const int numSquares = s_NumRows * s_NumColumns;
 
-  new (s_pBoard) Square[numSquares];
-
-  if (numSquares >= s_NumPlayers * s_NumWorkers)
+  if ((numSquares >= (s_NumPlayers * s_NumWorkers)) && s_ppPlayers && s_pBoard)
   {
-    mj::IStream stream = s_TransientMemory;
-    int* const pPositions  = stream.ReserveArrayUnaligned<int>(numSquares);
+    new (s_pBoard) Square[numSquares];
+    mj::IStream stream    = s_TransientMemory;
+    int* const pPositions = stream.ReserveArrayUnaligned<int>(numSquares);
     if (pPositions)
     {
       // Random worker positions
@@ -123,10 +122,10 @@ void SantoriniInit()
 {
   mj::IStream stream(s_Memory, sizeof(s_Memory));
   s_ppPlayers = nullptr;
-  s_pBoard   = nullptr;
+  s_pBoard    = nullptr;
 
   decltype(s_ppPlayers) ppPlayers = stream.ReserveArrayUnaligned<Player*>(s_NumPlayers);
-  decltype(s_pBoard) pBoard      = stream.NewArrayUnaligned<Square>(s_NumRows * s_NumColumns);
+  decltype(s_pBoard) pBoard       = stream.NewArrayUnaligned<Square>(s_NumRows * s_NumColumns);
   if (ppPlayers && pBoard)
   {
     for (int i = 0; i < s_NumPlayers; i++)
@@ -140,8 +139,8 @@ void SantoriniInit()
     if (stream.Good())
     {
       s_TransientMemory = stream;
-      s_ppPlayers         = ppPlayers;
-      s_pBoard           = pBoard;
+      s_ppPlayers       = ppPlayers;
+      s_pBoard          = pBoard;
       s_CurrentPlayer   = 0;
     }
   }
