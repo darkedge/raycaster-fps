@@ -91,9 +91,10 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\..\3rdparty\assimp-4.1.0;..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\civetweb\$(Platform)\$(Configuration);..\common\$(Platform)\$(Configuration);..\curl\$(Platform)\$(Configuration);..\EASTL\$(Platform)\$(Configuration);..\parson\$(Platform)\$(Configuration);..\pcre2\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration);..\zlib\$(Platform)\$(Configuration);..\libuv\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
@@ -119,11 +120,12 @@
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\3rdparty\assimp-4.1.0;..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\civetweb\$(Platform)\$(Configuration);..\common\$(Platform)\$(Configuration);..\curl\$(Platform)\$(Configuration);..\EASTL\$(Platform)\$(Configuration);..\parson\$(Platform)\$(Configuration);..\pcre2\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration);..\zlib\$(Platform)\$(Configuration);..\libuv\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
@@ -149,11 +151,12 @@
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\3rdparty\assimp-4.1.0;..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\civetweb\$(Platform)\$(Configuration);..\common\$(Platform)\$(Configuration);..\curl\$(Platform)\$(Configuration);..\EASTL\$(Platform)\$(Configuration);..\parson\$(Platform)\$(Configuration);..\pcre2\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration);..\zlib\$(Platform)\$(Configuration);..\libuv\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\Release;..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\SDL2\$(Platform)\Release;..\yojimbo\$(Platform)\Release</AdditionalLibraryDirectories>
       <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>

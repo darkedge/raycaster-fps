@@ -46,6 +46,7 @@ struct ApiThreadArgs
 
 static int32_t runApiThread(bx::Thread* self, void* userData)
 {
+  (void)self;
   auto args = (ApiThreadArgs*)userData;
   // Initialize bgfx using the native window handle and window resolution.
   bgfx::Init init;
@@ -132,7 +133,6 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
   SDL_GetWindowWMInfo(pWindow, &wmInfo);
-  HWND hwnd = wmInfo.info.win.window;
 
   // Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
   // Most graphics APIs must be used on the same thread that created the window.
@@ -141,12 +141,12 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   // Create a thread to call the bgfx API from (except bgfx::renderFrame).
   ApiThreadArgs apiThreadArgs;
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-    apiThreadArgs.platformData.ndt = wmInfo.info.x11.display;
-    apiThreadArgs.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
+  apiThreadArgs.platformData.ndt = wmInfo.info.x11.display;
+  apiThreadArgs.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
 #elif BX_PLATFORM_OSX
-    apiThreadArgs.platformData.nwh = wmInfo.info.cocoa.window;
+  apiThreadArgs.platformData.nwh = wmInfo.info.cocoa.window;
 #elif BX_PLATFORM_WINDOWS
-    apiThreadArgs.platformData.nwh = wmInfo.info.win.window;
+  apiThreadArgs.platformData.nwh = wmInfo.info.win.window;
 #endif
 
   int width, height;
