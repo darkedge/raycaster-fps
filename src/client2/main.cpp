@@ -133,7 +133,7 @@ static int32_t runApiThread(bx::Thread* self, void* userData)
 int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR /*pCmdLine*/,
                           int32_t /*nCmdShow*/)
 {
-  if (SDL_Init(0) != 0)
+  if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
   {
     return 1;
   }
@@ -151,16 +151,20 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   // Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
   // Most graphics APIs must be used on the same thread that created the window.
   bgfx::renderFrame();
+
   // Create a thread to call the bgfx API from (except bgfx::renderFrame).
   ApiThreadArgs apiThreadArgs;
   apiThreadArgs.platformData.nwh = hwnd;
+
   int width, height;
   SDL_GetWindowSize(pWindow, &width, &height);
   apiThreadArgs.width  = (uint32_t)width;
   apiThreadArgs.height = (uint32_t)height;
+
   bx::Thread apiThread;
   apiThread.init(runApiThread, &apiThreadArgs);
-  // Run GLFW message pump.
+
+  // Run message pump.
   bool exit = false;
   while (!exit)
   {
@@ -214,13 +218,16 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
         break;
       }
     }
+
     // Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
     bgfx::renderFrame();
   }
+
   // Wait for the API thread to finish before shutting down.
   while (bgfx::RenderFrame::NoContext != bgfx::renderFrame())
   {
   }
+
   apiThread.shutdown();
   SDL_DestroyWindow(pWindow);
   SDL_Quit();
