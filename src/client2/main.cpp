@@ -1,7 +1,3 @@
-/*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
- */
 #include <stdio.h>
 #include <bx/bx.h>
 #include <bx/spscqueue.h>
@@ -10,11 +6,6 @@
 #include <bgfx/platform.h>
 #include "logo.h"
 #include <SDL.h>
-
-// TODO: This is only needed for the entry point, so move it to another file.
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
 #include <SDL_syswm.h>
 
 static bx::DefaultAllocator s_allocator;
@@ -45,11 +36,6 @@ struct ResizeEvent
   uint32_t width;
   uint32_t height;
 };
-
-static void glfw_errorCallback(int error, const char* description)
-{
-  fprintf(stderr, "GLFW error %d: %s\n", error, description);
-}
 
 struct ApiThreadArgs
 {
@@ -154,7 +140,14 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
 
   // Create a thread to call the bgfx API from (except bgfx::renderFrame).
   ApiThreadArgs apiThreadArgs;
-  apiThreadArgs.platformData.nwh = hwnd;
+#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+    apiThreadArgs.platformData.ndt = wmInfo.info.x11.display;
+    apiThreadArgs.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
+#elif BX_PLATFORM_OSX
+    apiThreadArgs.platformData.nwh = wmInfo.info.cocoa.window;
+#elif BX_PLATFORM_WINDOWS
+    apiThreadArgs.platformData.nwh = wmInfo.info.win.window;
+#endif
 
   int width, height;
   SDL_GetWindowSize(pWindow, &width, &height);
