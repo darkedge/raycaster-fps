@@ -36,7 +36,7 @@ struct KeyEvent
 {
   EventType type = EventType::Key;
   int key;
-  int action;
+  bool pressed;
 };
 
 struct ResizeEvent
@@ -50,16 +50,6 @@ static void glfw_errorCallback(int error, const char* description)
 {
   fprintf(stderr, "GLFW error %d: %s\n", error, description);
 }
-
-#if 0 // TODO
-static void glfw_keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-  auto keyEvent    = new KeyEvent;
-  keyEvent->key    = key;
-  keyEvent->action = action;
-  s_apiThreadEvents.push(keyEvent);
-}
-#endif
 
 struct ApiThreadArgs
 {
@@ -92,16 +82,13 @@ static int32_t runApiThread(bx::Thread* self, void* userData)
     // Handle events from the main thread.
     while (auto ev = (EventType*)s_apiThreadEvents.pop())
     {
-#if 0 // TODO
       if (*ev == EventType::Key)
       {
         auto keyEvent = (KeyEvent*)ev;
-        if (keyEvent->key == GLFW_KEY_F1 && keyEvent->action == GLFW_RELEASE)
+        if (keyEvent->key == SDLK_F1 && !keyEvent->pressed)
           showStats = !showStats;
       }
-      else
-#endif
-      if (*ev == EventType::Resize)
+      else if (*ev == EventType::Resize)
       {
         auto resizeEvent = (ResizeEvent*)ev;
         bgfx::reset(resizeEvent->width, resizeEvent->height, BGFX_RESET_VSYNC);
@@ -146,13 +133,16 @@ static int32_t runApiThread(bx::Thread* self, void* userData)
 int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR /*pCmdLine*/,
                           int32_t /*nCmdShow*/)
 {
-  if (SDL_Init(SDL_INIT_VIDEO) != 0)
+  if (SDL_Init(0) != 0)
   {
     return 1;
   }
   SDL_Window* pWindow =
       SDL_CreateWindow("bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
-
+  if (!pWindow)
+  {
+    return 1;
+  }
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
   SDL_GetWindowWMInfo(pWindow, &wmInfo);
@@ -165,9 +155,7 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   ApiThreadArgs apiThreadArgs;
   apiThreadArgs.platformData.nwh = hwnd;
   int width, height;
-  // glfwGetWindowSize(window, &width, &height); // TODO
-  width                = 1024;
-  height               = 768;
+  SDL_GetWindowSize(pWindow, &width, &height);
   apiThreadArgs.width  = (uint32_t)width;
   apiThreadArgs.height = (uint32_t)height;
   bx::Thread apiThread;
@@ -204,6 +192,24 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
         }
       }
       break;
+      case SDL_KEYDOWN:
+      {
+        SDL_KeyboardEvent kev = event.key;
+        auto keyEvent         = new KeyEvent;
+        keyEvent->key         = kev.keysym.sym;
+        keyEvent->pressed     = true;
+        s_apiThreadEvents.push(keyEvent);
+      }
+      break;
+      case SDL_KEYUP:
+      {
+        SDL_KeyboardEvent kev = event.key;
+        auto keyEvent         = new KeyEvent;
+        keyEvent->key         = kev.keysym.sym;
+        keyEvent->pressed     = false;
+        s_apiThreadEvents.push(keyEvent);
+      }
+      break;
       default:
         break;
       }
@@ -218,5 +224,6 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
   apiThread.shutdown();
   SDL_DestroyWindow(pWindow);
   SDL_Quit();
+
   return apiThread.getExitCode();
 }
