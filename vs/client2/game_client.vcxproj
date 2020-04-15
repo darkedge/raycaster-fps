@@ -18,6 +18,7 @@
     <ClInclude Include="..\..\src\client2\logo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
     <ClCompile Include="..\..\src\client2\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -82,7 +83,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;_WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MJ_DEBUG;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;_WIN64</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
@@ -146,7 +147,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>TRACY_ENABLE;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MJ_PROFILE;TRACY_ENABLE;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>

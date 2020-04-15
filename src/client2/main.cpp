@@ -8,154 +8,75 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-static bx::DefaultAllocator s_allocator;
-static bx::SpScUnboundedQueue s_apiThreadEvents(&s_allocator);
+#include "tracy/Tracy.hpp"
 
-enum class EventType
-{
-  Exit,
-  Key,
-  Resize
-};
+static bool showStats = false;
 
-struct ExitEvent
+int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int32_t nCmdShow)
 {
-  EventType type = EventType::Exit;
-};
+  (void)hInstance;
+  (void)hPrevInstance;
+  (void)pCmdLine;
+  (void)nCmdShow;
 
-struct KeyEvent
-{
-  EventType type = EventType::Key;
-  int key;
-  bool pressed;
-};
-
-struct ResizeEvent
-{
-  EventType type = EventType::Resize;
-  uint32_t width;
-  uint32_t height;
-};
-
-struct ApiThreadArgs
-{
-  bgfx::PlatformData platformData;
-  uint32_t width;
-  uint32_t height;
-};
-
-static int32_t runApiThread(bx::Thread* self, void* userData)
-{
-  (void)self;
-  auto args = (ApiThreadArgs*)userData;
-  // Initialize bgfx using the native window handle and window resolution.
-  bgfx::Init init;
-  init.platformData      = args->platformData;
-  init.resolution.width  = args->width;
-  init.resolution.height = args->height;
-  init.resolution.reset  = BGFX_RESET_VSYNC;
-  if (!bgfx::init(init))
-    return 1;
-  // Set view 0 to the same dimensions as the window and to clear the color buffer.
-  const bgfx::ViewId kClearView = 0;
-  bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR);
-  bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
-  uint32_t width  = args->width;
-  uint32_t height = args->height;
-  bool showStats  = false;
-  bool exit       = false;
-  while (!exit)
-  {
-    // Handle events from the main thread.
-    while (auto ev = (EventType*)s_apiThreadEvents.pop())
-    {
-      if (*ev == EventType::Key)
-      {
-        auto keyEvent = (KeyEvent*)ev;
-        if (keyEvent->key == SDLK_F1 && !keyEvent->pressed)
-          showStats = !showStats;
-      }
-      else if (*ev == EventType::Resize)
-      {
-        auto resizeEvent = (ResizeEvent*)ev;
-        bgfx::reset(resizeEvent->width, resizeEvent->height, BGFX_RESET_VSYNC);
-        bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
-        width  = resizeEvent->width;
-        height = resizeEvent->height;
-      }
-      else if (*ev == EventType::Exit)
-      {
-        exit = true;
-      }
-      delete ev;
-    }
-    // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
-    bgfx::touch(kClearView);
-    // Use debug font to print information about this example.
-    bgfx::dbgTextClear();
-    bgfx::dbgTextImage(bx::max<uint16_t>(uint16_t(width / 2 / 8), 20) - 20,
-                       bx::max<uint16_t>(uint16_t(height / 2 / 16), 6) - 6, 40, 12, s_logo, 160);
-    bgfx::dbgTextPrintf(0, 0, 0x0f, "Press F1 to toggle stats.");
-    bgfx::dbgTextPrintf(
-        0, 1, 0x0f,
-        "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
-    bgfx::dbgTextPrintf(80, 1, 0x0f,
-                        "\x1b[;0m    \x1b[;1m    \x1b[; 2m    \x1b[; 3m    \x1b[; 4m    \x1b[; 5m    \x1b[; 6m    "
-                        "\x1b[; 7m    \x1b[0m");
-    bgfx::dbgTextPrintf(80, 2, 0x0f,
-                        "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    "
-                        "\x1b[;15m    \x1b[0m");
-    const bgfx::Stats* stats = bgfx::getStats();
-    bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width,
-                        stats->height, stats->textWidth, stats->textHeight);
-    // Enable stats or debug text.
-    bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
-    // Advance to next frame. Main thread will be kicked to process submitted rendering primitives.
-    bgfx::frame();
-  }
-  bgfx::shutdown();
-  return 0;
-}
-
-int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PWSTR /*pCmdLine*/,
-                          int32_t /*nCmdShow*/)
-{
+  // SDL initialization
+#if 0
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
   {
     return 1;
   }
+#endif
+
+  // Window
   SDL_Window* pWindow =
       SDL_CreateWindow("bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
   if (!pWindow)
   {
     return 1;
   }
-  SDL_SysWMinfo wmInfo;
-  SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(pWindow, &wmInfo);
 
   // Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
   // Most graphics APIs must be used on the same thread that created the window.
   bgfx::renderFrame();
+  // Initialize bgfx using the native window handle and window resolution.
+  bgfx::Init init;
 
-  // Create a thread to call the bgfx API from (except bgfx::renderFrame).
-  ApiThreadArgs apiThreadArgs;
+  SDL_SysWMinfo wmInfo;
+  SDL_VERSION(&wmInfo.version);
+  SDL_GetWindowWMInfo(pWindow, &wmInfo);
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-  apiThreadArgs.platformData.ndt = wmInfo.info.x11.display;
-  apiThreadArgs.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
+  init.platformData.ndt = wmInfo.info.x11.display;
+  init.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
 #elif BX_PLATFORM_OSX
-  apiThreadArgs.platformData.nwh = wmInfo.info.cocoa.window;
+  init.platformData.nwh = wmInfo.info.cocoa.window;
 #elif BX_PLATFORM_WINDOWS
-  apiThreadArgs.platformData.nwh = wmInfo.info.win.window;
+  init.platformData.nwh = wmInfo.info.win.window;
+#endif
+#if defined(MJ_DEBUG)
+  init.debug = true;
+#elif defined(MJ_PROFILE)
+  init.profile          = true;
 #endif
 
   int width, height;
   SDL_GetWindowSize(pWindow, &width, &height);
-  apiThreadArgs.width  = (uint32_t)width;
-  apiThreadArgs.height = (uint32_t)height;
 
-  bx::Thread apiThread;
-  apiThread.init(runApiThread, &apiThreadArgs);
+  uint32_t resetFlags = BGFX_RESET_VSYNC | BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
+
+  init.resolution.width           = width;
+  init.resolution.height          = height;
+  init.resolution.reset           = resetFlags;
+  init.resolution.numBackBuffers  = 1;
+  init.resolution.maxFrameLatency = 1;
+  if (!bgfx::init(init))
+  {
+    return 1;
+  }
+
+  // Set view 0 to the same dimensions as the window and to clear the color buffer.
+  const bgfx::ViewId kClearView = 0;
+  bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR);
+  bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 
   // Run message pump.
   bool exit = false;
@@ -167,7 +88,6 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       switch (event.type)
       {
       case SDL_QUIT:
-        s_apiThreadEvents.push(new ExitEvent);
         exit = true;
         break;
       case SDL_WINDOWEVENT:
@@ -178,10 +98,11 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
         case SDL_WINDOWEVENT_RESIZED:
         case SDL_WINDOWEVENT_SIZE_CHANGED:
         {
-          auto resize    = new ResizeEvent;
-          resize->width  = (uint32_t)wev.data1;
-          resize->height = (uint32_t)wev.data2;
-          s_apiThreadEvents.push(resize);
+          width  = wev.data1;
+          height = wev.data2;
+
+          bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
+          bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
         }
         break;
         default:
@@ -189,22 +110,13 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
         }
       }
       break;
-      case SDL_KEYDOWN:
-      {
-        SDL_KeyboardEvent kev = event.key;
-        auto keyEvent         = new KeyEvent;
-        keyEvent->key         = kev.keysym.sym;
-        keyEvent->pressed     = true;
-        s_apiThreadEvents.push(keyEvent);
-      }
-      break;
       case SDL_KEYUP:
       {
         SDL_KeyboardEvent kev = event.key;
-        auto keyEvent         = new KeyEvent;
-        keyEvent->key         = kev.keysym.sym;
-        keyEvent->pressed     = false;
-        s_apiThreadEvents.push(keyEvent);
+        if (kev.keysym.sym == SDLK_F1)
+        {
+          showStats = !showStats;
+        }
       }
       break;
       default:
@@ -212,18 +124,35 @@ int32_t CALLBACK wWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
       }
     }
 
-    // Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
-    bgfx::renderFrame();
+    // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view
+    // 0.
+    bgfx::touch(kClearView);
+    // Use debug font to print information about this example.
+    bgfx::dbgTextClear();
+    bgfx::dbgTextImage(bx::max<uint16_t>(uint16_t(width / 2 / 8), 20) - 20,
+                       bx::max<uint16_t>(uint16_t(height / 2 / 16), 6) - 6, 40, 12, s_logo, 160);
+    bgfx::dbgTextPrintf(0, 0, 0x0f, "Press F1 to toggle stats.");
+    bgfx::dbgTextPrintf(0, 1, 0x0f,
+                        "Color can be changed with ANSI "
+                        "\x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
+    bgfx::dbgTextPrintf(80, 1, 0x0f,
+                        "\x1b[;0m    \x1b[;1m    \x1b[; 2m    \x1b[; 3m    \x1b[; 4m    \x1b[; 5m    \x1b[; 6m    "
+                        "\x1b[; 7m    \x1b[0m");
+    bgfx::dbgTextPrintf(80, 2, 0x0f,
+                        "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    "
+                        "\x1b[;15m    \x1b[0m");
+    const bgfx::Stats* stats = bgfx::getStats();
+    bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width,
+                        stats->height, stats->textWidth, stats->textHeight);
+    // Enable stats or debug text.
+    bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
+    // Advance to next frame. Process submitted rendering primitives.
+    bgfx::frame();
   }
 
-  // Wait for the API thread to finish before shutting down.
-  while (bgfx::RenderFrame::NoContext != bgfx::renderFrame())
-  {
-  }
-
-  apiThread.shutdown();
+  bgfx::shutdown();
   SDL_DestroyWindow(pWindow);
   SDL_Quit();
 
-  return apiThread.getExitCode();
+  return 0;
 }
