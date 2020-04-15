@@ -116,9 +116,30 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
         case SDL_KEYUP:
         {
           SDL_KeyboardEvent kev = event.key;
-          if (kev.keysym.sym == SDLK_F1)
+          switch (kev.keysym.sym)
           {
+          case SDLK_F1:
             showStats = !showStats;
+            break;
+          case SDLK_F11:
+          {
+            static int mode       = 0;
+            SDL_WindowFlags flags = (SDL_WindowFlags)0;
+            switch (++mode)
+            {
+            case 2:
+              flags = SDL_WINDOW_FULLSCREEN;
+              break;
+            case 1:
+              flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+              break;
+            case 0:
+            default:
+              mode = 0;
+            }
+            SDL_SetWindowFullscreen(pWindow, flags);
+          }
+          break;
           }
         }
         break;
