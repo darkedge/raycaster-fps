@@ -16,3 +16,6 @@
 [submodule "3rdparty/enkiTS"]
 	path = 3rdparty/enkiTS
 	url = https://github.com/dougbinks/enkiTS
+[submodule "3rdparty/vcpkg"]
+	path = 3rdparty/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
