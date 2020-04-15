@@ -8,7 +8,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include "tracy/Tracy.hpp"
+#include "Tracy.hpp"
 
 static bool showStats = false;
 
@@ -82,45 +82,49 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
   bool exit = false;
   while (!exit)
   {
+    ZoneScopedNC("Game loop", tracy::Color::CornflowerBlue);
     SDL_Event event;
-    while (SDL_PollEvent(&event))
     {
-      switch (event.type)
+      ZoneScopedNC("Window message pump", tracy::Color::Aqua);
+      while (SDL_PollEvent(&event))
       {
-      case SDL_QUIT:
-        exit = true;
-        break;
-      case SDL_WINDOWEVENT:
-      {
-        const SDL_WindowEvent& wev = event.window;
-        switch (wev.event)
+        switch (event.type)
         {
-        case SDL_WINDOWEVENT_RESIZED:
-        case SDL_WINDOWEVENT_SIZE_CHANGED:
+        case SDL_QUIT:
+          exit = true;
+          break;
+        case SDL_WINDOWEVENT:
         {
-          width  = wev.data1;
-          height = wev.data2;
+          const SDL_WindowEvent& wev = event.window;
+          switch (wev.event)
+          {
+          case SDL_WINDOWEVENT_RESIZED:
+          case SDL_WINDOWEVENT_SIZE_CHANGED:
+          {
+            width  = wev.data1;
+            height = wev.data2;
 
-          bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
-          bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+            bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
+            bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+          }
+          break;
+          default:
+            break;
+          }
+        }
+        break;
+        case SDL_KEYUP:
+        {
+          SDL_KeyboardEvent kev = event.key;
+          if (kev.keysym.sym == SDLK_F1)
+          {
+            showStats = !showStats;
+          }
         }
         break;
         default:
           break;
         }
-      }
-      break;
-      case SDL_KEYUP:
-      {
-        SDL_KeyboardEvent kev = event.key;
-        if (kev.keysym.sym == SDLK_F1)
-        {
-          showStats = !showStats;
-        }
-      }
-      break;
-      default:
-        break;
       }
     }
 
@@ -147,7 +151,11 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
     // Enable stats or debug text.
     bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
     // Advance to next frame. Process submitted rendering primitives.
-    bgfx::frame();
+    {
+      ZoneScopedNC("bgfx::frame()", tracy::Color::Azure);
+      bgfx::frame();
+    }
+    FrameMark;
   }
 
   bgfx::shutdown();
