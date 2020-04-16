@@ -56,8 +56,8 @@ struct FontRangeMerge
 #if 0 // MJ
 static FontRangeMerge s_fontRangeMerge[] =
 {
-	{ s_iconsKenneyTtf,      sizeof(s_iconsKenneyTtf),      { ICON_MIN_KI, ICON_MAX_KI, 0 } },
-	{ s_iconsFontAwesomeTtf, sizeof(s_iconsFontAwesomeTtf), { ICON_MIN_FA, ICON_MAX_FA, 0 } },
+    { s_iconsKenneyTtf,      sizeof(s_iconsKenneyTtf),      { ICON_MIN_KI, ICON_MAX_KI, 0 } },
+    { s_iconsFontAwesomeTtf, sizeof(s_iconsFontAwesomeTtf), { ICON_MIN_FA, ICON_MAX_FA, 0 } },
 };
 #endif
 
@@ -267,31 +267,31 @@ struct OcornutImguiContext
     int32_t width;
     int32_t height;
 #if 0
-		{
-			ImFontConfig config;
-			config.FontDataOwnedByAtlas = false;
-			config.MergeMode = false;
+        {
+            ImFontConfig config;
+            config.FontDataOwnedByAtlas = false;
+            config.MergeMode = false;
 //			config.MergeGlyphCenterV = true;
 
-			const ImWchar* ranges = io.Fonts->GetGlyphRangesCyrillic();
-			m_font[ImGui::Font::Regular] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoRegularTtf,     sizeof(s_robotoRegularTtf),     _fontSize,      &config, ranges);
-			m_font[ImGui::Font::Mono   ] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoMonoRegularTtf, sizeof(s_robotoMonoRegularTtf), _fontSize-3.0f, &config, ranges);
+            const ImWchar* ranges = io.Fonts->GetGlyphRangesCyrillic();
+            m_font[ImGui::Font::Regular] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoRegularTtf,     sizeof(s_robotoRegularTtf),     _fontSize,      &config, ranges);
+            m_font[ImGui::Font::Mono   ] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoMonoRegularTtf, sizeof(s_robotoMonoRegularTtf), _fontSize-3.0f, &config, ranges);
 
-			config.MergeMode = true;
-			config.DstFont   = m_font[ImGui::Font::Regular];
+            config.MergeMode = true;
+            config.DstFont   = m_font[ImGui::Font::Regular];
 
-			for (uint32_t ii = 0; ii < BX_COUNTOF(s_fontRangeMerge); ++ii)
-			{
-				const FontRangeMerge& frm = s_fontRangeMerge[ii];
+            for (uint32_t ii = 0; ii < BX_COUNTOF(s_fontRangeMerge); ++ii)
+            {
+                const FontRangeMerge& frm = s_fontRangeMerge[ii];
 
-				io.Fonts->AddFontFromMemoryTTF( (void*)frm.data
-						, (int)frm.size
-						, _fontSize-3.0f
-						, &config
-						, frm.ranges
-						);
-			}
-		}
+                io.Fonts->AddFontFromMemoryTTF( (void*)frm.data
+                        , (int)frm.size
+                        , _fontSize-3.0f
+                        , &config
+                        , frm.ranges
+                        );
+            }
+        }
 #endif
 
     io.Fonts->GetTexDataAsRGBA32(&data, &width, &height);
@@ -379,7 +379,7 @@ struct OcornutImguiContext
     ImGui::NewFrame();
 
 #if 0 // MJ
-		ImGuizmo::BeginFrame();
+        ImGuizmo::BeginFrame();
 #endif
   }
 
@@ -398,7 +398,7 @@ struct OcornutImguiContext
   bgfx::UniformHandle s_tex;
   bgfx::UniformHandle u_imageLodEnabled;
 #if 0 // MJ
-	ImFont* m_font[ImGui::Font::Count];
+    ImFont* m_font[ImGui::Font::Count];
 #endif
   int64_t m_last;
   int32_t m_lastScroll;
@@ -443,10 +443,10 @@ void imguiEndFrame()
 #if 0 // MJ
 namespace ImGui
 {
-	void PushFont(Font::Enum _font)
-	{
-		PushFont(s_ctx.m_font[_font]);
-	}
+    void PushFont(Font::Enum _font)
+    {
+        PushFont(s_ctx.m_font[_font]);
+    }
 } // namespace ImGui
 
 BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4505); // error C4505: '' : unreferenced local function has been removed
