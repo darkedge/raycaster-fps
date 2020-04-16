@@ -8,9 +8,7 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
-#include "Tracy.hpp"
-
-#include "dear-imgui/imgui.h"
+#include "..\..\3rdparty\tracy\Tracy.hpp"
 
 static bool showStats = false;
 
@@ -31,7 +29,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
 
   // Window
   SDL_Window* pWindow =
-      SDL_CreateWindow("bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
+      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
   if (!pWindow)
   {
     return 1;
@@ -170,11 +168,18 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
                           "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    "
                           "\x1b[;15m    \x1b[0m");
       const bgfx::Stats* stats = bgfx::getStats();
-      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width,
-                          stats->height, stats->textWidth, stats->textHeight);
+      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.",
+                          stats->width, stats->height, stats->textWidth, stats->textHeight);
       // Enable stats or debug text.
       bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
     }
+#if 0
+    {
+      ImGui::Begin("test");
+      ImGui::Text("Hello World!");
+      ImGui::End();
+    }
+#endif
 
     // Advance to next frame. Process submitted rendering primitives.
     {
