@@ -1,79 +1,236 @@
+diff --git a/3rdparty/bgfx b/3rdparty/bgfx
+--- a/3rdparty/bgfx
++++ b/3rdparty/bgfx
+@@ -1 +1 @@
+-Subproject commit 5b9116138f8e919ac790acdaf81aa3b76bc237ba
++Subproject commit 5b9116138f8e919ac790acdaf81aa3b76bc237ba-dirty
 diff --git a/src/client2/main.cpp b/src/client2/main.cpp
-index ada0338..1b7f945 100644
+index 5f03739..6a321f7 100644
 --- a/src/client2/main.cpp
 +++ b/src/client2/main.cpp
-@@ -10,8 +10,6 @@
+@@ -8,6 +8,8 @@
+ #include <SDL.h>
+ #include <SDL_syswm.h>
  
- #include "Tracy.hpp"
++#include "mj_common.h"
++
+ #include "..\..\3rdparty\tracy\Tracy.hpp"
  
--#include "dear-imgui/imgui.h"
--
  static bool showStats = false;
- 
- int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int32_t nCmdShow)
-@@ -31,7 +29,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
+@@ -29,7 +31,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
  
    // Window
    SDL_Window* pWindow =
--      SDL_CreateWindow("bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
-+      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
+-      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
++      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, MJ_WND_WIDTH, MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
    if (!pWindow)
    {
      return 1;
-@@ -170,11 +168,16 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
-                           "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    "
-                           "\x1b[;15m    \x1b[0m");
-       const bgfx::Stats* stats = bgfx::getStats();
--      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width,
--                          stats->height, stats->textWidth, stats->textHeight);
-+      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.",
-+                          stats->width, stats->height, stats->textWidth, stats->textHeight);
-       // Enable stats or debug text.
-       bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
-     }
-+    {
-+      ImGui::Begin("test");
-+      ImGui::Text("Hello World!");
-+      ImGui::End();
-+    }
- 
-     // Advance to next frame. Process submitted rendering primitives.
-     {
+diff --git a/vs/client/strings.txt b/vs/client/strings.txt
+index 90b5b0f..befe2e4 100644
+--- a/vs/client/strings.txt
++++ b/vs/client/strings.txt
+@@ -1,5 +1,5 @@
+-4c4366b
+-112
++f41b047
++115
+ master
+-2020-04-15 21:56
++2020-04-16 21:01
+ Debug
+diff --git a/vs/client/wd.diff b/vs/client/wd.diff
+index fc40200..262b925 100644
+--- a/vs/client/wd.diff
++++ b/vs/client/wd.diff
+@@ -1,79 +1,86 @@
++diff --git a/3rdparty/bgfx b/3rdparty/bgfx
++--- a/3rdparty/bgfx
+++++ b/3rdparty/bgfx
++@@ -1 +1 @@
++-Subproject commit 5b9116138f8e919ac790acdaf81aa3b76bc237ba
+++Subproject commit 5b9116138f8e919ac790acdaf81aa3b76bc237ba-dirty
+ diff --git a/src/client2/main.cpp b/src/client2/main.cpp
+-index ada0338..1b7f945 100644
++index 5f03739..6a321f7 100644
+ --- a/src/client2/main.cpp
+ +++ b/src/client2/main.cpp
+-@@ -10,8 +10,6 @@
++@@ -8,6 +8,8 @@
++ #include <SDL.h>
++ #include <SDL_syswm.h>
+  
+- #include "Tracy.hpp"
+++#include "mj_common.h"
+++
++ #include "..\..\3rdparty\tracy\Tracy.hpp"
+  
+--#include "dear-imgui/imgui.h"
+--
+  static bool showStats = false;
+- 
+- int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int32_t nCmdShow)
+-@@ -31,7 +29,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
++@@ -29,7 +31,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
+  
+    // Window
+    SDL_Window* pWindow =
+--      SDL_CreateWindow("bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
+-+      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
++-      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
+++      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, MJ_WND_WIDTH, MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
+    if (!pWindow)
+    {
+      return 1;
+-@@ -170,11 +168,16 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
+-                           "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    "
+-                           "\x1b[;15m    \x1b[0m");
+-       const bgfx::Stats* stats = bgfx::getStats();
+--      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width,
+--                          stats->height, stats->textWidth, stats->textHeight);
+-+      bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.",
+-+                          stats->width, stats->height, stats->textWidth, stats->textHeight);
+-       // Enable stats or debug text.
+-       bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
+-     }
+-+    {
+-+      ImGui::Begin("test");
+-+      ImGui::Text("Hello World!");
+-+      ImGui::End();
+-+    }
+- 
+-     // Advance to next frame. Process submitted rendering primitives.
+-     {
+ diff --git a/vs/client2/game_client.vcxproj b/vs/client2/game_client.vcxproj
+-index efba804..a5d4608 100644
++index 1a91028..20920c3 100644
+ --- a/vs/client2/game_client.vcxproj
+ +++ b/vs/client2/game_client.vcxproj
+-@@ -82,7 +82,7 @@
++@@ -15,11 +15,26 @@
++     </ProjectConfiguration>
++   </ItemGroup>
++   <ItemGroup>
+++    <ClInclude Include="..\..\3rdparty\bgfx\examples\common\imgui\imgui_impl_bgfx.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imconfig.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imgui.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imgui_internal.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imstb_rectpack.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imstb_textedit.h" />
+++    <ClInclude Include="..\..\3rdparty\imgui\imstb_truetype.h" />
++     <ClInclude Include="..\..\src\client2\logo.h" />
+++    <ClInclude Include="..\..\src\client2\mj_common.h" />
+++    <ClInclude Include="..\..\src\client2\mj_input.h" />
++   </ItemGroup>
++   <ItemGroup>
+++    <ClCompile Include="..\..\3rdparty\bgfx\examples\common\imgui\imgui_impl_bgfx.cpp" />
+++    <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp" />
+++    <ClCompile Include="..\..\3rdparty\imgui\imgui_demo.cpp" />
+++    <ClCompile Include="..\..\3rdparty\imgui\imgui_draw.cpp" />
+++    <ClCompile Include="..\..\3rdparty\imgui\imgui_widgets.cpp" />
++     <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
++     <ClCompile Include="..\..\src\client2\main.cpp" />
+++    <ClCompile Include="..\..\src\client2\mj_input.cpp" />
++   </ItemGroup>
++   <PropertyGroup Label="Globals">
++     <VCProjectVersion>16.0</VCProjectVersion>
++@@ -82,7 +97,7 @@
+      <ClCompile>
+        <WarningLevel>Level4</WarningLevel>
+        <ConformanceMode>true</ConformanceMode>
+--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
++-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+++      <AdditionalIncludeDirectories>..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+        <PreprocessorDefinitions>MJ_DEBUG;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;_WIN64</PreprocessorDefinitions>
+        <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+-@@ -116,7 +116,7 @@
++@@ -116,7 +131,7 @@
+        <FunctionLevelLinking>true</FunctionLevelLinking>
+        <IntrinsicFunctions>true</IntrinsicFunctions>
+        <ConformanceMode>true</ConformanceMode>
+--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
++-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+++      <AdditionalIncludeDirectories>..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
+        <MultiProcessorCompilation>true</MultiProcessorCompilation>
+        <ExceptionHandling>false</ExceptionHandling>
+-@@ -147,7 +147,7 @@
++@@ -147,7 +162,7 @@
+        <FunctionLevelLinking>true</FunctionLevelLinking>
+        <IntrinsicFunctions>true</IntrinsicFunctions>
+        <ConformanceMode>true</ConformanceMode>
+--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
++-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+++      <AdditionalIncludeDirectories>..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        <PreprocessorDefinitions>MJ_PROFILE;TRACY_ENABLE;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
+        <MultiProcessorCompilation>true</MultiProcessorCompilation>
+        <ExceptionHandling>false</ExceptionHandling>
+-@@ -173,4 +173,4 @@
+-   </ItemDefinitionGroup>
+-   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+-   <ImportGroup Label="ExtensionTargets" />
+--</Project>
+-+</Project>
+-\ No newline at end of file
 diff --git a/vs/client2/game_client.vcxproj b/vs/client2/game_client.vcxproj
-index efba804..a5d4608 100644
+index 1a91028..fe0763f 100644
 --- a/vs/client2/game_client.vcxproj
 +++ b/vs/client2/game_client.vcxproj
-@@ -82,7 +82,7 @@
+@@ -15,11 +15,26 @@
+     </ProjectConfiguration>
+   </ItemGroup>
+   <ItemGroup>
++    <ClInclude Include="..\..\3rdparty\bgfx\examples\common\imgui\imgui_impl_bgfx.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imconfig.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imgui.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imgui_internal.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imstb_rectpack.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imstb_textedit.h" />
++    <ClInclude Include="..\..\3rdparty\imgui\imstb_truetype.h" />
+     <ClInclude Include="..\..\src\client2\logo.h" />
++    <ClInclude Include="..\..\src\client2\mj_common.h" />
++    <ClInclude Include="..\..\src\client2\mj_input.h" />
+   </ItemGroup>
+   <ItemGroup>
++    <ClCompile Include="..\..\3rdparty\bgfx\examples\common\imgui\imgui_impl_bgfx.cpp" />
++    <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp" />
++    <ClCompile Include="..\..\3rdparty\imgui\imgui_demo.cpp" />
++    <ClCompile Include="..\..\3rdparty\imgui\imgui_draw.cpp" />
++    <ClCompile Include="..\..\3rdparty\imgui\imgui_widgets.cpp" />
+     <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
+     <ClCompile Include="..\..\src\client2\main.cpp" />
++    <ClCompile Include="..\..\src\client2\mj_input.cpp" />
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <VCProjectVersion>16.0</VCProjectVersion>
+@@ -82,7 +97,7 @@
      <ClCompile>
        <WarningLevel>Level4</WarningLevel>
        <ConformanceMode>true</ConformanceMode>
--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <AdditionalIncludeDirectories>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
        <BasicRuntimeChecks>Default</BasicRuntimeChecks>
        <PreprocessorDefinitions>MJ_DEBUG;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;_DEBUG;_WIN64</PreprocessorDefinitions>
        <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-@@ -116,7 +116,7 @@
+@@ -116,7 +131,7 @@
        <FunctionLevelLinking>true</FunctionLevelLinking>
        <IntrinsicFunctions>true</IntrinsicFunctions>
        <ConformanceMode>true</ConformanceMode>
--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <AdditionalIncludeDirectories>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
        <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
        <MultiProcessorCompilation>true</MultiProcessorCompilation>
        <ExceptionHandling>false</ExceptionHandling>
-@@ -147,7 +147,7 @@
+@@ -147,7 +162,7 @@
        <FunctionLevelLinking>true</FunctionLevelLinking>
        <IntrinsicFunctions>true</IntrinsicFunctions>
        <ConformanceMode>true</ConformanceMode>
--      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\bgfx\examples\common;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
-+      <AdditionalIncludeDirectories>..\..\include;..\..\3rdparty\yojimbo;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include;..\..\3rdparty\bgfx\3rdparty\dear-imgui;..\..\3rdparty\SDL2-2.0.12\include;..\..\3rdparty\glm-0.9.9.6;..\..\3rdparty\tracy</AdditionalIncludeDirectories>
+-      <AdditionalIncludeDirectories>..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <AdditionalIncludeDirectories>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
        <PreprocessorDefinitions>MJ_PROFILE;TRACY_ENABLE;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
        <MultiProcessorCompilation>true</MultiProcessorCompilation>
        <ExceptionHandling>false</ExceptionHandling>
-@@ -173,4 +173,4 @@
-   </ItemDefinitionGroup>
-   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-   <ImportGroup Label="ExtensionTargets" />
--</Project>
-+</Project>
-\ No newline at end of file

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "raycaster-fps", "client\raycaster-fps.vcxproj", "{28BD5102-155A-4A70-A342-D3A1DE5BC291}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game_client", "client2\game_client.vcxproj", "{AC4DF311-9024-4BFA-BEDB-A04D95C186E6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C9998228-E049-484A-95D4-5F9762A01D5E} = {C9998228-E049-484A-95D4-5F9762A01D5E}
@@ -28,12 +26,6 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Debug|x64.ActiveCfg = Debug|x64
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Debug|x64.Build.0 = Debug|x64
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Profile|x64.ActiveCfg = Profile|x64
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Profile|x64.Build.0 = Profile|x64
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Release|x64.ActiveCfg = Release|x64
-		{28BD5102-155A-4A70-A342-D3A1DE5BC291}.Release|x64.Build.0 = Release|x64
 		{AC4DF311-9024-4BFA-BEDB-A04D95C186E6}.Debug|x64.ActiveCfg = Debug|x64
 		{AC4DF311-9024-4BFA-BEDB-A04D95C186E6}.Debug|x64.Build.0 = Debug|x64
 		{AC4DF311-9024-4BFA-BEDB-A04D95C186E6}.Profile|x64.ActiveCfg = Profile|x64

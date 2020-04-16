@@ -8,6 +8,9 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
+#include "mj_common.h"
+#include "imgui_impl_bgfx.h"
+
 #include "..\..\3rdparty\tracy\Tracy.hpp"
 
 static bool showStats = false;
@@ -28,8 +31,8 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
 #endif
 
   // Window
-  SDL_Window* pWindow =
-      SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_RESIZABLE);
+  SDL_Window* pWindow = SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                         MJ_WND_WIDTH, MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
   if (!pWindow)
   {
     return 1;
@@ -73,10 +76,16 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
     return 1;
   }
 
+  imguiCreate();
+
   // Set view 0 to the same dimensions as the window and to clear the color buffer.
   const bgfx::ViewId kClearView = 0;
   bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR);
   bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
+  int32_t mouseX      = 0;
+  int32_t mouseY      = 0;
+  int32_t mouseScroll = 0;
+  uint8_t mouseMask   = 0;
 
   // Run message pump.
   bool exit = false;
@@ -90,6 +99,56 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
       {
         switch (event.type)
         {
+        case SDL_MOUSEWHEEL:
+        {
+          const SDL_MouseWheelEvent& e = event.wheel;
+          mouseScroll += e.y;
+        }
+        break;
+        case SDL_MOUSEBUTTONUP:
+        {
+          const SDL_MouseButtonEvent& e = event.button;
+          switch (e.button)
+          {
+          case SDL_BUTTON_LEFT:
+            mouseMask &= ~IMGUI_MBUT_LEFT;
+            break;
+          case SDL_BUTTON_MIDDLE:
+            mouseMask &= ~IMGUI_MBUT_MIDDLE;
+            break;
+          case SDL_BUTTON_RIGHT:
+            mouseMask &= ~IMGUI_MBUT_RIGHT;
+          default:
+            break;
+          }
+        }
+        break;
+        case SDL_MOUSEBUTTONDOWN:
+        {
+          const SDL_MouseButtonEvent& e = event.button;
+          switch (e.button)
+          {
+          case SDL_BUTTON_LEFT:
+            mouseMask |= IMGUI_MBUT_LEFT;
+            break;
+          case SDL_BUTTON_MIDDLE:
+            mouseMask |= IMGUI_MBUT_MIDDLE;
+            break;
+          case SDL_BUTTON_RIGHT:
+            mouseMask |= IMGUI_MBUT_RIGHT;
+            break;
+          default:
+            break;
+          }
+        }
+        break;
+        case SDL_MOUSEMOTION:
+        {
+          const SDL_MouseMotionEvent& e = event.motion;
+          mouseX                        = e.x;
+          mouseY                        = e.y;
+        }
+        break;
         case SDL_QUIT:
           exit = true;
           break;
@@ -148,6 +207,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
         }
       }
     }
+
     {
       ZoneScopedNC("bgfx debug", tracy::Color::Beige);
       // This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view
@@ -173,13 +233,21 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
       // Enable stats or debug text.
       bgfx::setDebug(showStats ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
     }
-#if 0
+
     {
-      ImGui::Begin("test");
-      ImGui::Text("Hello World!");
-      ImGui::End();
+      ZoneScopedNC("ImGui NewFrame", tracy::Color::BlueViolet);
+      imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
     }
-#endif
+
+    {
+      ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
+      ImGui::ShowDemoWindow();
+    }
+
+    {
+      ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
+      imguiEndFrame();
+    }
 
     // Advance to next frame. Process submitted rendering primitives.
     {
@@ -188,6 +256,8 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
       FrameMark;
     }
   }
+
+  imguiDestroy();
 
   bgfx::shutdown();
   SDL_DestroyWindow(pWindow);
