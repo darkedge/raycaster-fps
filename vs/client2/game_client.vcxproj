@@ -27,6 +27,7 @@
     <ClInclude Include="..\..\src\client2\logo.h" />
     <ClInclude Include="..\..\src\client2\mj_common.h" />
     <ClInclude Include="..\..\src\client2\mj_input.h" />
+    <ClInclude Include="..\..\src\client2\raytracer.h" />
     <ClInclude Include="..\..\src\client2\vs_imgui_image.bin.h" />
     <ClInclude Include="..\..\src\client2\vs_ocornut_imgui.bin.h" />
   </ItemGroup>
@@ -39,6 +40,7 @@
     <ClCompile Include="..\..\src\client2\imgui_impl_bgfx.cpp" />
     <ClCompile Include="..\..\src\client2\main.cpp" />
     <ClCompile Include="..\..\src\client2\mj_input.cpp" />
+    <ClCompile Include="..\..\src\client2\raytracer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\client2\fs_imgui_image.sc" />
@@ -92,16 +94,19 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -114,11 +119,12 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
@@ -144,10 +150,11 @@
       <AdditionalIncludeDirectories>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -175,10 +182,11 @@
       <AdditionalIncludeDirectories>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>MJ_PROFILE;TRACY_ENABLE;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NOMINMAX;NDEBUG;_WIN64</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>false</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

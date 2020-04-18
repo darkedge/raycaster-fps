@@ -266,7 +266,7 @@ struct OcornutImguiContext
     uint8_t* data;
     int32_t width;
     int32_t height;
-#if 0
+#if 0  // MJ
         {
             ImFontConfig config;
             config.FontDataOwnedByAtlas = false;
@@ -292,7 +292,7 @@ struct OcornutImguiContext
                         );
             }
         }
-#endif
+#endif // MJ
 
     io.Fonts->GetTexDataAsRGBA32(&data, &width, &height);
 
@@ -318,7 +318,7 @@ struct OcornutImguiContext
     bgfx::destroy(m_imageProgram);
     bgfx::destroy(m_program);
 
-    m_allocator = NULL;
+    // m_allocator = NULL;
   }
 
   void setupStyle(bool _dark)

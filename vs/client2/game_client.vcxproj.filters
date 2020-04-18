@@ -16,6 +16,8 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\client2\imgui_impl_bgfx.cpp" />
+    <ClCompile Include="..\..\src\client2\mj_input.cpp" />
+    <ClCompile Include="..\..\src\client2\raytracer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client2\logo.h" />
@@ -42,6 +44,9 @@
     <ClInclude Include="..\..\src\client2\vs_imgui_image.bin.h" />
     <ClInclude Include="..\..\src\client2\vs_ocornut_imgui.bin.h" />
     <ClInclude Include="..\..\src\client2\fs_imgui_image.bin.h" />
+    <ClInclude Include="..\..\src\client2\mj_common.h" />
+    <ClInclude Include="..\..\src\client2\mj_input.h" />
+    <ClInclude Include="..\..\src\client2\raytracer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -5,11 +5,13 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 #include "logo.h"
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_syswm.h>
 
 #include "mj_common.h"
 #include "imgui_impl_bgfx.h"
+#include "raytracer.h"
 
 #include "..\..\3rdparty\tracy\Tracy.hpp"
 
@@ -21,6 +23,8 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
   (void)hPrevInstance;
   (void)pCmdLine;
   (void)nCmdShow;
+
+  SDL_SetMainReady();
 
   // SDL initialization
 #if 0
@@ -76,11 +80,14 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
     return 1;
   }
 
-  imguiCreate();
+  rt::Init();
 
   // Set view 0 to the same dimensions as the window and to clear the color buffer.
   const bgfx::ViewId kClearView = 0;
   bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR);
+
+  imguiCreate();
+
   bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
   int32_t mouseX      = 0;
   int32_t mouseY      = 0;
@@ -163,6 +170,7 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
             width  = wev.data1;
             height = wev.data2;
 
+            rt::Resize(width, height);
             bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
             bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
           }
@@ -239,6 +247,8 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
       imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
     }
 
+    rt::Update();
+
     {
       ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
       ImGui::ShowDemoWindow();
@@ -256,6 +266,8 @@ int32_t CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pC
       FrameMark;
     }
   }
+
+  rt::Destroy();
 
   imguiDestroy();
 
