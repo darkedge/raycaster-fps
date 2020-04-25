@@ -17,7 +17,7 @@ if (-Not $ShaderPathExists) {
 }
 else {
     Push-Location -Path $ShaderPath
-    
+
     function BuildShaders ([String]$Filter, [String]$Type, [String]$Profile) {
         Get-ChildItem -Recurse -Filter $Filter |
         Foreach-Object {
@@ -35,10 +35,12 @@ else {
             if (-Not $HeaderExists -Or ($InTime -gt $OutTime)) {
                 # Write source file name to stdout
                 Write-Output $_.Name
-                $CommandLine = '-f', $InFile, '-o', $OutHeader, '--platform', 'windows', '--Type', $Type, '--Profile', $Profile, '--bin2c'
-                & $Exe $CommandLine
-                $CommandLine = '-f', $InFile, '-o', $OutHlsl, '--platform', 'windows', '--Type', $Type, '--Profile', $Profile, '--preprocess'
-                & $Exe $CommandLine
+
+                # Generate compiled header file
+                & $Exe -f $InFile -o $OutHeader --platform windows --Type $Type --Profile $Profile --bin2c
+                
+                # Generate preprocessed file for debugging
+                & $Exe -f $InFile -o $OutHlsl --platform windows --Type $Type --Profile $Profile --preprocess
             } 
         }
     }
@@ -53,7 +55,7 @@ else {
 
     # Fragment shaders
     Write-Output 'Building fragment shaders...'
-    BuildShaders 'fs_*.sc' 'f' 'fs_5_0'
+    BuildShaders 'fs_*.sc' 'f' 'ps_5_0'
     
     Pop-Location
 }

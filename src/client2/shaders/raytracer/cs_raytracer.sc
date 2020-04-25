@@ -29,8 +29,8 @@ vec2 ScreenToCameraSpace(const float2 ss, float fov)
 NUM_THREADS(16, 16, 1)
 void main()
 {
-  int x = gl_GlobalInvocationID.x;
-  int y = gl_GlobalInvocationID.y;
+  const int x = gl_GlobalInvocationID.x;
+  const int y = gl_GlobalInvocationID.y;
 
   // TODO
   int width = 640;
