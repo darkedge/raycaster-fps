@@ -354,3 +354,6 @@ intermediate/
 imgui.ini
 /strings.txt
 /wd.diff
+
+# Cooked assets folder (working directory of executable)
+/data/

@@ -18,6 +18,7 @@
     <ClCompile Include="..\..\src\client2\imgui_impl_bgfx.cpp" />
     <ClCompile Include="..\..\src\client2\mj_input.cpp" />
     <ClCompile Include="..\..\src\client2\raytracer.cpp" />
+    <ClCompile Include="..\..\src\client2\mj_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client2\logo.h" />
@@ -47,10 +48,15 @@
     <ClInclude Include="..\..\src\client2\mj_common.h" />
     <ClInclude Include="..\..\src\client2\mj_input.h" />
     <ClInclude Include="..\..\src\client2\raytracer.h" />
+    <ClInclude Include="..\..\src\client2\mj_platform.h" />
+    <ClInclude Include="..\..\src\client2\mj_win32.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
       <UniqueIdentifier>{25e4d3cc-f8b3-4b6d-926d-c15ad3e3018a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{5dad4c73-c242-47a2-ba69-657c2e88e02e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

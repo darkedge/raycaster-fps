@@ -5,47 +5,55 @@ Param(
     [String]$TargetDir
 )
 
-$cmd = '../../../tools/bgfx/shaderc.exe'
-$shaderPath = "..\..\src\game_client\shaders"
-$exists = Test-Path -Path $shaderPath
-if ($exists) {
-    Push-Location -Path $shaderPath
-    Get-ChildItem -Recurse -Filter vs_*.sc |
-    Foreach-Object {    
-        $rel = (Resolve-Path -Path $_.FullName -Relative)
-        $scWrite = (Get-Item $_.FullName).LastWriteTime
-        $out = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.h'))
-        $exists = Test-Path -Path $out
+# Path to bgfx shaderc executable
+$Exe = '../../../tools/bgfx/shaderc.exe'
 
-        if ($exists) {
-            $hWrite = (Get-Item $out).LastWriteTime
-        }
+# Path to shader source files
+$ShaderPath = "..\..\src\client2\shaders"
 
-        if (-Not $exists -Or ($scWrite -gt $hWrite)) {
-            Write-Output $_.Name
-            $prm = '-f', $rel, '-o', $out, '--platform', 'windows', '--type', 'v', '--profile', 'vs_5_0', '--bin2c'
-            & $cmd $prm
-        } 
-    }
-    Pop-Location
-
-    Push-Location -Path $shaderPath
-    Get-ChildItem -Recurse -Filter fs_*.sc |
-    Foreach-Object {
-        $rel = (Resolve-Path -Path $_.FullName -Relative)
-        $scWrite = (Get-Item $_.FullName).LastWriteTime
-        $out = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.h'))
-        $exists = Test-Path -Path $out
-
-        if ($exists) {
-            $hWrite = (Get-Item $out).LastWriteTime
-        }
+$ShaderPathExists = Test-Path -Path $ShaderPath
+if (-Not $ShaderPathExists) {
+    Write-Output "Could not find shader path $($ShaderPath)!"
+}
+else {
+    Push-Location -Path $ShaderPath
     
-        if (-Not $exists -Or ($scWrite -gt $hWrite)) {
-            Write-Output $_.Name
-            $prm = '-f', $rel, '-o', $out, '--platform', 'windows', '--type', 'f', '--profile', 'ps_5_0', '--bin2c'
-            & $cmd $prm
+    function BuildShaders ([String]$Filter, [String]$Type, [String]$Profile) {
+        Get-ChildItem -Recurse -Filter $Filter |
+        Foreach-Object {
+            $InFile = (Resolve-Path -Path $_.FullName -Relative)
+            $InTime = (Get-Item $_.FullName).LastWriteTime
+            $OutHeader = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.h'))
+            $OutHlsl = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.hlsl'))
+
+            # Test if input is newer than output
+            $HeaderExists = Test-Path -Path $OutHeader
+            if ($HeaderExists) {
+                $OutTime = (Get-Item $OutHeader).LastWriteTime
+            }
+
+            if (-Not $HeaderExists -Or ($InTime -gt $OutTime)) {
+                # Write source file name to stdout
+                Write-Output $_.Name
+                $CommandLine = '-f', $InFile, '-o', $OutHeader, '--platform', 'windows', '--Type', $Type, '--Profile', $Profile, '--bin2c'
+                & $Exe $CommandLine
+                $CommandLine = '-f', $InFile, '-o', $OutHlsl, '--platform', 'windows', '--Type', $Type, '--Profile', $Profile, '--preprocess'
+                & $Exe $CommandLine
+            } 
         }
     }
+
+    # Compute shaders
+    Write-Output 'Building compute shaders...'
+    BuildShaders 'cs_*.sc' 'c' 'cs_5_0'
+
+    # Vertex shaders
+    Write-Output 'Building vertex shaders...'
+    BuildShaders 'vs_*.sc' 'v' 'vs_5_0'
+
+    # Fragment shaders
+    Write-Output 'Building fragment shaders...'
+    BuildShaders 'fs_*.sc' 'f' 'fs_5_0'
+    
     Pop-Location
 }

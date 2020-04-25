@@ -12,32 +12,10 @@
 
 #include "imgui_impl_bgfx.h"
 
-#if 0 // MJ
-#include "../bgfx_utils.h"
-
-//#define USE_ENTRY 1
-
-#ifndef USE_ENTRY
-#define USE_ENTRY 0
-#endif // USE_ENTRY
-
-#if USE_ENTRY
-#include "../entry/entry.h"
-#include "../entry/input.h"
-#endif // USE_ENTRY
-#endif
-
 #include "vs_ocornut_imgui.bin.h"
 #include "fs_ocornut_imgui.bin.h"
 #include "vs_imgui_image.bin.h"
 #include "fs_imgui_image.bin.h"
-
-#if 0 // MJ
-#include "roboto_regular.ttf.h"
-#include "robotomono_regular.ttf.h"
-#include "icons_kenney.ttf.h"
-#include "icons_font_awesome.ttf.h"
-#endif
 
 static const bgfx::EmbeddedShader s_embeddedShaders[] = { BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
                                                           BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
@@ -53,21 +31,11 @@ struct FontRangeMerge
   ImWchar ranges[3];
 };
 
-#if 0 // MJ
-static FontRangeMerge s_fontRangeMerge[] =
-{
-    { s_iconsKenneyTtf,      sizeof(s_iconsKenneyTtf),      { ICON_MIN_KI, ICON_MAX_KI, 0 } },
-    { s_iconsFontAwesomeTtf, sizeof(s_iconsFontAwesomeTtf), { ICON_MIN_FA, ICON_MAX_FA, 0 } },
-};
-#endif
-
-#if 1 // MJ
 inline bool checkAvailTransientBuffers(uint32_t _numVertices, const bgfx::VertexLayout& _layout, uint32_t _numIndices)
 {
   return _numVertices == bgfx::getAvailTransientVertexBuffer(_numVertices, _layout) &&
          (0 == _numIndices || _numIndices == bgfx::getAvailTransientIndexBuffer(_numIndices));
 }
-#endif
 
 static void* memAlloc(size_t _size, void* _userData);
 static void memFree(void* _ptr, void* _userData);
@@ -177,12 +145,10 @@ struct OcornutImguiContext
 
   void create(float _fontSize, bx::AllocatorI* _allocator)
   {
-#if 1 // MJ
     (void)_fontSize;
-#endif
     m_allocator = _allocator;
 
-    if (NULL == _allocator)
+    if (!_allocator)
     {
       static bx::DefaultAllocator allocator;
       m_allocator = &allocator;
@@ -204,49 +170,6 @@ struct OcornutImguiContext
 
     setupStyle(true);
 
-#if USE_ENTRY
-    io.KeyMap[ImGuiKey_Tab]        = (int)entry::Key::Tab;
-    io.KeyMap[ImGuiKey_LeftArrow]  = (int)entry::Key::Left;
-    io.KeyMap[ImGuiKey_RightArrow] = (int)entry::Key::Right;
-    io.KeyMap[ImGuiKey_UpArrow]    = (int)entry::Key::Up;
-    io.KeyMap[ImGuiKey_DownArrow]  = (int)entry::Key::Down;
-    io.KeyMap[ImGuiKey_PageUp]     = (int)entry::Key::PageUp;
-    io.KeyMap[ImGuiKey_PageDown]   = (int)entry::Key::PageDown;
-    io.KeyMap[ImGuiKey_Home]       = (int)entry::Key::Home;
-    io.KeyMap[ImGuiKey_End]        = (int)entry::Key::End;
-    io.KeyMap[ImGuiKey_Insert]     = (int)entry::Key::Insert;
-    io.KeyMap[ImGuiKey_Delete]     = (int)entry::Key::Delete;
-    io.KeyMap[ImGuiKey_Backspace]  = (int)entry::Key::Backspace;
-    io.KeyMap[ImGuiKey_Space]      = (int)entry::Key::Space;
-    io.KeyMap[ImGuiKey_Enter]      = (int)entry::Key::Return;
-    io.KeyMap[ImGuiKey_Escape]     = (int)entry::Key::Esc;
-    io.KeyMap[ImGuiKey_A]          = (int)entry::Key::KeyA;
-    io.KeyMap[ImGuiKey_C]          = (int)entry::Key::KeyC;
-    io.KeyMap[ImGuiKey_V]          = (int)entry::Key::KeyV;
-    io.KeyMap[ImGuiKey_X]          = (int)entry::Key::KeyX;
-    io.KeyMap[ImGuiKey_Y]          = (int)entry::Key::KeyY;
-    io.KeyMap[ImGuiKey_Z]          = (int)entry::Key::KeyZ;
-
-    io.ConfigFlags |= 0 | ImGuiConfigFlags_NavEnableGamepad | ImGuiConfigFlags_NavEnableKeyboard;
-
-    io.NavInputs[ImGuiNavInput_Activate] = (int)entry::Key::GamepadA;
-    io.NavInputs[ImGuiNavInput_Cancel]   = (int)entry::Key::GamepadB;
-    //		io.NavInputs[ImGuiNavInput_Input]       = (int)entry::Key::;
-    //		io.NavInputs[ImGuiNavInput_Menu]        = (int)entry::Key::;
-    io.NavInputs[ImGuiNavInput_DpadLeft]  = (int)entry::Key::GamepadLeft;
-    io.NavInputs[ImGuiNavInput_DpadRight] = (int)entry::Key::GamepadRight;
-    io.NavInputs[ImGuiNavInput_DpadUp]    = (int)entry::Key::GamepadUp;
-    io.NavInputs[ImGuiNavInput_DpadDown]  = (int)entry::Key::GamepadDown;
-//		io.NavInputs[ImGuiNavInput_LStickLeft]  = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickRight] = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickUp]    = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_LStickDown]  = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_FocusPrev]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_FocusNext]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_TweakSlow]   = (int)entry::Key::;
-//		io.NavInputs[ImGuiNavInput_TweakFast]   = (int)entry::Key::;
-#endif // USE_ENTRY
-
     bgfx::RendererType::Enum type = bgfx::getRendererType();
     m_program = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui"),
                                     bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui"), true);
@@ -266,49 +189,14 @@ struct OcornutImguiContext
     uint8_t* data;
     int32_t width;
     int32_t height;
-#if 0  // MJ
-        {
-            ImFontConfig config;
-            config.FontDataOwnedByAtlas = false;
-            config.MergeMode = false;
-//			config.MergeGlyphCenterV = true;
-
-            const ImWchar* ranges = io.Fonts->GetGlyphRangesCyrillic();
-            m_font[ImGui::Font::Regular] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoRegularTtf,     sizeof(s_robotoRegularTtf),     _fontSize,      &config, ranges);
-            m_font[ImGui::Font::Mono   ] = io.Fonts->AddFontFromMemoryTTF( (void*)s_robotoMonoRegularTtf, sizeof(s_robotoMonoRegularTtf), _fontSize-3.0f, &config, ranges);
-
-            config.MergeMode = true;
-            config.DstFont   = m_font[ImGui::Font::Regular];
-
-            for (uint32_t ii = 0; ii < BX_COUNTOF(s_fontRangeMerge); ++ii)
-            {
-                const FontRangeMerge& frm = s_fontRangeMerge[ii];
-
-                io.Fonts->AddFontFromMemoryTTF( (void*)frm.data
-                        , (int)frm.size
-                        , _fontSize-3.0f
-                        , &config
-                        , frm.ranges
-                        );
-            }
-        }
-#endif // MJ
-
     io.Fonts->GetTexDataAsRGBA32(&data, &width, &height);
 
     m_texture = bgfx::createTexture2D((uint16_t)width, (uint16_t)height, false, 1, bgfx::TextureFormat::BGRA8, 0,
                                       bgfx::copy(data, width * height * 4));
-
-#if 0  // MJ
-    ImGui::InitDockContext();
-#endif // MJ
   }
 
   void destroy()
   {
-#if 0 // MJ
-    ImGui::ShutdownDockContext();
-#endif
     ImGui::DestroyContext(m_imgui);
 
     bgfx::destroy(s_tex);
@@ -317,8 +205,6 @@ struct OcornutImguiContext
     bgfx::destroy(u_imageLodEnabled);
     bgfx::destroy(m_imageProgram);
     bgfx::destroy(m_program);
-
-    // m_allocator = NULL;
   }
 
   void setupStyle(bool _dark)
@@ -365,22 +251,7 @@ struct OcornutImguiContext
     io.MouseWheel   = (float)(_scroll - m_lastScroll);
     m_lastScroll    = _scroll;
 
-#if USE_ENTRY
-    uint8_t modifiers = inputGetModifiersState();
-    io.KeyShift       = 0 != (modifiers & (entry::Modifier::LeftShift | entry::Modifier::RightShift));
-    io.KeyCtrl        = 0 != (modifiers & (entry::Modifier::LeftCtrl | entry::Modifier::RightCtrl));
-    io.KeyAlt         = 0 != (modifiers & (entry::Modifier::LeftAlt | entry::Modifier::RightAlt));
-    for (int32_t ii = 0; ii < (int32_t)entry::Key::Count; ++ii)
-    {
-      io.KeysDown[ii] = inputGetKeyState(entry::Key::Enum(ii));
-    }
-#endif // USE_ENTRY
-
     ImGui::NewFrame();
-
-#if 0 // MJ
-        ImGuizmo::BeginFrame();
-#endif
   }
 
   void endFrame()
@@ -397,9 +268,6 @@ struct OcornutImguiContext
   bgfx::TextureHandle m_texture;
   bgfx::UniformHandle s_tex;
   bgfx::UniformHandle u_imageLodEnabled;
-#if 0 // MJ
-    ImFont* m_font[ImGui::Font::Count];
-#endif
   int64_t m_last;
   int32_t m_lastScroll;
   bgfx::ViewId m_viewId;
@@ -439,26 +307,3 @@ void imguiEndFrame()
 {
   s_ctx.endFrame();
 }
-
-#if 0 // MJ
-namespace ImGui
-{
-    void PushFont(Font::Enum _font)
-    {
-        PushFont(s_ctx.m_font[_font]);
-    }
-} // namespace ImGui
-
-BX_PRAGMA_DIAGNOSTIC_IGNORED_MSVC(4505); // error C4505: '' : unreferenced local function has been removed
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wunused-function"); // warning: 'int rect_width_compare(const void*, const void*)' defined but not used
-BX_PRAGMA_DIAGNOSTIC_PUSH();
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG("-Wunknown-pragmas")
-BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wtype-limits"); // warning: comparison is always true due to limited range of data type
-#define STBTT_malloc(_size, _userData) memAlloc(_size, _userData)
-#define STBTT_free(_ptr, _userData)    memFree(_ptr, _userData)
-#define STB_RECT_PACK_IMPLEMENTATION
-#include <stb/stb_rect_pack.h>
-#define STB_TRUETYPE_IMPLEMENTATION
-#include <stb/stb_truetype.h>
-BX_PRAGMA_DIAGNOSTIC_POP();
-#endif // MJ
