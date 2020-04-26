@@ -3,7 +3,11 @@
 #include <string_view>
 #include <stdint.h>
 #include <bgfx/bgfx.h>
+#include <bimg/bimg.h>
 #include <glm/glm.hpp>
+#include <bx/allocator.h>
+#include <bx/error.h>
+#include <glm/gtc/type_ptr.hpp>
 #include "mj_common.h"
 #include <imgui.h>
 #include <SDL.h>
@@ -17,7 +21,11 @@
 
 static constexpr uint32_t GRID_DIM = 16;
 
+static bx::DefaultAllocator s_defaultAllocator;
+
+static bgfx::VertexLayout computeVertexLayout;
 static bgfx::ProgramHandle s_RaytracerProgram;
+static bgfx::TextureHandle s_RaytracerTextureArray;
 static bgfx::ProgramHandle s_ScreenTriangleProgram;
 static bgfx::VertexLayout s_ScreenTriangleVertexLayout;
 static bgfx::UniformHandle s_ScreenTriangleSampler;
@@ -25,64 +33,235 @@ static bgfx::TextureHandle s_RaytracerOutputTexture;
 
 // Grid
 static uint32_t s_Grid[64 * 64];
-static bgfx::DynamicVertexBufferHandle s_GridBuffer;
+static bgfx::VertexBufferHandle s_GridBuffer;
 
-static bgfx::DynamicVertexBufferHandle s_ObjectBuffer;
+static bgfx::VertexBufferHandle s_ObjectBuffer;
 static uint32_t s_Object[64 * 64 * 64];
 
-static bgfx::DynamicVertexBufferHandle s_PaletteBuffer;
+static bgfx::VertexBufferHandle s_PaletteBuffer;
 static uint32_t s_Palette[256];
 
-static void ParseLevel(void* pFile, size_t datasize)
+// Constants
+static bgfx::UniformHandle s_uMat;
+static bgfx::UniformHandle s_uCameraPos;
+static bgfx::UniformHandle s_uFieldOfView;
+static bgfx::UniformHandle s_uWidth;
+static bgfx::UniformHandle s_uHeight;
+static bgfx::UniformHandle s_uTextureArray;
+
+static glm::mat4 s_Mat;
+static glm::vec4 s_CameraPos;
+static glm::vec4 s_FieldOfView;
+static glm::vec4 s_Width;
+static glm::vec4 s_Height;
+
+static glm::quat s_Rotation;
+
+static float lastMousePos;
+static float currentMousePos;
+
+void CameraInit()
 {
-  uint16_t* pData    = (uint16_t*)pFile;
-  size_t numElements = datasize / sizeof(*pData);
-  for (size_t i = 0; i < numElements; i++)
-  {
-    uint16_t val = pData[i];
-    if (val < 0x006A)
-    {
-      s_Grid[i] = 1;
-    }
-  }
-
-  // Setup compute buffers
-  bgfx::VertexLayout computeVertexLayout;
-  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 4, bgfx::AttribType::Float).end();
-
-  s_GridBuffer = bgfx::createDynamicVertexBuffer(1 << 15, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
-  // s_RaytracerTextureArray = bgfx::createTexture2D()
-  s_ObjectBuffer           = bgfx::createDynamicVertexBuffer(1 << 15, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
-  s_PaletteBuffer          = bgfx::createDynamicVertexBuffer(1 << 15, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
-  s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
-                                                   BGFX_TEXTURE_COMPUTE_WRITE);
-
-  // Compute shader
-  bgfx::ShaderHandle csh = bgfx::createShader(bgfx::makeRef(cs_raytracer, sizeof(cs_raytracer)));
-  s_RaytracerProgram     = bgfx::createProgram(csh, true);
-
-  // Screen shader
-  bgfx::ShaderHandle vsh  = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
-  bgfx::ShaderHandle fsh  = bgfx::createShader(bgfx::makeRef(fs_screen_triangle, sizeof(fs_screen_triangle)));
-  s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
-  s_ScreenTriangleSampler = bgfx::createUniform("SampleType", bgfx::UniformType::Sampler);
-  s_ScreenTriangleVertexLayout.begin().add(bgfx::Attrib::Indices, 1, bgfx::AttribType::Float).end();
-
-  bgfx::setBuffer(0, s_GridBuffer, bgfx::Access::Read);
-  // bgfx::setTexture(1, s_TextureArrayBuffer, bgfx::Access::Read);
-  bgfx::setBuffer(2, s_ObjectBuffer, bgfx::Access::Read);
-  bgfx::setBuffer(3, s_PaletteBuffer, bgfx::Access::Read);
+  lastMousePos    = 0.0f;
+  currentMousePos = 0.0f;
+  s_Rotation      = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
 }
 
-void rt::Init()
+static void Reset()
+{
+  s_CameraPos = glm::vec4(54.5f, 0.5f, 34.5f, 0.0f);
+  // s_Rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
+  // s_Camera.frame = 0;
+  s_FieldOfView.x = 60.0f;
+  CameraInit();
+}
+
+static bool InitObjectPlaceholder()
+{
+  bool voxelData   = false;
+  bool paletteData = false;
+  bool sizeData    = false;
+
+  constexpr int32_t ID_VOX  = 542658390;
+  constexpr int32_t ID_MAIN = 1313423693;
+  constexpr int32_t ID_SIZE = 1163544915;
+  constexpr int32_t ID_XYZI = 1230657880;
+  constexpr int32_t ID_RGBA = 1094862674;
+
+  MJ_UNINITIALIZED size_t datasize;
+  void* pFile = SDL_LoadFile("obj_placeholder_small.vox", &datasize);
+  if (pFile)
+  {
+    mj::IStream stream(pFile, datasize);
+
+    MJ_UNINITIALIZED int32_t* pId;
+    MJ_UNINITIALIZED uint32_t* versionNumber;
+
+    // Check header
+    if (stream.Fetch(MJ_REF pId).Fetch(MJ_REF versionNumber).Good() && (*pId == ID_VOX) && (*versionNumber == 150))
+    {
+      MJ_UNINITIALIZED uint32_t* pNumBytesChunkContent;
+      MJ_UNINITIALIZED uint32_t* pNumBytesChildrenChunks;
+      while (stream.SizeLeft() > 0)
+      {
+        if (stream
+                .Fetch(MJ_REF pId)                     //
+                .Fetch(MJ_REF pNumBytesChunkContent)   //
+                .Fetch(MJ_REF pNumBytesChildrenChunks) //
+                .Good())
+        {
+          switch (*pId)
+          {
+          case ID_MAIN: // Root node
+            break;
+          case ID_SIZE:
+          {
+            MJ_UNINITIALIZED uint32_t* pSizeX;
+            MJ_UNINITIALIZED uint32_t* pSizeY;
+            MJ_UNINITIALIZED uint32_t* pSizeZ;
+            if (stream
+                    .Fetch(MJ_REF pSizeX) //
+                    .Fetch(MJ_REF pSizeY) //
+                    .Fetch(MJ_REF pSizeZ) //
+                    .Good())
+            {
+              if ((*pSizeX == 64) && (*pSizeY == 64) && (*pSizeZ == 64))
+              {
+                sizeData = true;
+              }
+            }
+          }
+          break;
+          case ID_XYZI:
+          {
+            MJ_UNINITIALIZED uint32_t* pNumVoxels;
+            if (stream
+                    .Fetch(MJ_REF pNumVoxels) //
+                    .Good())
+            {
+              for (uint32_t i = 0; i < *pNumVoxels; i++)
+              {
+                uint8_t* pX;
+                uint8_t* pY;
+                uint8_t* pZ;
+                uint8_t* pColorIndex;
+                if (stream
+                        .Fetch(MJ_REF pX)          //
+                        .Fetch(MJ_REF pY)          //
+                        .Fetch(MJ_REF pZ)          //
+                        .Fetch(MJ_REF pColorIndex) //
+                        .Good())
+                {
+                  // Flip MagicaVoxel's right-handed Z-up to left-handed Y-up
+                  s_Object[*pY * 64 * 64 + *pZ * 64 + *pX] = *pColorIndex;
+                }
+              }
+              const bgfx::Memory* pMemory = bgfx::makeRef(s_Object, sizeof(s_Object));
+              s_ObjectBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+            }
+          }
+          break;
+          case ID_RGBA:
+          {
+            const bgfx::Memory* pMemory = bgfx::copy(stream.Position(), *pNumBytesChunkContent);
+            s_PaletteBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+          }
+          break;
+          default: // Skip irrelevant nodes
+            stream.Skip(*pNumBytesChunkContent);
+            break;
+          }
+        }
+      }
+    }
+    SDL_free(pFile);
+  }
+
+  return voxelData && paletteData && sizeData;
+}
+
+static void InitTexture2DArray()
+{
+  MJ_UNINITIALIZED size_t datasize;
+  void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
+  if (pFile)
+  {
+    mj::IStream stream(pFile, datasize);
+
+    bx::Error error;
+    bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, datasize, &error);
+
+    if (pImageContainer)
+    {
+      const bgfx::Memory* pMemory = bgfx::makeRef(pImageContainer->m_data, pImageContainer->m_size);
+      s_RaytracerTextureArray     = bgfx::createTexture2D(pImageContainer->m_width, pImageContainer->m_height,
+                                                      !!pImageContainer->m_numMips, pImageContainer->m_numLayers,
+                                                      (bgfx::TextureFormat::Enum)pImageContainer->m_format, 0, pMemory);
+      bimg::imageFree(pImageContainer);
+      s_uTextureArray = bgfx::createUniform("s_TextureArray", bgfx::UniformType::Sampler);
+    }
+
+    SDL_free(pFile);
+  }
+}
+
+static void LoadLevel()
 {
   MJ_UNINITIALIZED size_t datasize;
   void* pFile = SDL_LoadFile("E1M1.bin", &datasize);
   if (pFile)
   {
-    ParseLevel(pFile, datasize);
+    uint16_t* pData    = (uint16_t*)pFile;
+    size_t numElements = datasize / sizeof(*pData);
+    for (size_t i = 0; i < numElements; i++)
+    {
+      uint16_t val = pData[i];
+      if (val < 0x006A)
+      {
+        s_Grid[i] = 1;
+      }
+    }
+
+    const bgfx::Memory* pMemory = bgfx::makeRef(s_Grid, sizeof(s_Grid));
+    s_GridBuffer                = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+
     SDL_free(pFile);
   }
+}
+
+void rt::Init()
+{
+  // Compute shader
+  bgfx::ShaderHandle csh   = bgfx::createShader(bgfx::makeRef(cs_raytracer, sizeof(cs_raytracer)));
+  s_RaytracerProgram       = bgfx::createProgram(csh, true);
+  s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
+                                                   BGFX_TEXTURE_COMPUTE_WRITE);
+  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Float).end();
+
+  // Screen shader
+  bgfx::ShaderHandle vsh  = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
+  bgfx::ShaderHandle fsh  = bgfx::createShader(bgfx::makeRef(fs_screen_triangle, sizeof(fs_screen_triangle)));
+  s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
+
+  s_Width  = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
+  s_Height = glm::vec4(MJ_RT_HEIGHT, 0.0f, 0.0f, 0.0f);
+
+  Reset();
+
+  // Set constant buffer with camera
+  s_uMat         = bgfx::createUniform("mat", bgfx::UniformType::Mat4);
+  s_uCameraPos   = bgfx::createUniform("s_CameraPos", bgfx::UniformType::Vec4);
+  s_uFieldOfView = bgfx::createUniform("s_FieldOfView", bgfx::UniformType::Vec4);
+  s_uWidth       = bgfx::createUniform("width", bgfx::UniformType::Vec4);
+  s_uHeight      = bgfx::createUniform("height", bgfx::UniformType::Vec4);
+
+  LoadLevel();
+  s_ScreenTriangleSampler = bgfx::createUniform("SampleType", bgfx::UniformType::Sampler);
+  s_ScreenTriangleVertexLayout.begin().add(bgfx::Attrib::Indices, 1, bgfx::AttribType::Float).end();
+
+  InitTexture2DArray();
+
+  InitObjectPlaceholder();
 }
 
 void rt::Resize(int width, int height)
@@ -93,8 +272,18 @@ void rt::Resize(int width, int height)
 
 void rt::Update()
 {
+  bgfx::setUniform(s_uMat, glm::value_ptr(s_Mat));
+  bgfx::setUniform(s_uCameraPos, glm::value_ptr(s_CameraPos));
+  bgfx::setUniform(s_uFieldOfView, glm::value_ptr(s_FieldOfView));
+  bgfx::setUniform(s_uWidth, glm::value_ptr(s_Width));
+  bgfx::setUniform(s_uHeight, glm::value_ptr(s_Height));
+
   const bgfx::ViewId viewId = 0;
   bgfx::setImage(5, s_RaytracerOutputTexture, 0, bgfx::Access::Write);
+  bgfx::setBuffer(0, s_GridBuffer, bgfx::Access::Read);
+  bgfx::setTexture(1, s_uTextureArray, s_RaytracerTextureArray);
+  bgfx::setBuffer(2, s_ObjectBuffer, bgfx::Access::Read);
+  bgfx::setBuffer(3, s_PaletteBuffer, bgfx::Access::Read);
   bgfx::dispatch(viewId, s_RaytracerProgram, (MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM,
                  (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 

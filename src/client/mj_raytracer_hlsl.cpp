@@ -278,7 +278,6 @@ static bool InitObjectPlaceholder(ID3D11Device* pDevice)
                   {
                     s_pObjectBuffer.Reset();
                     s_pObjectSrv.Reset();
-                    ;
                   }
                 }
               }
