@@ -32,7 +32,7 @@ static bgfx::UniformHandle s_ScreenTriangleSampler;
 static bgfx::TextureHandle s_RaytracerOutputTexture;
 
 // Grid
-static uint32_t s_Grid[64 * 64];
+static float s_Grid[64 * 64];
 static bgfx::VertexBufferHandle s_GridBuffer;
 
 static bgfx::VertexBufferHandle s_ObjectBuffer;
@@ -221,7 +221,7 @@ static void LoadLevel()
       uint16_t val = pData[i];
       if (val < 0x006A)
       {
-        s_Grid[i] = 1;
+        s_Grid[i] = 1.0f;
       }
     }
 
@@ -242,7 +242,7 @@ void rt::Init()
   s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
                                                    BGFX_TEXTURE_COMPUTE_WRITE);
   bgfx::setName(s_RaytracerOutputTexture, "s_RaytracerOutputTexture");
-  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Float).end();
+  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Uint8).end();
 
   // Screen shader
   bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));

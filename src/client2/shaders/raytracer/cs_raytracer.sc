@@ -13,7 +13,7 @@ struct Ray
 
 // Shader Resource Views
 BUFFER_RO(s_Grid, float, 0);
-IMAGE2D_ARRAY_RO(s_TextureArray,rgba32f,1);
+SAMPLER2DARRAY(s_TextureArray,1);
 BUFFER_RO(s_Object, float, 2);
 BUFFER_RO(s_Palette, float, 3);
 
@@ -69,9 +69,9 @@ float IntersectObject(vec3 pos, vec3 dir, out vec4 objectColor, int stepX, int s
          (blockPosY >= 0) && (blockPosY < 64) && //
          (blockPosZ >= 0) && (blockPosZ < 64))
   {
-    uint color = s_Object[blockPosZ * 64 * 64 + blockPosY * 64 + blockPosX];
+    float color = s_Object[blockPosZ * 64 * 64 + blockPosY * 64 + blockPosX];
 
-    if (color != 0)
+    if (color != 0.0)
     {
       objectColor = MGetVertexColour(s_Palette[color - 1]);
       t           = tMax * 0.015625f; // (1.0 / 64.0)
@@ -152,9 +152,9 @@ vec4 IntersectRayGrid(const Ray ray)
         return AttenuateSample(tMax + tObj, objectColor);
       }
     }
-    uint block = s_Grid[blockPosZ * 64 + blockPosX];
+    float block = s_Grid[blockPosZ * 64 + blockPosX];
 
-    if (block == 1) // Wall hit
+    if (block == 1.0) // Wall hit
     {
       if (horizontal) // Walls along X axis
       {
@@ -167,7 +167,7 @@ vec4 IntersectRayGrid(const Ray ray)
         v = ray.origin.y + tMax * ray.direction.y;
       }
 
-      return AttenuateSample(tMax, imageLoad(s_TextureArray, vec3(u, (1.0 - v), 0.0)));
+      return AttenuateSample(tMax, texture2DArrayLod(s_TextureArray, vec3(u, (1.0 - v), 0.0), 0));
     }
 
     if (tMaxX < tMaxY)
@@ -197,11 +197,11 @@ vec4 IntersectRayGrid(const Ray ray)
 
         if (ray.direction.y > 0)
         {
-          return AttenuateSample(t, imageLoad(s_TextureArray, vec3(u, v, 2.0)));
+          return AttenuateSample(t, texture2DArrayLod(s_TextureArray, vec3(u, v, 2.0), 0));
         }
         else
         {
-          return AttenuateSample(t, imageLoad(s_TextureArray, vec3(u, v, 1.0)));
+          return AttenuateSample(t, texture2DArrayLod(s_TextureArray, vec3(u, v, 1.0), 0));
         }
       }
       else
