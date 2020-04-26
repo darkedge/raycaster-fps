@@ -12,17 +12,10 @@
 
 #include "imgui_impl_bgfx.h"
 
-#include "vs_ocornut_imgui.bin.h"
-#include "fs_ocornut_imgui.bin.h"
-#include "vs_imgui_image.bin.h"
-#include "fs_imgui_image.bin.h"
-
-static const bgfx::EmbeddedShader s_embeddedShaders[] = { BGFX_EMBEDDED_SHADER(vs_ocornut_imgui),
-                                                          BGFX_EMBEDDED_SHADER(fs_ocornut_imgui),
-                                                          BGFX_EMBEDDED_SHADER(vs_imgui_image),
-                                                          BGFX_EMBEDDED_SHADER(fs_imgui_image),
-
-                                                          BGFX_EMBEDDED_SHADER_END() };
+#include "shaders/imgui/vs_ocornut_imgui.h"
+#include "shaders/imgui/fs_ocornut_imgui.h"
+#include "shaders/imgui/vs_imgui_image.h"
+#include "shaders/imgui/fs_imgui_image.h"
 
 struct FontRangeMerge
 {
@@ -171,12 +164,18 @@ struct OcornutImguiContext
     setupStyle(true);
 
     bgfx::RendererType::Enum type = bgfx::getRendererType();
-    m_program = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_ocornut_imgui"),
-                                    bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_ocornut_imgui"), true);
+    {
+      bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_ocornut_imgui, sizeof(vs_ocornut_imgui)));
+      bgfx::ShaderHandle fsh = bgfx::createShader(bgfx::makeRef(fs_ocornut_imgui, sizeof(fs_ocornut_imgui)));
+      m_program              = bgfx::createProgram(vsh, fsh, true);
+    }
 
     u_imageLodEnabled = bgfx::createUniform("u_imageLodEnabled", bgfx::UniformType::Vec4);
-    m_imageProgram    = bgfx::createProgram(bgfx::createEmbeddedShader(s_embeddedShaders, type, "vs_imgui_image"),
-                                         bgfx::createEmbeddedShader(s_embeddedShaders, type, "fs_imgui_image"), true);
+    {
+      bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_imgui_image, sizeof(vs_imgui_image)));
+      bgfx::ShaderHandle fsh = bgfx::createShader(bgfx::makeRef(fs_imgui_image, sizeof(fs_imgui_image)));
+      m_imageProgram         = bgfx::createProgram(vsh, fsh, true);
+    }
 
     m_layout.begin()
         .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)

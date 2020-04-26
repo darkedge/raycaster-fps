@@ -5,7 +5,7 @@ $input v_texcoord0
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
-#include <bgfx_shader.sh>
+#include "../bgfx_shader.sh"
 
 uniform vec4 u_imageLodEnabled;
 SAMPLER2D(s_texColor, 0);

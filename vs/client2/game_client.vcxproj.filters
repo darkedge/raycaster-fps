@@ -41,10 +41,8 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\client2\imgui_impl_bgfx.h" />
-    <ClInclude Include="..\..\src\client2\fs_ocornut_imgui.bin.h" />
     <ClInclude Include="..\..\src\client2\vs_imgui_image.bin.h" />
     <ClInclude Include="..\..\src\client2\vs_ocornut_imgui.bin.h" />
-    <ClInclude Include="..\..\src\client2\fs_imgui_image.bin.h" />
     <ClInclude Include="..\..\src\client2\mj_common.h" />
     <ClInclude Include="..\..\src\client2\mj_input.h" />
     <ClInclude Include="..\..\src\client2\raytracer.h" />
@@ -58,11 +56,45 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{5dad4c73-c242-47a2-ba69-657c2e88e02e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\screen_triangle">
+      <UniqueIdentifier>{1bbdb65d-86d2-4f1e-a194-6185614b6f01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\raytracer">
+      <UniqueIdentifier>{0a544aed-dffd-4fa2-a212-45f60ee39239}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\imgui">
+      <UniqueIdentifier>{ba57d6d9-f181-49a2-99b3-c7396074f0a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\client2\fs_ocornut_imgui.sc" />
     <None Include="..\..\src\client2\vs_imgui_image.sc" />
     <None Include="..\..\src\client2\vs_ocornut_imgui.sc" />
-    <None Include="..\..\src\client2\fs_imgui_image.sc" />
+    <None Include="..\..\src\client2\shaders\raytracer\cs_raytracer.sc">
+      <Filter>shaders\raytracer</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\screen_triangle\varying.def.sc">
+      <Filter>shaders\screen_triangle</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\screen_triangle\vs_screen_triangle.sc">
+      <Filter>shaders\screen_triangle</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\screen_triangle\fs_screen_triangle.sc">
+      <Filter>shaders\screen_triangle</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\imgui\varying.def.sc">
+      <Filter>shaders\imgui</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\imgui\vs_imgui_image.sc">
+      <Filter>shaders\imgui</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\imgui\vs_ocornut_imgui.sc">
+      <Filter>shaders\imgui</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\imgui\fs_imgui_image.sc">
+      <Filter>shaders\imgui</Filter>
+    </None>
+    <None Include="..\..\src\client2\shaders\imgui\fs_ocornut_imgui.sc">
+      <Filter>shaders\imgui</Filter>
+    </None>
   </ItemGroup>
 </Project>
