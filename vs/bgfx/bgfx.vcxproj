@@ -51,7 +51,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\3rdparty\bx\include;..\..\3rdparty\bgfx\include;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bgfx\3rdparty;..\..\3rdparty\bgfx\3rdparty\khronos;..\..\3rdparty\bgfx\3rdparty\dxsdk\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BGFX_CONFIG_MULTITHREADED=0;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BGFX_CONFIG_MULTITHREADED=0;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_WIN64;BGFX_CONFIG_DEBUG=1</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>

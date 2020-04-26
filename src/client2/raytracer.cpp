@@ -158,6 +158,7 @@ static bool InitObjectPlaceholder()
               }
               const bgfx::Memory* pMemory = bgfx::makeRef(s_Object, sizeof(s_Object));
               s_ObjectBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+              bgfx::setName(s_ObjectBuffer, "s_ObjectBuffer");
             }
           }
           break;
@@ -165,6 +166,7 @@ static bool InitObjectPlaceholder()
           {
             const bgfx::Memory* pMemory = bgfx::copy(stream.Position(), *pNumBytesChunkContent);
             s_PaletteBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+            bgfx::setName(s_PaletteBuffer, "s_PaletteBuffer");
           }
           break;
           default: // Skip irrelevant nodes
@@ -193,10 +195,11 @@ static void InitTexture2DArray()
 
     if (pImageContainer)
     {
-      const bgfx::Memory* pMemory = bgfx::makeRef(pImageContainer->m_data, pImageContainer->m_size);
-      s_RaytracerTextureArray     = bgfx::createTexture2D(pImageContainer->m_width, pImageContainer->m_height,
-                                                      !!pImageContainer->m_numMips, pImageContainer->m_numLayers,
+      const bgfx::Memory* pMemory = bgfx::copy(pImageContainer->m_data, pImageContainer->m_size);
+      s_RaytracerTextureArray     = bgfx::createTexture2D(pImageContainer->m_width, pImageContainer->m_height, false,
+                                                      pImageContainer->m_numLayers,
                                                       (bgfx::TextureFormat::Enum)pImageContainer->m_format, 0, pMemory);
+      bgfx::setName(s_RaytracerTextureArray, "s_RaytracerTextureArray");
       bimg::imageFree(pImageContainer);
       s_uTextureArray = bgfx::createUniform("s_TextureArray", bgfx::UniformType::Sampler);
     }
@@ -224,6 +227,7 @@ static void LoadLevel()
 
     const bgfx::Memory* pMemory = bgfx::makeRef(s_Grid, sizeof(s_Grid));
     s_GridBuffer                = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+    bgfx::setName(s_GridBuffer, "s_GridBuffer");
 
     SDL_free(pFile);
   }
@@ -232,15 +236,19 @@ static void LoadLevel()
 void rt::Init()
 {
   // Compute shader
-  bgfx::ShaderHandle csh   = bgfx::createShader(bgfx::makeRef(cs_raytracer, sizeof(cs_raytracer)));
+  bgfx::ShaderHandle csh = bgfx::createShader(bgfx::makeRef(cs_raytracer, sizeof(cs_raytracer)));
+  bgfx::setName(csh, "compute shader");
   s_RaytracerProgram       = bgfx::createProgram(csh, true);
   s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
                                                    BGFX_TEXTURE_COMPUTE_WRITE);
+  bgfx::setName(s_RaytracerOutputTexture, "s_RaytracerOutputTexture");
   computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Float).end();
 
   // Screen shader
-  bgfx::ShaderHandle vsh  = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
-  bgfx::ShaderHandle fsh  = bgfx::createShader(bgfx::makeRef(fs_screen_triangle, sizeof(fs_screen_triangle)));
+  bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
+  bgfx::setName(vsh, "screen triangle vertex");
+  bgfx::ShaderHandle fsh = bgfx::createShader(bgfx::makeRef(fs_screen_triangle, sizeof(fs_screen_triangle)));
+  bgfx::setName(fsh, "screen triangle fragment");
   s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
 
   s_Width  = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
@@ -272,6 +280,9 @@ void rt::Resize(int width, int height)
 
 void rt::Update()
 {
+  auto mat = glm::identity<glm::mat4>();
+  s_Mat    = glm::translate(mat, glm::vec3(s_CameraPos)) * glm::mat4_cast(s_Rotation);
+
   bgfx::setUniform(s_uMat, glm::value_ptr(s_Mat));
   bgfx::setUniform(s_uCameraPos, glm::value_ptr(s_CameraPos));
   bgfx::setUniform(s_uFieldOfView, glm::value_ptr(s_FieldOfView));
@@ -284,6 +295,7 @@ void rt::Update()
   bgfx::setTexture(1, s_uTextureArray, s_RaytracerTextureArray);
   bgfx::setBuffer(2, s_ObjectBuffer, bgfx::Access::Read);
   bgfx::setBuffer(3, s_PaletteBuffer, bgfx::Access::Read);
+
   bgfx::dispatch(viewId, s_RaytracerProgram, (MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM,
                  (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
 
@@ -295,4 +307,25 @@ void rt::Update()
 
 void rt::Destroy()
 {
+  // Vertex buffers
+  bgfx::destroy(s_ObjectBuffer);
+  bgfx::destroy(s_GridBuffer);
+  bgfx::destroy(s_PaletteBuffer);
+
+  // Programs
+  bgfx::destroy(s_RaytracerProgram);
+  bgfx::destroy(s_ScreenTriangleProgram);
+
+  // Textures
+  bgfx::destroy(s_RaytracerTextureArray);
+  bgfx::destroy(s_RaytracerOutputTexture);
+
+  // Uniforms
+  bgfx::destroy(s_uMat);
+  bgfx::destroy(s_uCameraPos);
+  bgfx::destroy(s_uFieldOfView);
+  bgfx::destroy(s_uWidth);
+  bgfx::destroy(s_uHeight);
+  bgfx::destroy(s_uTextureArray);
+  bgfx::destroy(s_ScreenTriangleSampler);
 }
