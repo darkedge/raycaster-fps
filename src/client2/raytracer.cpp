@@ -26,7 +26,6 @@ static constexpr uint32_t GRID_DIM = 16;
 
 static bx::DefaultAllocator s_defaultAllocator;
 
-static bgfx::VertexLayout computeVertexLayout;
 static bgfx::ProgramHandle s_RaytracerProgram;
 static bgfx::TextureHandle s_RaytracerTextureArray;
 static bgfx::ProgramHandle s_ScreenTriangleProgram;
@@ -35,13 +34,13 @@ static bgfx::UniformHandle s_ScreenTriangleSampler;
 static bgfx::TextureHandle s_RaytracerOutputTexture;
 
 // Grid
-static float s_Grid[64 * 64];
-static bgfx::VertexBufferHandle s_GridBuffer;
+static uint32_t s_Grid[64 * 64];
+static bgfx::IndexBufferHandle s_GridBuffer;
 
-static bgfx::VertexBufferHandle s_ObjectBuffer;
+static bgfx::IndexBufferHandle s_ObjectBuffer;
 static uint32_t s_Object[64 * 64 * 64];
 
-static bgfx::VertexBufferHandle s_PaletteBuffer;
+static bgfx::IndexBufferHandle s_PaletteBuffer;
 static uint32_t s_Palette[256];
 
 // Constants
@@ -147,7 +146,7 @@ static bool InitObjectPlaceholder()
                 }
               }
               const bgfx::Memory* pMemory = bgfx::makeRef(s_Object, sizeof(s_Object));
-              s_ObjectBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+              s_ObjectBuffer = bgfx::createIndexBuffer(pMemory, BGFX_BUFFER_COMPUTE_READ | BGFX_BUFFER_INDEX32);
               bgfx::setName(s_ObjectBuffer, "s_ObjectBuffer");
             }
           }
@@ -155,7 +154,7 @@ static bool InitObjectPlaceholder()
           case ID_RGBA:
           {
             const bgfx::Memory* pMemory = bgfx::copy(stream.Position(), *pNumBytesChunkContent);
-            s_PaletteBuffer = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+            s_PaletteBuffer = bgfx::createIndexBuffer(pMemory, BGFX_BUFFER_COMPUTE_READ | BGFX_BUFFER_INDEX32);
             bgfx::setName(s_PaletteBuffer, "s_PaletteBuffer");
           }
           break;
@@ -217,7 +216,7 @@ static void LoadLevel()
     }
 
     const bgfx::Memory* pMemory = bgfx::makeRef(s_Grid, sizeof(s_Grid));
-    s_GridBuffer                = bgfx::createVertexBuffer(pMemory, computeVertexLayout, BGFX_BUFFER_COMPUTE_READ);
+    s_GridBuffer                = bgfx::createIndexBuffer(pMemory, BGFX_BUFFER_COMPUTE_READ | BGFX_BUFFER_INDEX32);
     bgfx::setName(s_GridBuffer, "s_GridBuffer");
 
     SDL_free(pFile);
@@ -229,11 +228,11 @@ void rt::Init()
   // Compute shader
   bgfx::ShaderHandle csh = bgfx::createShader(bgfx::makeRef(cs_raytracer, sizeof(cs_raytracer)));
   bgfx::setName(csh, "compute shader");
-  s_RaytracerProgram       = bgfx::createProgram(csh, true);
-  s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
-                                                   BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT);
+  s_RaytracerProgram = bgfx::createProgram(csh, true);
+  s_RaytracerOutputTexture =
+      bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
+                            BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT);
   bgfx::setName(s_RaytracerOutputTexture, "s_RaytracerOutputTexture");
-  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Float).end();
 
   // Screen shader
   bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
