@@ -5,11 +5,15 @@ Param(
     [String]$TargetDir
 )
 
-# Path to bgfx shaderc executable
+# Path to bgfx shaderc executable (after Push-Location of shader folder)
 $Exe = '../../../tools/bgfx/shaderc.exe'
 
 # Path to shader source files
 $ShaderPath = "..\..\src\client2\shaders"
+
+if ($Configuration -eq 'Debug') {
+    $Debug = '--debug'
+}
 
 $ShaderPathExists = Test-Path -Path $ShaderPath
 if (-Not $ShaderPathExists) {
@@ -37,10 +41,7 @@ else {
                 Write-Output $_.Name
 
                 # Generate compiled header file
-                & $Exe -f $InFile -o $OutHeader --platform windows --Type $Type --Profile $Profile --bin2c
-                
-                # Generate preprocessed file for debugging
-                & $Exe -f $InFile -o $OutHlsl --platform windows --Type $Type --Profile $Profile --preprocess
+                & $Exe -f $InFile -o $OutHeader --platform windows --Type $Type --Profile $Profile --bin2c $Debug
             } 
         }
     }

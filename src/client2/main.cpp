@@ -1,10 +1,12 @@
 #include "mj_win32.h"
 #include "mj_common.h"
 #include "imgui_impl_bgfx.h"
+#include "mj_input.h"
 #include "raytracer.h"
 
 #include <stdio.h>
 #include <bx/bx.h>
+#include <bx/timer.h>
 #include <bx/spscqueue.h>
 #include <bx/thread.h>
 #include <bgfx/bgfx.h>
@@ -15,6 +17,16 @@
 #include <SDL_syswm.h>
 
 #include "..\..\3rdparty\tracy\Tracy.hpp"
+
+// WARNING: global variable
+static float mj_DeltaTime;
+namespace mj
+{
+  float GetDeltaTime()
+  {
+    return mj_DeltaTime;
+  }
+} // namespace mj
 
 int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR pCmdLine,
                           _In_ int nCmdShow)
@@ -86,6 +98,11 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   int32_t mouseScroll = 0;
   uint8_t mouseMask   = 0;
 
+  mj::input::Init();
+
+  int64_t lastTime = bx::getHPCounter();
+  int64_t perfFreq = bx::getHPFrequency();
+
   // Run message pump.
   bool exit = false;
   while (!exit)
@@ -146,6 +163,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
           const SDL_MouseMotionEvent& e = event.motion;
           mouseX                        = e.x;
           mouseY                        = e.y;
+          mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
         }
         break;
         case SDL_QUIT:
@@ -172,9 +190,16 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
           }
         }
         break;
+        case SDL_KEYDOWN:
+        {
+          SDL_KeyboardEvent kev = event.key;
+          mj::input::SetKey(kev.keysym.sym, true);
+        }
+        break;
         case SDL_KEYUP:
         {
           SDL_KeyboardEvent kev = event.key;
+          mj::input::SetKey(kev.keysym.sym, false);
           switch (kev.keysym.sym)
           {
           case SDLK_F11:
@@ -207,6 +232,18 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
         }
       }
     }
+
+    mj::input::Update();
+
+    int64_t now     = bx::getHPCounter();
+    LONGLONG counts = now - lastTime;
+    float dt        = (float)counts / perfFreq;
+    if (dt > (1.0f / 60.0f))
+    {
+      dt = 1.0f / 60.0f;
+    }
+    mj_DeltaTime = dt;
+    lastTime     = now;
 
     {
       ZoneScopedNC("ImGui NewFrame", tracy::Color::BlueViolet);

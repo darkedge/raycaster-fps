@@ -12,6 +12,9 @@
 #include <imgui.h>
 #include <SDL.h>
 
+#include "camera.h"
+#include "mj_input.h"
+
 #include "../tracy/Tracy.hpp"
 
 // bgfx shaderc outputs
@@ -50,30 +53,17 @@ static bgfx::UniformHandle s_uHeight;
 static bgfx::UniformHandle s_uTextureArray;
 
 static glm::mat4 s_Mat;
-static glm::vec4 s_CameraPos;
 static glm::vec4 s_FieldOfView;
 static glm::vec4 s_Width;
 static glm::vec4 s_Height;
+static Camera s_Camera;
 
-static glm::quat s_Rotation;
-
-static float lastMousePos;
-static float currentMousePos;
-
-void CameraInit()
-{
-  lastMousePos    = 0.0f;
-  currentMousePos = 0.0f;
-  s_Rotation      = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
-}
+static bool s_MouseLook = true;
 
 static void Reset()
 {
-  s_CameraPos = glm::vec4(54.5f, 0.5f, 34.5f, 0.0f);
-  // s_Rotation = glm::quat(0.0f, 0.0f, 0.0f, 1.0f);
-  // s_Camera.frame = 0;
   s_FieldOfView.x = 60.0f;
-  CameraInit();
+  CameraInit(MJ_REF s_Camera);
 }
 
 static bool InitObjectPlaceholder()
@@ -191,14 +181,15 @@ static void InitTexture2DArray()
     mj::IStream stream(pFile, datasize);
 
     bx::Error error;
-    bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, datasize, &error);
+    bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, (uint32_t)datasize, &error);
 
     if (pImageContainer)
     {
       const bgfx::Memory* pMemory = bgfx::copy(pImageContainer->m_data, pImageContainer->m_size);
-      s_RaytracerTextureArray     = bgfx::createTexture2D(pImageContainer->m_width, pImageContainer->m_height, false,
-                                                      pImageContainer->m_numLayers,
-                                                      (bgfx::TextureFormat::Enum)pImageContainer->m_format, 0, pMemory);
+      s_RaytracerTextureArray =
+          bgfx::createTexture2D((uint16_t)pImageContainer->m_width, (uint16_t)pImageContainer->m_height, false,
+                                pImageContainer->m_numLayers, (bgfx::TextureFormat::Enum)pImageContainer->m_format,
+                                BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT, pMemory);
       bgfx::setName(s_RaytracerTextureArray, "s_RaytracerTextureArray");
       bimg::imageFree(pImageContainer);
       s_uTextureArray = bgfx::createUniform("s_TextureArray", bgfx::UniformType::Sampler);
@@ -240,9 +231,9 @@ void rt::Init()
   bgfx::setName(csh, "compute shader");
   s_RaytracerProgram       = bgfx::createProgram(csh, true);
   s_RaytracerOutputTexture = bgfx::createTexture2D(MJ_RT_WIDTH, MJ_RT_HEIGHT, false, 1, bgfx::TextureFormat::RGBA32F,
-                                                   BGFX_TEXTURE_COMPUTE_WRITE);
+                                                   BGFX_TEXTURE_COMPUTE_WRITE | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT);
   bgfx::setName(s_RaytracerOutputTexture, "s_RaytracerOutputTexture");
-  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Uint8).end();
+  computeVertexLayout.begin().add(bgfx::Attrib::TexCoord0, 1, bgfx::AttribType::Float).end();
 
   // Screen shader
   bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
@@ -280,11 +271,21 @@ void rt::Resize(int width, int height)
 
 void rt::Update()
 {
+  ZoneScoped;
+  if (mj::input::GetKeyDown(Key::F3))
+  {
+    s_MouseLook = !s_MouseLook;
+  }
+  if (s_MouseLook)
+  {
+    CameraMovement(MJ_REF s_Camera);
+  }
+
   auto mat = glm::identity<glm::mat4>();
-  s_Mat    = glm::translate(mat, glm::vec3(s_CameraPos)) * glm::mat4_cast(s_Rotation);
+  s_Mat    = glm::translate(mat, glm::vec3(s_Camera.position)) * glm::mat4_cast(s_Camera.rotation);
 
   bgfx::setUniform(s_uMat, glm::value_ptr(s_Mat));
-  bgfx::setUniform(s_uCameraPos, glm::value_ptr(s_CameraPos));
+  bgfx::setUniform(s_uCameraPos, glm::value_ptr(s_Camera.position));
   bgfx::setUniform(s_uFieldOfView, glm::value_ptr(s_FieldOfView));
   bgfx::setUniform(s_uWidth, glm::value_ptr(s_Width));
   bgfx::setUniform(s_uHeight, glm::value_ptr(s_Height));

@@ -163,7 +163,6 @@ struct OcornutImguiContext
 
     setupStyle(true);
 
-    bgfx::RendererType::Enum type = bgfx::getRendererType();
     {
       bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_ocornut_imgui, sizeof(vs_ocornut_imgui)));
       bgfx::ShaderHandle fsh = bgfx::createShader(bgfx::makeRef(fs_ocornut_imgui, sizeof(fs_ocornut_imgui)));

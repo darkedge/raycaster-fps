@@ -19,6 +19,7 @@
     <ClCompile Include="..\..\src\client2\mj_input.cpp" />
     <ClCompile Include="..\..\src\client2\raytracer.cpp" />
     <ClCompile Include="..\..\src\client2\mj_win32.cpp" />
+    <ClCompile Include="..\..\src\client2\camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client2\logo.h" />
@@ -48,6 +49,7 @@
     <ClInclude Include="..\..\src\client2\raytracer.h" />
     <ClInclude Include="..\..\src\client2\mj_platform.h" />
     <ClInclude Include="..\..\src\client2\mj_win32.h" />
+    <ClInclude Include="..\..\src\client2\camera.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
