@@ -84,7 +84,7 @@ $Strings += $StringTemplate -f 'DateTime', (Get-Date -Format "yyyy-MM-dd HH:mm:s
 $Strings += $StringTemplate -f 'BuildConfiguration', $Configuration
 
 # Diff
-$GitDiff = ((git diff) -ne $null, "")
+$GitDiff = (git diff)
 $GitDiff = ($GitDiff -replace '\\', '\\') # Escape backslashes (input is escaped, output is not)
 $GitDiff = ($GitDiff -replace '"', '\"') # Escape double quotes
 $GitDiff = ($GitDiff -join '\r\n"' + [Environment]::NewLine + '      "') # Concatenate array
