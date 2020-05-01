@@ -315,9 +315,6 @@ void rt::Update()
   }
 
   ShowBuildInfo();
-  ImGui::Begin("Diff");
-  ImGui::TextUnformatted(mj::txt::pGitDiff);
-  ImGui::End();
 
   auto mat = glm::identity<glm::mat4>();
   s_Mat    = glm::translate(mat, glm::vec3(s_Camera.position)) * glm::mat4_cast(s_Camera.rotation);
