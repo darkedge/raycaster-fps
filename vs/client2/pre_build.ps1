@@ -75,6 +75,13 @@ namespace mj
 
 $StringTemplate = 'const char* p{0} = "{1}";'
 
+function FormatDiff ([String[]]$Diff) {
+    $Diff = ($Diff -replace '\\', '\\') # Escape backslashes (input is escaped, output is not)
+    $Diff = ($Diff -replace '"', '\"') # Escape double quotes
+    $Diff = ($Diff -join '\r\n"' + [Environment]::NewLine + '      "') # Concatenate array
+    return $Diff
+}
+
 # Add strings
 $Strings = New-Object System.Collections.ArrayList
 $Strings += $StringTemplate -f 'GitCommitId', (git rev-parse --short HEAD)
@@ -82,13 +89,8 @@ $Strings += $StringTemplate -f 'GitRevision', (git rev-list --count HEAD)
 $Strings += $StringTemplate -f 'GitBranch', (git rev-parse --abbrev-ref HEAD)
 $Strings += $StringTemplate -f 'DateTime', (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 $Strings += $StringTemplate -f 'BuildConfiguration', $Configuration
-
-# Diff
-$GitDiff = (git diff)
-$GitDiff = ($GitDiff -replace '\\', '\\') # Escape backslashes (input is escaped, output is not)
-$GitDiff = ($GitDiff -replace '"', '\"') # Escape double quotes
-$GitDiff = ($GitDiff -join '\r\n"' + [Environment]::NewLine + '      "') # Concatenate array
-$Strings += $StringTemplate -f 'GitDiff', $GitDiff
+$Strings += $StringTemplate -f 'GitDiff', (FormatDiff (git diff))
+$Strings += $StringTemplate -f 'GitDiffStaged', (FormatDiff (git diff --staged))
 
 $GeneratedPath = '..\..\src\client2\generated'
 If (!(Test-Path -Path $GeneratedPath)) {
