@@ -50,6 +50,9 @@
     <ClInclude Include="..\..\src\client2\mj_platform.h" />
     <ClInclude Include="..\..\src\client2\mj_win32.h" />
     <ClInclude Include="..\..\src\client2\camera.h" />
+    <ClInclude Include="..\..\src\client2\generated\text.h">
+      <Filter>generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -66,6 +69,9 @@
     </Filter>
     <Filter Include="shaders\imgui">
       <UniqueIdentifier>{ba57d6d9-f181-49a2-99b3-c7396074f0a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="generated">
+      <UniqueIdentifier>{4fd46164-bf2f-4df2-9537-ec37336c7ac7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

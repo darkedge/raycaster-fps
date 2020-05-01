@@ -357,3 +357,6 @@ imgui.ini
 
 # Cooked assets folder (working directory of executable)
 /data/
+
+# Scripted code generation folder
+generated/

@@ -16,6 +16,7 @@
 #include "mj_input.h"
 
 #include "../tracy/Tracy.hpp"
+#include "generated/text.h"
 
 // bgfx shaderc outputs
 #include "shaders/raytracer/cs_raytracer.h"
@@ -63,6 +64,33 @@ static void Reset()
 {
   s_FieldOfView.x = 60.0f;
   CameraInit(MJ_REF s_Camera);
+}
+
+static void ShowBuildInfo()
+{
+  // FIXME-VIEWPORT: Select a default viewport
+  const float DISTANCE = 10.0f;
+  static int corner    = 0;
+  if (corner != -1)
+  {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 window_pos =
+        ImVec2((corner & 1) ? (viewport->Pos.x + viewport->Size.x - DISTANCE) : (viewport->Pos.x + DISTANCE),
+               (corner & 2) ? (viewport->Pos.y + viewport->Size.y - DISTANCE) : (viewport->Pos.y + DISTANCE));
+    ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+    ImGui::SetNextWindowViewport(viewport->ID);
+  }
+  ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+  if (ImGui::Begin("Overlay", nullptr,
+                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDocking |
+                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+  {
+    ImGui::Text("%s, %s (%s #%s), %s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId, mj::txt::pGitBranch,
+                mj::txt::pGitRevision, mj::txt::pDateTime);
+  }
+  ImGui::End();
 }
 
 static bool InitObjectPlaceholder()
@@ -211,7 +239,7 @@ static void LoadLevel()
       uint16_t val = pData[i];
       if (val < 0x006A)
       {
-        s_Grid[i] = 1.0f;
+        s_Grid[i] = 1;
       }
     }
 
@@ -279,6 +307,17 @@ void rt::Update()
   {
     CameraMovement(MJ_REF s_Camera);
   }
+
+  // Reset button
+  if (mj::input::GetKeyDown(Key::KeyR))
+  {
+    Reset();
+  }
+
+  ShowBuildInfo();
+  ImGui::Begin("Diff");
+  ImGui::TextUnformatted(mj::txt::pGitDiff);
+  ImGui::End();
 
   auto mat = glm::identity<glm::mat4>();
   s_Mat    = glm::translate(mat, glm::vec3(s_Camera.position)) * glm::mat4_cast(s_Camera.rotation);

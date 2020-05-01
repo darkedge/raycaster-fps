@@ -252,10 +252,12 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     rt::Update();
 
+#if 0
     {
       ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
       ImGui::ShowDemoWindow();
     }
+#endif
 
     {
       ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);

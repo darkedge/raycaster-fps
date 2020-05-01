@@ -28,7 +28,6 @@ else {
             $InFile = (Resolve-Path -Path $_.FullName -Relative)
             $InTime = (Get-Item $_.FullName).LastWriteTime
             $OutHeader = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.h'))
-            $OutHlsl = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.hlsl'))
 
             # Test if input is newer than output
             $HeaderExists = Test-Path -Path $OutHeader
@@ -60,3 +59,42 @@ else {
     
     Pop-Location
 }
+
+# Code generation
+
+$TxtTemplate = @'
+#pragma once
+namespace mj
+{{
+  namespace txt
+  {{
+    {0}
+  }}
+}}
+'@
+
+$StringTemplate = 'const char* p{0} = "{1}";'
+
+# Add strings
+$Strings = New-Object System.Collections.ArrayList
+$Strings += $StringTemplate -f 'GitCommitId', (git rev-parse --short HEAD)
+$Strings += $StringTemplate -f 'GitRevision', (git rev-list --count HEAD)
+$Strings += $StringTemplate -f 'GitBranch', (git rev-parse --abbrev-ref HEAD)
+$Strings += $StringTemplate -f 'DateTime', (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+$Strings += $StringTemplate -f 'BuildConfiguration', $Configuration
+
+# Diff
+$GitDiff = ((git diff) -ne $null, "")
+$GitDiff = ($GitDiff -replace '\\', '\\') # Escape backslashes (input is escaped, output is not)
+$GitDiff = ($GitDiff -replace '"', '\"') # Escape double quotes
+$GitDiff = ($GitDiff -join '\r\n"' + [Environment]::NewLine + '      "') # Concatenate array
+$Strings += $StringTemplate -f 'GitDiff', $GitDiff
+
+$GeneratedPath = '..\..\src\client2\generated'
+If (!(Test-Path -Path $GeneratedPath)) {
+    New-Item -ItemType Directory -Force -Path $GeneratedPath
+}
+
+$TxtPath = Join-Path -Path $GeneratedPath -ChildPath 'text.h'
+$TxtTemplate = $TxtTemplate -f $($Strings -join [Environment]::NewLine + '    ')
+[System.IO.File]::WriteAllLines($TxtPath, $TxtTemplate)
