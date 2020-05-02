@@ -250,7 +250,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
       imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
     }
 
-    rt::Update();
+    rt::Update(width, height);
 
 #if 0
     {

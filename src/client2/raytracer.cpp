@@ -296,7 +296,7 @@ void rt::Resize(int width, int height)
   (void)height;
 }
 
-void rt::Update()
+void rt::Update(int width, int height)
 {
   ZoneScoped;
   if (mj::input::GetKeyDown(Key::F3))
@@ -315,6 +315,25 @@ void rt::Update()
   }
 
   ShowBuildInfo();
+
+  {
+    // Get thread group and index
+    MJ_UNINITIALIZED int x;
+    MJ_UNINITIALIZED int y;
+    MJ_DISCARD(SDL_GetMouseState(&x, &y));
+    int32_t groupX  = x * MJ_RT_WIDTH / width / GRID_DIM;
+    int32_t groupY  = y * MJ_RT_HEIGHT / height / GRID_DIM;
+    int32_t threadX = x * MJ_RT_WIDTH / width % GRID_DIM;
+    int32_t threadY = y * MJ_RT_HEIGHT / height % GRID_DIM;
+
+    ImGui::Begin("Hello, world!");
+    ImGui::Text("R to reset, F3 toggles mouselook");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
+    ImGui::SliderFloat("Field of view", &s_FieldOfView.x, 5.0f, 170.0f);
+    ImGui::Text("Group: [%d, %d, 0], Thread: [%d, %d, 0]", groupX, groupY, threadX, threadY);
+    ImGui::End();
+  }
 
   auto mat = glm::identity<glm::mat4>();
   s_Mat    = glm::translate(mat, glm::vec3(s_Camera.position)) * glm::mat4_cast(s_Camera.rotation);

@@ -4,6 +4,6 @@ namespace rt
 {
   void Init();
   void Resize(int width, int height);
-  void Update();
+  void Update(int width, int height);
   void Destroy();
 } // namespace rt
