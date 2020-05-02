@@ -288,7 +288,11 @@ void rt::Init()
 
   InitTexture2DArray();
 
-  InitObjectPlaceholder();
+  MJ_DISCARD(InitObjectPlaceholder());
+
+  // Allow mouse movement tracking outside the window
+  // MJ_DISCARD(SDL_CaptureMouse(SDL_TRUE));
+  MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
 }
 
 void rt::Resize(int width, int height)
@@ -303,6 +307,12 @@ void rt::Update(int width, int height)
   if (mj::input::GetKeyDown(Key::F3))
   {
     s_MouseLook = !s_MouseLook;
+    SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook);
+    if (!s_MouseLook)
+    {
+      // Only works if relative mouse mode is off
+      SDL_WarpMouseInWindow(nullptr, width / 2, height / 2);
+    }
   }
   if (s_MouseLook)
   {
