@@ -154,7 +154,7 @@ vec4 IntersectRayGrid(const Ray ray)
     }
     uint block = s_Grid[blockPosZ * 64 + blockPosX];
 
-    if (block == 1) // Wall hit
+    if (block != 0) // Wall hit
     {
       if (horizontal) // Walls along X axis
       {
@@ -167,7 +167,7 @@ vec4 IntersectRayGrid(const Ray ray)
         v = ray.origin.y + tMax * ray.direction.y;
       }
 
-      return AttenuateSample(tMax, texture2DArrayLod(s_TextureArray, vec3(u, (1.0 - v), 116.0), 0));
+      return AttenuateSample(tMax, texture2DArrayLod(s_TextureArray, vec3(u, (1.0 - v), 2 * (block - 1)), 0));
     }
 
     if (tMaxX < tMaxY)

@@ -240,7 +240,7 @@ static void LoadLevel()
       uint16_t val = pData[i];
       if (val < 0x006A)
       {
-        s_Grid[i] = 1;
+        s_Grid[i] = val;
       }
     }
 
