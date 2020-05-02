@@ -1,9 +1,5 @@
 #pragma once
-
-namespace game
-{
-  struct Data;
-}
+#include "game.h"
 
 namespace rt
 {

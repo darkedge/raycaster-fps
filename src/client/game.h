@@ -4,6 +4,8 @@
 
 namespace game
 {
+  constexpr uint32_t LEVEL_DIM = 64;
+
   struct Data
   {
     glm::mat4 s_Mat;

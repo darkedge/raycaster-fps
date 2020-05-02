@@ -89,9 +89,9 @@ void game::Update(int width, int height)
   }
 
   ShowBuildInfo();
-  
-  auto mat = glm::identity<glm::mat4>();
-  s_Data.s_Mat    = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
+
+  auto mat     = glm::identity<glm::mat4>();
+  s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
   rt::Update(width, height, &s_Data);
   rs::Update(width, height, &s_Data);

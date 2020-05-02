@@ -29,11 +29,11 @@ static bgfx::UniformHandle s_ScreenTriangleSampler;
 static bgfx::TextureHandle s_RaytracerOutputTexture;
 
 // Grid
-static uint32_t s_Grid[64 * 64];
+static uint32_t s_Grid[game::LEVEL_DIM * game::LEVEL_DIM];
 static bgfx::IndexBufferHandle s_GridBuffer;
 
 static bgfx::IndexBufferHandle s_ObjectBuffer;
-static uint32_t s_Object[64 * 64 * 64];
+static uint32_t s_Object[game::LEVEL_DIM * game::LEVEL_DIM * game::LEVEL_DIM];
 
 static bgfx::IndexBufferHandle s_PaletteBuffer;
 static uint32_t s_Palette[256];
@@ -95,7 +95,7 @@ static bool InitObjectPlaceholder()
                     .Fetch(MJ_REF pSizeZ) //
                     .Good())
             {
-              if ((*pSizeX == 64) && (*pSizeY == 64) && (*pSizeZ == 64))
+              if ((*pSizeX == game::LEVEL_DIM) && (*pSizeY == game::LEVEL_DIM) && (*pSizeZ == game::LEVEL_DIM))
               {
                 sizeData = true;
               }
@@ -123,7 +123,7 @@ static bool InitObjectPlaceholder()
                         .Good())
                 {
                   // Flip MagicaVoxel's right-handed Z-up to left-handed Y-up
-                  s_Object[*pY * 64 * 64 + *pZ * 64 + *pX] = *pColorIndex;
+                  s_Object[*pY * game::LEVEL_DIM * game::LEVEL_DIM + *pZ * game::LEVEL_DIM + *pX] = *pColorIndex;
                 }
               }
               const bgfx::Memory* pMemory = bgfx::makeRef(s_Object, sizeof(s_Object));
