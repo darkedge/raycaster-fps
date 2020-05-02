@@ -20,6 +20,8 @@
     <ClCompile Include="..\..\src\client\raytracer.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\camera.cpp" />
+    <ClCompile Include="..\..\src\client\rasterizer.cpp" />
+    <ClCompile Include="..\..\src\client\game.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\logo.h" />
@@ -53,6 +55,8 @@
     <ClInclude Include="..\..\src\client\generated\text.h">
       <Filter>generated</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\client\rasterizer.h" />
+    <ClInclude Include="..\..\src\client\game.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

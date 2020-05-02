@@ -2,7 +2,7 @@
 #include "mj_common.h"
 #include "imgui_impl_bgfx.h"
 #include "mj_input.h"
-#include "raytracer.h"
+#include "game.h"
 
 #include <stdio.h>
 #include <bx/bx.h>
@@ -84,7 +84,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     return 1;
   }
 
-  rt::Init();
+  game::Init();
 
   // Set view 0 to the same dimensions as the window and to clear the color buffer.
   const bgfx::ViewId kClearView = 0;
@@ -180,7 +180,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             width  = wev.data1;
             height = wev.data2;
 
-            rt::Resize(width, height);
+            game::Resize(width, height);
             bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
             bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
           }
@@ -250,7 +250,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
       imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
     }
 
-    rt::Update(width, height);
+    game::Update(width, height);
 
 #if 0
     {
@@ -272,7 +272,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     }
   }
 
-  rt::Destroy();
+  game::Destroy();
 
   imguiDestroy();
 

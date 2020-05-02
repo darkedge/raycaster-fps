@@ -1,22 +1,16 @@
 #include "raytracer.h"
 #include "mj_platform.h"
-#include <string_view>
-#include <stdint.h>
 #include <bgfx/bgfx.h>
 #include <bimg/bimg.h>
-#include <glm/glm.hpp>
 #include <bx/allocator.h>
 #include <bx/error.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "mj_common.h"
 #include <imgui.h>
 #include <SDL.h>
-
-#include "camera.h"
-#include "mj_input.h"
+#include "game.h"
 
 #include "../tracy/Tracy.hpp"
-#include "generated/text.h"
 
 // bgfx shaderc outputs
 #include "shaders/raytracer/cs_raytracer.h"
@@ -51,48 +45,6 @@ static bgfx::UniformHandle s_uFieldOfView;
 static bgfx::UniformHandle s_uWidth;
 static bgfx::UniformHandle s_uHeight;
 static bgfx::UniformHandle s_uTextureArray;
-
-static glm::mat4 s_Mat;
-static glm::vec4 s_FieldOfView;
-static glm::vec4 s_Width;
-static glm::vec4 s_Height;
-static Camera s_Camera;
-
-static bool s_MouseLook = true;
-
-static void Reset()
-{
-  s_FieldOfView.x = 60.0f;
-  CameraInit(MJ_REF s_Camera);
-}
-
-static void ShowBuildInfo()
-{
-  // FIXME-VIEWPORT: Select a default viewport
-  const float DISTANCE = 10.0f;
-  static int corner    = 0;
-  if (corner != -1)
-  {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 window_pos =
-        ImVec2((corner & 1) ? (viewport->Pos.x + viewport->Size.x - DISTANCE) : (viewport->Pos.x + DISTANCE),
-               (corner & 2) ? (viewport->Pos.y + viewport->Size.y - DISTANCE) : (viewport->Pos.y + DISTANCE));
-    ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-    ImGui::SetNextWindowViewport(viewport->ID);
-  }
-  ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-  if (ImGui::Begin("Overlay", nullptr,
-                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDocking |
-                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
-                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
-  {
-    ImGui::Text("%s, %s (%s #%s), %s\nStaged:%s\nUnstaged:%s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId,
-                mj::txt::pGitBranch, mj::txt::pGitRevision, mj::txt::pDateTime, mj::txt::pGitDiffStaged,
-                mj::txt::pGitDiff);
-  }
-  ImGui::End();
-}
 
 static bool InitObjectPlaceholder()
 {
@@ -270,11 +222,6 @@ void rt::Init()
   bgfx::setName(fsh, "screen triangle fragment");
   s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
 
-  s_Width  = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
-  s_Height = glm::vec4(MJ_RT_HEIGHT, 0.0f, 0.0f, 0.0f);
-
-  Reset();
-
   // Set constant buffer with camera
   s_uMat         = bgfx::createUniform("mat", bgfx::UniformType::Mat4);
   s_uCameraPos   = bgfx::createUniform("s_CameraPos", bgfx::UniformType::Vec4);
@@ -289,10 +236,6 @@ void rt::Init()
   InitTexture2DArray();
 
   MJ_DISCARD(InitObjectPlaceholder());
-
-  // Allow mouse movement tracking outside the window
-  // MJ_DISCARD(SDL_CaptureMouse(SDL_TRUE));
-  MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
 }
 
 void rt::Resize(int width, int height)
@@ -301,31 +244,9 @@ void rt::Resize(int width, int height)
   (void)height;
 }
 
-void rt::Update(int width, int height)
+void rt::Update(int width, int height, game::Data* pData)
 {
   ZoneScoped;
-  if (mj::input::GetKeyDown(Key::F3))
-  {
-    s_MouseLook = !s_MouseLook;
-    SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook);
-    if (!s_MouseLook)
-    {
-      // Only works if relative mouse mode is off
-      SDL_WarpMouseInWindow(nullptr, width / 2, height / 2);
-    }
-  }
-  if (s_MouseLook)
-  {
-    CameraMovement(MJ_REF s_Camera);
-  }
-
-  // Reset button
-  if (mj::input::GetKeyDown(Key::KeyR))
-  {
-    Reset();
-  }
-
-  ShowBuildInfo();
 
   {
     // Get thread group and index
@@ -341,19 +262,16 @@ void rt::Update(int width, int height)
     ImGui::Text("R to reset, F3 toggles mouselook");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
-    ImGui::SliderFloat("Field of view", &s_FieldOfView.x, 5.0f, 170.0f);
+    ImGui::SliderFloat("Field of view", &pData->s_FieldOfView.x, 5.0f, 170.0f);
     ImGui::Text("Group: [%d, %d, 0], Thread: [%d, %d, 0]", groupX, groupY, threadX, threadY);
     ImGui::End();
   }
 
-  auto mat = glm::identity<glm::mat4>();
-  s_Mat    = glm::translate(mat, glm::vec3(s_Camera.position)) * glm::mat4_cast(s_Camera.rotation);
-
-  bgfx::setUniform(s_uMat, glm::value_ptr(s_Mat));
-  bgfx::setUniform(s_uCameraPos, glm::value_ptr(s_Camera.position));
-  bgfx::setUniform(s_uFieldOfView, glm::value_ptr(s_FieldOfView));
-  bgfx::setUniform(s_uWidth, glm::value_ptr(s_Width));
-  bgfx::setUniform(s_uHeight, glm::value_ptr(s_Height));
+  bgfx::setUniform(s_uMat, glm::value_ptr(pData->s_Mat));
+  bgfx::setUniform(s_uCameraPos, glm::value_ptr(pData->s_Camera.position));
+  bgfx::setUniform(s_uFieldOfView, glm::value_ptr(pData->s_FieldOfView));
+  bgfx::setUniform(s_uWidth, glm::value_ptr(pData->s_Width));
+  bgfx::setUniform(s_uHeight, glm::value_ptr(pData->s_Height));
 
   const bgfx::ViewId viewId = 0;
   bgfx::setImage(5, s_RaytracerOutputTexture, 0, bgfx::Access::Write);
