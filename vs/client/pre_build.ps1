@@ -9,7 +9,7 @@ Param(
 $Exe = '../../../tools/bgfx/shaderc.exe'
 
 # Path to shader source files
-$ShaderPath = "..\..\src\client2\shaders"
+$ShaderPath = "..\..\src\client\shaders"
 
 if ($Configuration -eq 'Debug') {
     $Debug = '--debug'
@@ -89,10 +89,10 @@ $Strings += $StringTemplate -f 'GitRevision', (git rev-list --count HEAD)
 $Strings += $StringTemplate -f 'GitBranch', (git rev-parse --abbrev-ref HEAD)
 $Strings += $StringTemplate -f 'DateTime', (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 $Strings += $StringTemplate -f 'BuildConfiguration', $Configuration
-$Strings += $StringTemplate -f 'GitDiff', (FormatDiff (git diff))
-$Strings += $StringTemplate -f 'GitDiffStaged', (FormatDiff (git diff --staged))
+$Strings += $StringTemplate -f 'GitDiff', (FormatDiff (git diff --shortstat))
+$Strings += $StringTemplate -f 'GitDiffStaged', (FormatDiff (git diff --staged --shortstat))
 
-$GeneratedPath = '..\..\src\client2\generated'
+$GeneratedPath = '..\..\src\client\generated'
 If (!(Test-Path -Path $GeneratedPath)) {
     New-Item -ItemType Directory -Force -Path $GeneratedPath
 }

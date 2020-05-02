@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include "glm/glm.hpp"
 
+#ifdef MJ_INPUT_SDL
+#include <SDL_keycode.h>
+#endif // MJ_INPUT_SDL
+
 struct GamepadHandle
 {
   uint16_t idx;
@@ -234,7 +238,9 @@ namespace mj
     bool GetMouseButtonUp(MouseButton::Enum button);
 
     // Keyboard
-    void SetKey(Key::Enum key, bool active);
+#ifdef MJ_INPUT_SDL
+    void SetKey(SDL_Keycode key, bool active);
+#endif // MJ_INPUT_SDL
     bool IsEscapePressed();
     void SetKeyName(Key::Enum key, const char* keyName);
 

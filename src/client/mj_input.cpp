@@ -1,6 +1,9 @@
 #include "mj_input.h"
 #include <queue>
-#include "tracy/Tracy.hpp"
+#include "../../tracy/Tracy.hpp"
+#ifdef MJ_INPUT_SDL
+#include <SDL_keycode.h>
+#endif // MJ_INPUT_SDL
 
 // Multiple of 32 (32-bit integer flags)
 constexpr auto INPUT_NUM_KEYS          = Key::Count;
@@ -201,7 +204,7 @@ bool mj::input::GetKeyUp(Key::Enum key)
  * @param[in]  key     The key
  * @param[in]  active  True if this was a key press event, otherwise false
  */
-void mj::input::SetKey(Key::Enum key, bool active)
+static void SetKey(Key::Enum key, bool active)
 {
   assert(key >= 0);
   assert(key < INPUT_NUM_KEYS);
@@ -262,6 +265,211 @@ void mj::input::SetKey(Key::Enum key, bool active)
     break;
   }
 }
+
+// One massive jump table
+#ifdef MJ_INPUT_SDL
+static Key::Enum MapKey(SDL_Keycode key)
+{
+  switch (key)
+  {
+  case SDLK_ESCAPE:
+    return Key::Esc;
+  case SDLK_RETURN:
+    return Key::Return;
+  case SDLK_TAB:
+    return Key::Tab;
+  case SDLK_SPACE:
+    return Key::Space;
+  case SDLK_BACKSPACE:
+    return Key::Backspace;
+  case SDLK_UP:
+    return Key::Up;
+  case SDLK_DOWN:
+    return Key::Down;
+  case SDLK_LEFT:
+    return Key::Left;
+  case SDLK_RIGHT:
+    return Key::Right;
+  case SDLK_INSERT:
+    return Key::Insert;
+  case SDLK_DELETE:
+    return Key::Delete;
+  case SDLK_HOME:
+    return Key::Home;
+  case SDLK_END:
+    return Key::End;
+  case SDLK_PAGEUP:
+    return Key::PageUp;
+  case SDLK_PAGEDOWN:
+    return Key::PageDown;
+  case SDLK_PRINTSCREEN:
+    return Key::Print;
+  case SDLK_PLUS:
+    return Key::Plus;
+  case SDLK_MINUS:
+    return Key::Minus;
+  case SDLK_LEFTBRACKET:
+    return Key::LeftBracket;
+  case SDLK_RIGHTBRACKET:
+    return Key::RightBracket;
+  case SDLK_SEMICOLON:
+    return Key::Semicolon;
+  case SDLK_QUOTE:
+    return Key::Quote;
+  case SDLK_COMMA:
+    return Key::Comma;
+  case SDLK_PERIOD:
+    return Key::Period;
+  case SDLK_SLASH:
+    return Key::Slash;
+  case SDLK_BACKSLASH:
+    return Key::Backslash;
+  case SDLK_F1:
+    return Key::F1;
+  case SDLK_F2:
+    return Key::F2;
+  case SDLK_F3:
+    return Key::F3;
+  case SDLK_F4:
+    return Key::F4;
+  case SDLK_F5:
+    return Key::F5;
+  case SDLK_F6:
+    return Key::F6;
+  case SDLK_F7:
+    return Key::F7;
+  case SDLK_F8:
+    return Key::F8;
+  case SDLK_F9:
+    return Key::F9;
+  case SDLK_F10:
+    return Key::F10;
+  case SDLK_F11:
+    return Key::F11;
+  case SDLK_F12:
+    return Key::F12;
+  case SDLK_KP_0:
+    return Key::NumPad0;
+  case SDLK_KP_1:
+    return Key::NumPad1;
+  case SDLK_KP_2:
+    return Key::NumPad2;
+  case SDLK_KP_3:
+    return Key::NumPad3;
+  case SDLK_KP_4:
+    return Key::NumPad4;
+  case SDLK_KP_5:
+    return Key::NumPad5;
+  case SDLK_KP_6:
+    return Key::NumPad6;
+  case SDLK_KP_7:
+    return Key::NumPad7;
+  case SDLK_KP_8:
+    return Key::NumPad8;
+  case SDLK_KP_9:
+    return Key::NumPad9;
+  case SDLK_0:
+    return Key::Key0;
+  case SDLK_1:
+    return Key::Key1;
+  case SDLK_2:
+    return Key::Key2;
+  case SDLK_3:
+    return Key::Key3;
+  case SDLK_4:
+    return Key::Key4;
+  case SDLK_5:
+    return Key::Key5;
+  case SDLK_6:
+    return Key::Key6;
+  case SDLK_7:
+    return Key::Key7;
+  case SDLK_8:
+    return Key::Key8;
+  case SDLK_9:
+    return Key::Key9;
+  case SDLK_a:
+    return Key::KeyA;
+  case SDLK_b:
+    return Key::KeyB;
+  case SDLK_c:
+    return Key::KeyC;
+  case SDLK_d:
+    return Key::KeyD;
+  case SDLK_e:
+    return Key::KeyE;
+  case SDLK_f:
+    return Key::KeyF;
+  case SDLK_g:
+    return Key::KeyG;
+  case SDLK_h:
+    return Key::KeyH;
+  case SDLK_i:
+    return Key::KeyI;
+  case SDLK_j:
+    return Key::KeyJ;
+  case SDLK_k:
+    return Key::KeyK;
+  case SDLK_l:
+    return Key::KeyL;
+  case SDLK_m:
+    return Key::KeyM;
+  case SDLK_n:
+    return Key::KeyN;
+  case SDLK_o:
+    return Key::KeyO;
+  case SDLK_p:
+    return Key::KeyP;
+  case SDLK_q:
+    return Key::KeyQ;
+  case SDLK_r:
+    return Key::KeyR;
+  case SDLK_s:
+    return Key::KeyS;
+  case SDLK_t:
+    return Key::KeyT;
+  case SDLK_u:
+    return Key::KeyU;
+  case SDLK_v:
+    return Key::KeyV;
+  case SDLK_w:
+    return Key::KeyW;
+  case SDLK_x:
+    return Key::KeyX;
+  case SDLK_y:
+    return Key::KeyY;
+  case SDLK_z:
+    return Key::KeyZ;
+  case SDLK_LALT:
+    return Key::LeftAlt;
+  case SDLK_RALT:
+    return Key::RightAlt;
+  case SDLK_LCTRL:
+    return Key::LeftCtrl;
+  case SDLK_RCTRL:
+    return Key::RightCtrl;
+  case SDLK_LSHIFT:
+    return Key::LeftShift;
+  case SDLK_RSHIFT:
+    return Key::RightShift;
+  case SDLK_LGUI:
+    return Key::LeftMeta;
+  case SDLK_RGUI:
+    return Key::RightMeta;
+  default:
+    return Key::None;
+  }
+}
+
+void mj::input::SetKey(SDL_Keycode key, bool active)
+{
+  Key::Enum mappedKey = MapKey(key);
+  if (mappedKey != Key::None)
+  {
+    SetKey(mappedKey, active);
+  }
+}
+#endif // MJ_INPUT_SDL
 
 /**
  * @brief      Queue an ASCII character for ImGui typing.

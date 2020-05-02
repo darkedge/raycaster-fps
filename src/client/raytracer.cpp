@@ -87,8 +87,9 @@ static void ShowBuildInfo()
                        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
                        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
   {
-    ImGui::Text("%s, %s (%s #%s), %s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId, mj::txt::pGitBranch,
-                mj::txt::pGitRevision, mj::txt::pDateTime);
+    ImGui::Text("%s, %s (%s #%s), %s\nStaged:%s\nUnstaged:%s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId,
+                mj::txt::pGitBranch, mj::txt::pGitRevision, mj::txt::pDateTime, mj::txt::pGitDiffStaged,
+                mj::txt::pGitDiff);
   }
   ImGui::End();
 }

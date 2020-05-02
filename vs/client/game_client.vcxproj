@@ -21,17 +21,17 @@
     <ClInclude Include="..\..\3rdparty\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\..\3rdparty\imgui\imstb_textedit.h" />
     <ClInclude Include="..\..\3rdparty\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\..\src\client2\camera.h" />
-    <ClInclude Include="..\..\src\client2\generated\text.h" />
-    <ClInclude Include="..\..\src\client2\imgui_impl_bgfx.h" />
-    <ClInclude Include="..\..\src\client2\logo.h" />
-    <ClInclude Include="..\..\src\client2\mj_common.h" />
-    <ClInclude Include="..\..\src\client2\mj_input.h" />
-    <ClInclude Include="..\..\src\client2\mj_platform.h" />
-    <ClInclude Include="..\..\src\client2\mj_win32.h" />
-    <ClInclude Include="..\..\src\client2\raytracer.h" />
-    <ClInclude Include="..\..\src\client2\vs_imgui_image.bin.h" />
-    <ClInclude Include="..\..\src\client2\vs_ocornut_imgui.bin.h" />
+    <ClInclude Include="..\..\src\client\camera.h" />
+    <ClInclude Include="..\..\src\client\generated\text.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_bgfx.h" />
+    <ClInclude Include="..\..\src\client\logo.h" />
+    <ClInclude Include="..\..\src\client\mj_common.h" />
+    <ClInclude Include="..\..\src\client\mj_input.h" />
+    <ClInclude Include="..\..\src\client\mj_platform.h" />
+    <ClInclude Include="..\..\src\client\mj_win32.h" />
+    <ClInclude Include="..\..\src\client\raytracer.h" />
+    <ClInclude Include="..\..\src\client\vs_imgui_image.bin.h" />
+    <ClInclude Include="..\..\src\client\vs_ocornut_imgui.bin.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp" />
@@ -39,25 +39,25 @@
     <ClCompile Include="..\..\3rdparty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\..\3rdparty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
-    <ClCompile Include="..\..\src\client2\camera.cpp" />
-    <ClCompile Include="..\..\src\client2\imgui_impl_bgfx.cpp" />
-    <ClCompile Include="..\..\src\client2\main.cpp" />
-    <ClCompile Include="..\..\src\client2\mj_input.cpp" />
-    <ClCompile Include="..\..\src\client2\mj_win32.cpp" />
-    <ClCompile Include="..\..\src\client2\raytracer.cpp" />
+    <ClCompile Include="..\..\src\client\camera.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_bgfx.cpp" />
+    <ClCompile Include="..\..\src\client\main.cpp" />
+    <ClCompile Include="..\..\src\client\mj_input.cpp" />
+    <ClCompile Include="..\..\src\client\mj_win32.cpp" />
+    <ClCompile Include="..\..\src\client\raytracer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\client2\shaders\imgui\fs_imgui_image.sc" />
-    <None Include="..\..\src\client2\shaders\imgui\fs_ocornut_imgui.sc" />
-    <None Include="..\..\src\client2\shaders\imgui\varying.def.sc" />
-    <None Include="..\..\src\client2\shaders\imgui\vs_imgui_image.sc" />
-    <None Include="..\..\src\client2\shaders\imgui\vs_ocornut_imgui.sc" />
-    <None Include="..\..\src\client2\shaders\raytracer\cs_raytracer.sc" />
-    <None Include="..\..\src\client2\shaders\screen_triangle\fs_screen_triangle.sc" />
-    <None Include="..\..\src\client2\shaders\screen_triangle\varying.def.sc" />
-    <None Include="..\..\src\client2\shaders\screen_triangle\vs_screen_triangle.sc" />
-    <None Include="..\..\src\client2\vs_imgui_image.sc" />
-    <None Include="..\..\src\client2\vs_ocornut_imgui.sc" />
+    <None Include="..\..\src\client\shaders\imgui\fs_imgui_image.sc" />
+    <None Include="..\..\src\client\shaders\imgui\fs_ocornut_imgui.sc" />
+    <None Include="..\..\src\client\shaders\imgui\varying.def.sc" />
+    <None Include="..\..\src\client\shaders\imgui\vs_imgui_image.sc" />
+    <None Include="..\..\src\client\shaders\imgui\vs_ocornut_imgui.sc" />
+    <None Include="..\..\src\client\shaders\raytracer\cs_raytracer.sc" />
+    <None Include="..\..\src\client\shaders\screen_triangle\fs_screen_triangle.sc" />
+    <None Include="..\..\src\client\shaders\screen_triangle\varying.def.sc" />
+    <None Include="..\..\src\client\shaders\screen_triangle\vs_screen_triangle.sc" />
+    <None Include="..\..\src\client\vs_imgui_image.sc" />
+    <None Include="..\..\src\client\vs_ocornut_imgui.sc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
