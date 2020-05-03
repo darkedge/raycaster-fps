@@ -45,7 +45,73 @@ static bx::DefaultAllocator s_defaultAllocator;
 
 static bgfx::UniformHandle s_uTextureArray;
 
-static std::vector<Vertex> s_Vertices; // No index buffer for now...
+static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
+{
+  int16_t oldVertexCount = (int16_t)vertices.size();
+  MJ_UNINITIALIZED Vertex vertex;
+  
+  vertex.position.x = x;
+  vertex.position.y = 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 0.0f;
+  vertex.texCoord.y = 0.0f;
+  vertex.texCoord.z = 138.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 1.0f;
+  vertex.texCoord.y = 0.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.push_back(vertex);
+
+  indices.push_back(oldVertexCount + 0);
+  indices.push_back(oldVertexCount + 1);
+  indices.push_back(oldVertexCount + 3);
+  indices.push_back(oldVertexCount + 3);
+  indices.push_back(oldVertexCount + 2);
+  indices.push_back(oldVertexCount + 0);
+}
+
+static void InsertFloor(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
+{
+  int16_t oldVertexCount = (int16_t)vertices.size();
+  MJ_UNINITIALIZED Vertex vertex;
+  
+  vertex.position.x = x;
+  vertex.position.y = 0.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 0.0f;
+  vertex.texCoord.y = 0.0f;
+  vertex.texCoord.z = 136.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 1.0f;
+  vertex.texCoord.y = 0.0f;
+  vertices.push_back(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.push_back(vertex);
+
+  indices.push_back(oldVertexCount + 0);
+  indices.push_back(oldVertexCount + 2);
+  indices.push_back(oldVertexCount + 1);
+  indices.push_back(oldVertexCount + 1);
+  indices.push_back(oldVertexCount + 2);
+  indices.push_back(oldVertexCount + 3);
+}
 
 static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x0, float z0, float x1,
                             float z1, uint16_t block)
@@ -125,13 +191,27 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
               xz[primaryAxis] -= neighbor;
               glm::vec3 v = { xz[0], 0.0f, xz[1] };
               InsertRectangle(vertices, indices, (float)xz[0] + arr_xz[i], (float)xz[1] + arr_xz[cur_z],
-                              (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], block);
+                              (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], 2 * block - 1);
               xz[primaryAxis] += neighbor;
             }
           }
 
           xz[primaryAxis] -= neighbor;
         }
+      }
+    }
+  }
+
+  // Floor/ceiling pass
+  for (size_t z = 0; z < game::LEVEL_DIM; z++)
+  {
+    // Check for blocks in this slice
+    for (size_t x = 0; x < game::LEVEL_DIM; x++)
+    {
+      if (pData[z * game::LEVEL_DIM + x] >= 0x006A)
+      {
+        InsertFloor(vertices, indices, (float)x, (float)z);
+        InsertCeiling(vertices, indices, (float)x, (float)z);
       }
     }
   }
