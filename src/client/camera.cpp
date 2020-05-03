@@ -20,6 +20,7 @@ void CameraInit(Camera& camera)
   currentMousePos = 0.0f;
   camera.position = glm::vec4(54.5f, 0.5f, 34.5f, 0.0f);
   camera.rotation = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
+  camera.yaw      = -currentMousePos;
 }
 
 void CameraMovement(Camera& camera)
@@ -58,6 +59,7 @@ void CameraMovement(Camera& camera)
   if (currentMousePos != lastMousePos)
   {
     camera.rotation = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
+    camera.yaw      = -currentMousePos;
     lastMousePos    = currentMousePos;
   }
 }

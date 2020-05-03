@@ -13,7 +13,7 @@ struct Ray
 
 // Shader Resource Views
 BUFFER_RO(s_Grid, uint, 0);
-SAMPLER2DARRAY(s_TextureArray,1);
+SAMPLER2DARRAY(s_TextureArray, 1);
 BUFFER_RO(s_Object, uint, 2);
 BUFFER_RO(s_Palette, uint, 3);
 

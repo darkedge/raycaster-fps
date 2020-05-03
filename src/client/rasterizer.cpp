@@ -1,13 +1,19 @@
 #include "rasterizer.h"
 #include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <vector>
 #include "mj_common.h"
 #include <SDL.h>
+#include <bimg/bimg.h>
+#include <bx/allocator.h>
+#include <bx/error.h>
 
 // bgfx shaderc outputs
 #include "shaders/screen_triangle/vs_screen_triangle.h"
 #include "shaders/screen_triangle/fs_screen_triangle.h"
+#include "shaders/rasterizer/vs_rasterizer.h"
+#include "shaders/rasterizer/fs_rasterizer.h"
 
 struct Vertex
 {
@@ -27,8 +33,17 @@ struct Vertex
 bgfx::VertexLayout Vertex::s_VertexLayout;
 
 static bgfx::ProgramHandle s_ScreenTriangleProgram;
+static bgfx::VertexLayout s_ScreenTriangleVertexLayout;
+static bgfx::UniformHandle s_ScreenTriangleSampler;
+
+static bgfx::ProgramHandle s_RasterizerProgram;
 static bgfx::VertexBufferHandle s_VertexBufferHandle;
 static bgfx::IndexBufferHandle s_IndexBufferHandle;
+static bgfx::TextureHandle s_RasterizerTextureArray;
+
+static bx::DefaultAllocator s_defaultAllocator;
+
+static bgfx::UniformHandle s_uTextureArray;
 
 static std::vector<Vertex> s_Vertices; // No index buffer for now...
 
@@ -36,10 +51,10 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
                             float z1, uint16_t block)
 {
   // Get vertex count before adding new ones
-  size_t oldVertexCount = vertices.size();
-  // 2->3
-  //  \
-  // 0->1
+  int16_t oldVertexCount = (int16_t)vertices.size();
+  // 1  3
+  //  \ |
+  // 0->2
   MJ_UNINITIALIZED Vertex vertex;
   vertex.position.x = x0;
   vertex.position.y = 0.0f;
@@ -48,39 +63,31 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   vertex.texCoord.y = 0.0f;
   vertex.texCoord.z = block;
   vertices.push_back(vertex);
+  vertex.position.y = 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.push_back(vertex);
   vertex.position.x = x1;
   vertex.position.y = 0.0f;
   vertex.position.z = z1;
   vertex.texCoord.x = 1.0f;
   vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = block;
   vertices.push_back(vertex);
-  vertex.position.x = x0;
   vertex.position.y = 1.0f;
-  vertex.position.z = z0;
-  vertex.texCoord.x = 0.0f;
   vertex.texCoord.y = 1.0f;
-  vertex.texCoord.z = block;
-  vertices.push_back(vertex);
-  vertex.position.x = x1;
-  vertex.position.y = 1.0f;
-  vertex.position.z = z1;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertex.texCoord.z = block;
   vertices.push_back(vertex);
 
   indices.push_back(oldVertexCount + 0);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 2);
   indices.push_back(oldVertexCount + 2);
   indices.push_back(oldVertexCount + 1);
+  indices.push_back(oldVertexCount + 1);
+  indices.push_back(oldVertexCount + 2);
   indices.push_back(oldVertexCount + 3);
 }
 
 static void CreateMesh(uint16_t* pData, size_t numElements)
 {
-  int32_t xyz[] = { 0, 0 }; // xyz yzx zxy
+  MJ_DISCARD(numElements);
+  int32_t xz[] = { 0, 0 }; // xz yzx zxy
 
   std::vector<Vertex> vertices;
   std::vector<int16_t> indices;
@@ -90,36 +97,40 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
   // -X, -Z, +X, +Z
   for (int32_t i = 0; i < 4; i++)
   {
-    int32_t d0 = (i + 0) % 2; //  x  z  x  z
-    int32_t d1 = (i + 1) % 2; //  z  x  z  x
+    int32_t primaryAxis   = i & 1;           //  x  z  x  z
+    int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
-    int32_t backface = i / 2 * 2 - 1; // -1 -1 -1 +1 +1 +1
-    int32_t dxyz[]   = { 0, 1, 0, -1 };
-    int32_t j        = (i + 1) % 4;
+    int32_t arr_xz[] = { 0, 0, 1, 1 };
+    int32_t neighbor = arr_xz[i] * 2 - 1; // -1 -1 +1 +1
+    int32_t cur_z    = (i + 3) & 3;       // 1, 0, 0, 1
+    int32_t next_x   = (i + 1) & 3;       // 0, 1, 1, 0
 
     // Traverse the level slice by slice from a single direction
-    for (xyz[d0] = 0; xyz[d0] < game::LEVEL_DIM; xyz[d0]++)
+    for (xz[primaryAxis] = 0; xz[primaryAxis] < game::LEVEL_DIM; xz[primaryAxis]++)
     {
       // Check for blocks in this slice
-      for (xyz[d1] = 0; xyz[d1] < game::LEVEL_DIM; xyz[d1]++)
+      for (xz[secondaryAxis] = 0; xz[secondaryAxis] < game::LEVEL_DIM; xz[secondaryAxis]++)
       {
-        uint16_t block = pData[xyz[0] * game::LEVEL_DIM + xyz[1]];
+        uint16_t block = pData[xz[1] * game::LEVEL_DIM + xz[0]];
 
         if (block < 0x006A) // This block is solid
         {
           // Check the opposite block that is connected to this face
-          xyz[d0] += backface;
+          xz[primaryAxis] += neighbor;
 
-          if ((xyz[0] < game::LEVEL_DIM) && (xyz[1] < game::LEVEL_DIM)) // Bounds check
+          if ((xz[1] < game::LEVEL_DIM) && (xz[0] < game::LEVEL_DIM)) // Bounds check
           {
-            if (pData[xyz[0] * game::LEVEL_DIM + xyz[1]] >= 0x006A) // Is it empty?
+            if (pData[xz[1] * game::LEVEL_DIM + xz[0]] >= 0x006A) // Is it empty?
             {
-              glm::vec3 v = { xyz[0], 0.0f, xyz[1] };
-              InsertRectangle(vertices, indices, xyz[0], xyz[1], xyz[0] + dxyz[i], xyz[1] + dxyz[j], block);
+              xz[primaryAxis] -= neighbor;
+              glm::vec3 v = { xz[0], 0.0f, xz[1] };
+              InsertRectangle(vertices, indices, (float)xz[0] + arr_xz[i], (float)xz[1] + arr_xz[cur_z],
+                              (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], block);
+              xz[primaryAxis] += neighbor;
             }
           }
 
-          xyz[d0] -= backface;
+          xz[primaryAxis] -= neighbor;
         }
       }
     }
@@ -142,6 +153,33 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
       s_IndexBufferHandle = bgfx::createIndexBuffer(mem);
       bgfx::setName(s_IndexBufferHandle, "Rasterizer Index Buffer");
     }
+  }
+}
+
+static void InitTexture2DArray()
+{
+  MJ_UNINITIALIZED size_t datasize;
+  void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
+  if (pFile)
+  {
+    mj::IStream stream(pFile, datasize);
+
+    bx::Error error;
+    bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, (uint32_t)datasize, &error);
+
+    if (pImageContainer)
+    {
+      const bgfx::Memory* pMemory = bgfx::copy(pImageContainer->m_data, pImageContainer->m_size);
+      s_RasterizerTextureArray =
+          bgfx::createTexture2D((uint16_t)pImageContainer->m_width, (uint16_t)pImageContainer->m_height, false,
+                                pImageContainer->m_numLayers, (bgfx::TextureFormat::Enum)pImageContainer->m_format,
+                                BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT, pMemory);
+      bgfx::setName(s_RasterizerTextureArray, "s_RasterizerTextureArray");
+      bimg::imageFree(pImageContainer);
+      s_uTextureArray = bgfx::createUniform("s_TextureArray", bgfx::UniformType::Sampler);
+    }
+
+    SDL_free(pFile);
   }
 }
 
@@ -169,24 +207,63 @@ void rs::Init()
   bgfx::setName(fsh, "Rasterizer Screen Triangle Fragment Shader");
   s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
 
+  // Rasterizer shader
+  vsh = bgfx::createShader(bgfx::makeRef(vs_rasterizer, sizeof(vs_rasterizer)));
+  bgfx::setName(vsh, "Rasterizer Vertex Shader");
+  fsh = bgfx::createShader(bgfx::makeRef(fs_rasterizer, sizeof(fs_rasterizer)));
+  bgfx::setName(fsh, "Rasterizer Fragment Shader");
+  s_RasterizerProgram = bgfx::createProgram(vsh, fsh, true);
+
   Vertex::Init();
   LoadLevel();
+
+  s_ScreenTriangleSampler = bgfx::createUniform("SampleType", bgfx::UniformType::Sampler);
+  s_ScreenTriangleVertexLayout.begin().add(bgfx::Attrib::Indices, 1, bgfx::AttribType::Float).end();
+
+  InitTexture2DArray();
 }
 
 void rs::Resize(int width, int height)
 {
+  MJ_DISCARD(width);
+  MJ_DISCARD(height);
 }
 
 void rs::Update(int width, int height, game::Data* pData)
 {
+  glm::mat4 translate = glm::identity<glm::mat4>();
+  translate           = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
+  glm::mat4 rotate    = glm::transpose(glm::eulerAngleY(pData->s_Camera.yaw));
+
+  glm::mat4 view       = rotate * translate;
+  glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
+
+  bgfx::setViewClear(0, BGFX_CLEAR_DEPTH);
+  bgfx::setViewTransform(0, &view, &projection);
+
+  bgfx::setTexture(0, s_uTextureArray, s_RasterizerTextureArray);
   bgfx::setVertexBuffer(0, s_VertexBufferHandle);
   bgfx::setIndexBuffer(s_IndexBufferHandle);
+  bgfx::setState(BGFX_STATE_CULL_CW | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                 BGFX_STATE_DEPTH_TEST_LESS);
+
+  bgfx::submit(0, s_RasterizerProgram);
+
+#if 0
+  bgfx::setTexture(0, s_ScreenTriangleSampler, s_RaytracerOutputTexture);
+  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+  bgfx::setVertexCount(3);
   bgfx::submit(0, s_ScreenTriangleProgram);
+#endif
 }
 
 void rs::Destroy()
 {
   bgfx::destroy(s_ScreenTriangleProgram);
+  bgfx::destroy(s_RasterizerProgram);
+  bgfx::destroy(s_RasterizerTextureArray);
   bgfx::destroy(s_VertexBufferHandle);
   bgfx::destroy(s_IndexBufferHandle);
+  bgfx::destroy(s_uTextureArray);
+  bgfx::destroy(s_ScreenTriangleSampler);
 }

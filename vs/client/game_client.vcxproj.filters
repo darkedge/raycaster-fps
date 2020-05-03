@@ -77,6 +77,9 @@
     <Filter Include="generated">
       <UniqueIdentifier>{4fd46164-bf2f-4df2-9537-ec37336c7ac7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\rasterizer">
+      <UniqueIdentifier>{04c56b03-0bd5-40df-b046-e4dbc0b848b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\client\vs_imgui_image.sc" />
@@ -107,6 +110,15 @@
     </None>
     <None Include="..\..\src\client\shaders\imgui\fs_ocornut_imgui.sc">
       <Filter>shaders\imgui</Filter>
+    </None>
+    <None Include="..\..\src\client\shaders\rasterizer\varying.def.sc">
+      <Filter>shaders\rasterizer</Filter>
+    </None>
+    <None Include="..\..\src\client\shaders\rasterizer\vs_rasterizer.sc">
+      <Filter>shaders\rasterizer</Filter>
+    </None>
+    <None Include="..\..\src\client\shaders\rasterizer\fs_rasterizer.sc">
+      <Filter>shaders\rasterizer</Filter>
     </None>
   </ItemGroup>
 </Project>

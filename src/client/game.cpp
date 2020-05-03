@@ -90,10 +90,14 @@ void game::Update(int width, int height)
 
   ShowBuildInfo();
 
+  ImGui::Begin("Debug");
+  ImGui::Text("Player position: x=%.3f, z=%.3f", s_Data.s_Camera.position.x, s_Data.s_Camera.position.z);
+  ImGui::End();
+
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
-  rt::Update(width, height, &s_Data);
+  //rt::Update(width, height, &s_Data);
   rs::Update(width, height, &s_Data);
 }
 
