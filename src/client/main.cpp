@@ -86,13 +86,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   game::Init();
 
-  // Set view 0 to the same dimensions as the window and to clear the color buffer.
-  const bgfx::ViewId kClearView = 0;
-  bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR);
-
   imguiCreate();
 
-  bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
   int32_t mouseX      = 0;
   int32_t mouseY      = 0;
   int32_t mouseScroll = 0;
@@ -182,7 +177,6 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
             game::Resize(width, height);
             bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
-            bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
           }
           break;
           default:

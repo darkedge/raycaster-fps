@@ -17,8 +17,6 @@
 #include "shaders/screen_triangle/vs_screen_triangle.h"
 #include "shaders/screen_triangle/fs_screen_triangle.h"
 
-static constexpr uint32_t GRID_DIM = 16;
-
 static bx::DefaultAllocator s_defaultAllocator;
 
 static bgfx::ProgramHandle s_RaytracerProgram;
@@ -45,6 +43,8 @@ static bgfx::UniformHandle s_uFieldOfView;
 static bgfx::UniformHandle s_uWidth;
 static bgfx::UniformHandle s_uHeight;
 static bgfx::UniformHandle s_uTextureArray;
+
+static const bgfx::ViewId s_ViewId = 0;
 
 static bool InitObjectPlaceholder()
 {
@@ -236,6 +236,7 @@ void rt::Init()
   InitTexture2DArray();
 
   MJ_DISCARD(InitObjectPlaceholder());
+  bgfx::setViewName(0, "RayTracer");
 }
 
 void rt::Resize(int width, int height)
@@ -244,28 +245,11 @@ void rt::Resize(int width, int height)
   (void)height;
 }
 
-void rt::Update(int width, int height, game::Data* pData)
+void rt::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 {
   ZoneScoped;
-
-  {
-    // Get thread group and index
-    MJ_UNINITIALIZED int x;
-    MJ_UNINITIALIZED int y;
-    MJ_DISCARD(SDL_GetMouseState(&x, &y));
-    int32_t groupX  = x * MJ_RT_WIDTH / width / GRID_DIM;
-    int32_t groupY  = y * MJ_RT_HEIGHT / height / GRID_DIM;
-    int32_t threadX = x * MJ_RT_WIDTH / width % GRID_DIM;
-    int32_t threadY = y * MJ_RT_HEIGHT / height % GRID_DIM;
-
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("R to reset, F3 toggles mouselook");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-                ImGui::GetIO().Framerate);
-    ImGui::SliderFloat("Field of view", &pData->s_FieldOfView.x, 5.0f, 170.0f);
-    ImGui::Text("Group: [%d, %d, 0], Thread: [%d, %d, 0]", groupX, groupY, threadX, threadY);
-    ImGui::End();
-  }
+  bgfx::setViewRect(viewId, 0, 0, bgfx::BackbufferRatio::Equal);
+  bgfx::setViewScissor(viewId, 0, 0, width / 2, height);
 
   bgfx::setUniform(s_uMat, glm::value_ptr(pData->s_Mat));
   bgfx::setUniform(s_uCameraPos, glm::value_ptr(pData->s_Camera.position));
@@ -273,16 +257,16 @@ void rt::Update(int width, int height, game::Data* pData)
   bgfx::setUniform(s_uWidth, glm::value_ptr(pData->s_Width));
   bgfx::setUniform(s_uHeight, glm::value_ptr(pData->s_Height));
 
-  const bgfx::ViewId viewId = 0;
   bgfx::setImage(5, s_RaytracerOutputTexture, 0, bgfx::Access::Write);
   bgfx::setBuffer(0, s_GridBuffer, bgfx::Access::Read);
   bgfx::setTexture(1, s_uTextureArray, s_RaytracerTextureArray);
   bgfx::setBuffer(2, s_ObjectBuffer, bgfx::Access::Read);
   bgfx::setBuffer(3, s_PaletteBuffer, bgfx::Access::Read);
 
-  bgfx::dispatch(viewId, s_RaytracerProgram, (MJ_RT_WIDTH + GRID_DIM - 1) / GRID_DIM,
-                 (MJ_RT_HEIGHT + GRID_DIM - 1) / GRID_DIM, 1);
+  bgfx::dispatch(viewId, s_RaytracerProgram, (MJ_RT_WIDTH + rt::GRID_DIM - 1) / rt::GRID_DIM,
+                 (MJ_RT_HEIGHT + rt::GRID_DIM - 1) / rt::GRID_DIM, 1);
 
+  // Screen triangle
   bgfx::setTexture(0, s_ScreenTriangleSampler, s_RaytracerOutputTexture);
   bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   bgfx::setVertexCount(3);

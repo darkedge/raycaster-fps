@@ -39,7 +39,8 @@ vec3 hash(uint3 x)
 
 vec4 AttenuateSample(float t, vec4 smpl)
 {
-  return smpl * rsqrt(t);
+  //return smpl * rsqrt(t);
+  return smpl;
 }
 
 // https://www.gamedev.net/forums/topic/662529-converting-uint-to-vec4-in-hlsl/
@@ -167,7 +168,7 @@ vec4 IntersectRayGrid(const Ray ray)
         v = ray.origin.y + tMax * ray.direction.y;
       }
 
-      return AttenuateSample(tMax, texture2DArrayLod(s_TextureArray, vec3(u, (1.0 - v), 2 * (block - 1)), 0));
+      return AttenuateSample(tMax, texture2DArrayLod(s_TextureArray, vec3(u, (1.0 - v), (2 * block) - 1), 0));
     }
 
     if (tMaxX < tMaxY)

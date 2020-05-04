@@ -44,8 +44,6 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\client\imgui_impl_bgfx.h" />
-    <ClInclude Include="..\..\src\client\vs_imgui_image.bin.h" />
-    <ClInclude Include="..\..\src\client\vs_ocornut_imgui.bin.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
     <ClInclude Include="..\..\src\client\raytracer.h" />
@@ -82,8 +80,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\client\vs_imgui_image.sc" />
-    <None Include="..\..\src\client\vs_ocornut_imgui.sc" />
     <None Include="..\..\src\client\shaders\raytracer\cs_raytracer.sc">
       <Filter>shaders\raytracer</Filter>
     </None>

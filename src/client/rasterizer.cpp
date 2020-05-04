@@ -49,7 +49,7 @@ static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& i
 {
   int16_t oldVertexCount = (int16_t)vertices.size();
   MJ_UNINITIALIZED Vertex vertex;
-  
+
   vertex.position.x = x;
   vertex.position.y = 1.0f;
   vertex.position.z = z;
@@ -83,7 +83,7 @@ static void InsertFloor(std::vector<Vertex>& vertices, std::vector<int16_t>& ind
 {
   int16_t oldVertexCount = (int16_t)vertices.size();
   MJ_UNINITIALIZED Vertex vertex;
-  
+
   vertex.position.x = x;
   vertex.position.y = 0.0f;
   vertex.position.z = z;
@@ -309,7 +309,7 @@ void rs::Resize(int width, int height)
   MJ_DISCARD(height);
 }
 
-void rs::Update(int width, int height, game::Data* pData)
+void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 {
   glm::mat4 translate = glm::identity<glm::mat4>();
   translate           = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
@@ -317,9 +317,10 @@ void rs::Update(int width, int height, game::Data* pData)
 
   glm::mat4 view       = rotate * translate;
   glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
-
-  bgfx::setViewClear(0, BGFX_CLEAR_DEPTH);
-  bgfx::setViewTransform(0, &view, &projection);
+  
+  bgfx::setViewRect(viewId, 0, 0, bgfx::BackbufferRatio::Equal);
+  bgfx::setViewScissor(viewId, width / 2, 0, width / 2, height);
+  bgfx::setViewTransform(viewId, &view, &projection);
 
   bgfx::setTexture(0, s_uTextureArray, s_RasterizerTextureArray);
   bgfx::setVertexBuffer(0, s_VertexBufferHandle);
@@ -327,14 +328,7 @@ void rs::Update(int width, int height, game::Data* pData)
   bgfx::setState(BGFX_STATE_CULL_CW | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
                  BGFX_STATE_DEPTH_TEST_LESS);
 
-  bgfx::submit(0, s_RasterizerProgram);
-
-#if 0
-  bgfx::setTexture(0, s_ScreenTriangleSampler, s_RaytracerOutputTexture);
-  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
-  bgfx::setVertexCount(3);
-  bgfx::submit(0, s_ScreenTriangleProgram);
-#endif
+  bgfx::submit(viewId, s_RasterizerProgram);
 }
 
 void rs::Destroy()
