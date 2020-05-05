@@ -17,7 +17,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\client\imgui_impl_bgfx.cpp" />
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
-    <ClCompile Include="..\..\src\client\raytracer.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\camera.cpp" />
     <ClCompile Include="..\..\src\client\rasterizer.cpp" />
@@ -46,7 +45,6 @@
     <ClInclude Include="..\..\src\client\imgui_impl_bgfx.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
-    <ClInclude Include="..\..\src\client\raytracer.h" />
     <ClInclude Include="..\..\src\client\mj_platform.h" />
     <ClInclude Include="..\..\src\client\mj_win32.h" />
     <ClInclude Include="..\..\src\client\camera.h" />
@@ -63,12 +61,6 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{5dad4c73-c242-47a2-ba69-657c2e88e02e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders\screen_triangle">
-      <UniqueIdentifier>{1bbdb65d-86d2-4f1e-a194-6185614b6f01}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="shaders\raytracer">
-      <UniqueIdentifier>{0a544aed-dffd-4fa2-a212-45f60ee39239}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders\imgui">
       <UniqueIdentifier>{ba57d6d9-f181-49a2-99b3-c7396074f0a1}</UniqueIdentifier>
     </Filter>
@@ -80,18 +72,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\client\shaders\raytracer\cs_raytracer.sc">
-      <Filter>shaders\raytracer</Filter>
-    </None>
-    <None Include="..\..\src\client\shaders\screen_triangle\varying.def.sc">
-      <Filter>shaders\screen_triangle</Filter>
-    </None>
-    <None Include="..\..\src\client\shaders\screen_triangle\vs_screen_triangle.sc">
-      <Filter>shaders\screen_triangle</Filter>
-    </None>
-    <None Include="..\..\src\client\shaders\screen_triangle\fs_screen_triangle.sc">
-      <Filter>shaders\screen_triangle</Filter>
-    </None>
     <None Include="..\..\src\client\shaders\imgui\varying.def.sc">
       <Filter>shaders\imgui</Filter>
     </None>

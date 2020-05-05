@@ -31,7 +31,6 @@
     <ClInclude Include="..\..\src\client\mj_platform.h" />
     <ClInclude Include="..\..\src\client\mj_win32.h" />
     <ClInclude Include="..\..\src\client\rasterizer.h" />
-    <ClInclude Include="..\..\src\client\raytracer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp" />
@@ -46,7 +45,6 @@
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\rasterizer.cpp" />
-    <ClCompile Include="..\..\src\client\raytracer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\client\shaders\imgui\fs_imgui_image.sc" />
@@ -57,10 +55,6 @@
     <None Include="..\..\src\client\shaders\rasterizer\fs_rasterizer.sc" />
     <None Include="..\..\src\client\shaders\rasterizer\varying.def.sc" />
     <None Include="..\..\src\client\shaders\rasterizer\vs_rasterizer.sc" />
-    <None Include="..\..\src\client\shaders\raytracer\cs_raytracer.sc" />
-    <None Include="..\..\src\client\shaders\screen_triangle\fs_screen_triangle.sc" />
-    <None Include="..\..\src\client\shaders\screen_triangle\varying.def.sc" />
-    <None Include="..\..\src\client\shaders\screen_triangle\vs_screen_triangle.sc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

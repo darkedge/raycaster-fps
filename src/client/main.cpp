@@ -72,7 +72,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   int width, height;
   SDL_GetWindowSize(pWindow, &width, &height);
 
-  uint32_t resetFlags = BGFX_RESET_VSYNC | BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
+  uint32_t resetFlags = BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
 
   init.resolution.width           = width;
   init.resolution.height          = height;

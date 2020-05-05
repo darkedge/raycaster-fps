@@ -1,6 +1,5 @@
 #include "game.h"
 #include "mj_common.h"
-#include "raytracer.h"
 #include "rasterizer.h"
 #include <imgui.h>
 #include "generated/text.h"
@@ -10,7 +9,6 @@
 
 static bool s_MouseLook = true;
 static game::Data s_Data;
-static const bgfx::ViewId s_RtViewId = 0;
 static const bgfx::ViewId s_RsViewId = 1;
 
 static void Reset()
@@ -54,19 +52,16 @@ void game::Init()
 
   Reset();
 
-  rt::Init();
   rs::Init();
 
   // Allow mouse movement tracking outside the window
   // MJ_DISCARD(SDL_CaptureMouse(SDL_TRUE));
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
-  bgfx::setViewName(s_RtViewId, "RaytracerViewId");
   bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
 
 void game::Resize(int width, int height)
 {
-  rt::Resize(width, height);
   rs::Resize(width, height);
 }
 
@@ -96,37 +91,25 @@ void game::Update(int width, int height)
   ShowBuildInfo();
 
   {
-    // Get thread group and index
-    MJ_UNINITIALIZED int x;
-    MJ_UNINITIALIZED int y;
-    MJ_DISCARD(SDL_GetMouseState(&x, &y));
-    int32_t groupX  = x * MJ_RT_WIDTH / width / rt::GRID_DIM;
-    int32_t groupY  = y * MJ_RT_HEIGHT / height / rt::GRID_DIM;
-    int32_t threadX = x * MJ_RT_WIDTH / width % rt::GRID_DIM;
-    int32_t threadY = y * MJ_RT_HEIGHT / height % rt::GRID_DIM;
-
     ImGui::Begin("Debug");
     ImGui::Text("R to reset, F3 toggles mouselook");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
     ImGui::SliderFloat("Field of view", &s_Data.s_FieldOfView.x, 5.0f, 170.0f);
-    ImGui::Text("Group: [%d, %d, 0], Thread: [%d, %d, 0]", groupX, groupY, threadX, threadY);
     ImGui::Text("Player position: x=%.3f, z=%.3f", s_Data.s_Camera.position.x, s_Data.s_Camera.position.z);
     ImGui::End();
   }
 
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
-  
+
   // Only clear first view as they both render to the same render target
   // Otherwise we clear twice inbetween renders
-  bgfx::setViewClear(s_RtViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
-  rt::Update(s_RtViewId, width, height, &s_Data);
+  bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
   rs::Update(s_RsViewId, width, height, &s_Data);
 }
 
 void game::Destroy()
 {
-  rt::Destroy();
   rs::Destroy();
 }

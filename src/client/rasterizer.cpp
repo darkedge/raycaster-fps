@@ -10,8 +10,6 @@
 #include <bx/error.h>
 
 // bgfx shaderc outputs
-#include "shaders/screen_triangle/vs_screen_triangle.h"
-#include "shaders/screen_triangle/fs_screen_triangle.h"
 #include "shaders/rasterizer/vs_rasterizer.h"
 #include "shaders/rasterizer/fs_rasterizer.h"
 
@@ -32,7 +30,6 @@ struct Vertex
 };
 bgfx::VertexLayout Vertex::s_VertexLayout;
 
-static bgfx::ProgramHandle s_ScreenTriangleProgram;
 static bgfx::VertexLayout s_ScreenTriangleVertexLayout;
 static bgfx::UniformHandle s_ScreenTriangleSampler;
 
@@ -280,17 +277,10 @@ static void LoadLevel()
 
 void rs::Init()
 {
-  // Screen shader
-  bgfx::ShaderHandle vsh = bgfx::createShader(bgfx::makeRef(vs_screen_triangle, sizeof(vs_screen_triangle)));
-  bgfx::setName(vsh, "Rasterizer Screen Triangle Vertex Shader");
-  bgfx::ShaderHandle fsh = bgfx::createShader(bgfx::makeRef(fs_screen_triangle, sizeof(fs_screen_triangle)));
-  bgfx::setName(fsh, "Rasterizer Screen Triangle Fragment Shader");
-  s_ScreenTriangleProgram = bgfx::createProgram(vsh, fsh, true);
-
   // Rasterizer shader
-  vsh = bgfx::createShader(bgfx::makeRef(vs_rasterizer, sizeof(vs_rasterizer)));
+  auto vsh = bgfx::createShader(bgfx::makeRef(vs_rasterizer, sizeof(vs_rasterizer)));
   bgfx::setName(vsh, "Rasterizer Vertex Shader");
-  fsh = bgfx::createShader(bgfx::makeRef(fs_rasterizer, sizeof(fs_rasterizer)));
+  auto fsh = bgfx::createShader(bgfx::makeRef(fs_rasterizer, sizeof(fs_rasterizer)));
   bgfx::setName(fsh, "Rasterizer Fragment Shader");
   s_RasterizerProgram = bgfx::createProgram(vsh, fsh, true);
 
@@ -317,9 +307,8 @@ void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 
   glm::mat4 view       = rotate * translate;
   glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
-  
+
   bgfx::setViewRect(viewId, 0, 0, bgfx::BackbufferRatio::Equal);
-  bgfx::setViewScissor(viewId, width / 2, 0, width / 2, height);
   bgfx::setViewTransform(viewId, &view, &projection);
 
   bgfx::setTexture(0, s_uTextureArray, s_RasterizerTextureArray);
@@ -333,7 +322,6 @@ void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 
 void rs::Destroy()
 {
-  bgfx::destroy(s_ScreenTriangleProgram);
   bgfx::destroy(s_RasterizerProgram);
   bgfx::destroy(s_RasterizerTextureArray);
   bgfx::destroy(s_VertexBufferHandle);
