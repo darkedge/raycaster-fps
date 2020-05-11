@@ -55,7 +55,6 @@ void game::Init()
   rs::Init();
 
   // Allow mouse movement tracking outside the window
-  // MJ_DISCARD(SDL_CaptureMouse(SDL_TRUE));
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
   bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
@@ -67,7 +66,7 @@ void game::Resize(int width, int height)
 
 void game::Update(int width, int height)
 {
-  if (mj::input::GetKeyDown(Key::F3))
+  if (mj::input::GetKeyDown(Key::F3) || mj::input::GetKeyDown(Key::KeyE))
   {
     s_MouseLook = !s_MouseLook;
     SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook);
@@ -92,7 +91,7 @@ void game::Update(int width, int height)
 
   {
     ImGui::Begin("Debug");
-    ImGui::Text("R to reset, F3 toggles mouselook");
+    ImGui::Text("R to reset, F3 or E toggles mouselook");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
     ImGui::SliderFloat("Field of view", &s_Data.s_FieldOfView.x, 5.0f, 170.0f);
