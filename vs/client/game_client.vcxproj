@@ -25,6 +25,7 @@
     <ClInclude Include="..\..\src\client\game.h" />
     <ClInclude Include="..\..\src\client\generated\text.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_bgfx.h" />
+    <ClInclude Include="..\..\src\client\map.h" />
     <ClInclude Include="..\..\src\client\logo.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
@@ -41,6 +42,7 @@
     <ClCompile Include="..\..\src\client\camera.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
     <ClCompile Include="..\..\src\client\imgui_impl_bgfx.cpp" />
+    <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\main.cpp" />
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />

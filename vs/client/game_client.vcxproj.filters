@@ -21,6 +21,7 @@
     <ClCompile Include="..\..\src\client\camera.cpp" />
     <ClCompile Include="..\..\src\client\rasterizer.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
+    <ClCompile Include="..\..\src\client\map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\logo.h" />
@@ -53,6 +54,7 @@
     </ClInclude>
     <ClInclude Include="..\..\src\client\rasterizer.h" />
     <ClInclude Include="..\..\src\client\game.h" />
+    <ClInclude Include="..\..\src\client\map.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

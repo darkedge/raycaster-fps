@@ -4,6 +4,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <vector>
 #include "mj_common.h"
+#include "map.h"
 #include <SDL.h>
 #include <bimg/bimg.h>
 #include <bx/allocator.h>
@@ -147,9 +148,8 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   indices.push_back(oldVertexCount + 3);
 }
 
-static void CreateMesh(uint16_t* pData, size_t numElements)
+static void CreateMesh(map::map_t map)
 {
-  MJ_DISCARD(numElements);
   int32_t xz[] = { 0, 0 }; // xz yzx zxy
 
   std::vector<Vertex> vertices;
@@ -160,6 +160,7 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
   // -X, -Z, +X, +Z
   for (int32_t i = 0; i < 4; i++)
   {
+    int32_t mapDim[]      = { map.width, map.height };
     int32_t primaryAxis   = i & 1;           //  x  z  x  z
     int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
@@ -169,21 +170,21 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
     int32_t next_x   = (i + 1) & 3;       // 0, 1, 1, 0
 
     // Traverse the level slice by slice from a single direction
-    for (xz[primaryAxis] = 0; xz[primaryAxis] < game::LEVEL_DIM; xz[primaryAxis]++)
+    for (xz[primaryAxis] = 0; xz[primaryAxis] < mapDim[primaryAxis]; xz[primaryAxis]++)
     {
       // Check for blocks in this slice
-      for (xz[secondaryAxis] = 0; xz[secondaryAxis] < game::LEVEL_DIM; xz[secondaryAxis]++)
+      for (xz[secondaryAxis] = 0; xz[secondaryAxis] < mapDim[secondaryAxis]; xz[secondaryAxis]++)
       {
-        uint16_t block = pData[xz[1] * game::LEVEL_DIM + xz[0]];
+        uint16_t block = map.pBlocks[xz[1] * map.width + xz[0]];
 
         if (block < 0x006A) // This block is solid
         {
           // Check the opposite block that is connected to this face
           xz[primaryAxis] += neighbor;
 
-          if ((xz[1] < game::LEVEL_DIM) && (xz[0] < game::LEVEL_DIM)) // Bounds check
+          if ((xz[1] < map.height) && (xz[0] < map.width)) // Bounds check
           {
-            if (pData[xz[1] * game::LEVEL_DIM + xz[0]] >= 0x006A) // Is it empty?
+            if (map.pBlocks[xz[1] * map.width + xz[0]] >= 0x006A) // Is it empty?
             {
               xz[primaryAxis] -= neighbor;
               glm::vec3 v = { xz[0], 0.0f, xz[1] };
@@ -205,7 +206,7 @@ static void CreateMesh(uint16_t* pData, size_t numElements)
     // Check for blocks in this slice
     for (size_t x = 0; x < game::LEVEL_DIM; x++)
     {
-      if (pData[z * game::LEVEL_DIM + x] >= 0x006A)
+      if (map.pBlocks[z * map.width + x] >= 0x006A)
       {
         InsertFloor(vertices, indices, (float)x, (float)z);
         InsertCeiling(vertices, indices, (float)x, (float)z);
@@ -239,8 +240,6 @@ static void InitTexture2DArray()
   void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
   if (pFile)
   {
-    mj::IStream stream(pFile, datasize);
-
     bx::Error error;
     bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, (uint32_t)datasize, &error);
 
@@ -262,16 +261,11 @@ static void InitTexture2DArray()
 
 static void LoadLevel()
 {
-  MJ_UNINITIALIZED size_t datasize;
-  void* pFile = SDL_LoadFile("E1M1.bin", &datasize);
-  if (pFile)
+  auto map = map::Load("e1m1.mjm");
+  if (map::Valid(map))
   {
-    uint16_t* pData    = (uint16_t*)pFile;
-    size_t numElements = datasize / sizeof(*pData);
-
-    CreateMesh(pData, numElements);
-
-    SDL_free(pFile);
+    CreateMesh(map);
+    map::Free(map);
   }
 }
 

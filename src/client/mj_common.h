@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <string.h> // memcpy
 #include <new>
 
 // Annotation macros
@@ -35,26 +36,26 @@ namespace mj
   }
 
   // stream for reading
-  class IStream
+  class MemoryBuffer
   {
   public:
-    IStream() : end(nullptr), position(nullptr)
+    MemoryBuffer() : end(nullptr), position(nullptr)
     {
     }
 
-    IStream(void* begin, void* end) : end((char*)end), position((char*)begin)
+    MemoryBuffer(void* pBegin, void* end) : end((char*)end), position((char*)pBegin)
     {
     }
 
-    IStream(void* begin, size_t size) : end((char*)begin + size), position((char*)begin)
+    MemoryBuffer(void* pBegin, size_t size) : end((char*)pBegin + size), position((char*)pBegin)
     {
     }
 
-    IStream(const IStream& other) : end(other.end), position(other.position)
+    MemoryBuffer(const MemoryBuffer& other) : end(other.end), position(other.position)
     {
     }
 
-    IStream& operator=(const IStream& rhs)
+    MemoryBuffer& operator=(const MemoryBuffer& rhs)
     {
       this->end      = rhs.end;
       this->position = rhs.position;
@@ -72,7 +73,7 @@ namespace mj
     }
 
     template <typename T>
-    IStream& operator>>(T& t)
+    MemoryBuffer& operator>>(T& t)
     {
       if (SizeLeft() >= sizeof(T))
       {
@@ -88,7 +89,7 @@ namespace mj
     }
 
     template <typename T>
-    IStream& Write(T& t)
+    MemoryBuffer& Write(T& t)
     {
       if (SizeLeft() >= sizeof(T))
       {
@@ -103,8 +104,23 @@ namespace mj
       return *this;
     }
 
+    MemoryBuffer& Write(void* pData, size_t size)
+    {
+      if (SizeLeft() >= size)
+      {
+        memcpy(this->position, pData, size);
+        this->position += size;
+      }
+      else
+      {
+        this->end      = nullptr;
+        this->position = nullptr;
+      }
+      return *this;
+    }
+
     template <typename T>
-    IStream& Read(T& t)
+    MemoryBuffer& Read(T& t)
     {
       if (SizeLeft() >= sizeof(T))
       {
@@ -119,7 +135,7 @@ namespace mj
       return *this;
     }
 
-    IStream& Skip(size_t numBytes)
+    MemoryBuffer& Skip(size_t numBytes)
     {
       if (SizeLeft() >= numBytes)
       {
@@ -136,8 +152,10 @@ namespace mj
     template <typename T>
     void Fetch(T*&&) = delete;
 
+    // Return the current position as a typed pointer.
+    // Advances the position afterwards.
     template <typename T>
-    IStream& Fetch(T*& t)
+    MemoryBuffer& Fetch(T*& t)
     {
       if (SizeLeft() >= sizeof(T))
       {
