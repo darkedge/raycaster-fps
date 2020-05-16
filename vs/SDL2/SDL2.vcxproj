@@ -65,7 +65,7 @@
       <AdditionalIncludeDirectories>..\..\3rdparty\SDL2-2.0.12\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SDL_RENDER_DISABLED=1;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_WIN64</PreprocessorDefinitions>
       <OmitDefaultLibName>true</OmitDefaultLibName>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <WarningLevel>Level3</WarningLevel>
@@ -104,7 +104,7 @@
       <AdditionalIncludeDirectories>..\..\3rdparty\SDL2-2.0.12\include</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <PreprocessorDefinitions>__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_WIN64</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SDL_RENDER_DISABLED=1;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_WIN64</PreprocessorDefinitions>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <OmitDefaultLibName>true</OmitDefaultLibName>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>

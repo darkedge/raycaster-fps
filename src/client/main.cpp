@@ -81,10 +81,26 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   init.profile          = true;
 #endif
 
+#if 0
+  HKEY hKey;
+  LSTATUS lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Video\\{4EE067DF-C76E-11E9-9E1B-8F5419C8F7F3}\\0000", 0, KEY_READ, &hKey);
+  if (lRes == ERROR_SUCCESS)
+  {
+    BYTE szBuffer[1024];
+    DWORD dwBufferSize = sizeof(szBuffer);
+    DWORD type;
+    lRes = RegQueryValueExW(hKey, L"DriverVersion", 0, &type, szBuffer, &dwBufferSize);
+    if (lRes == ERROR_SUCCESS)
+    {
+        printf("%ws\n", (wchar_t*)szBuffer);
+    }
+  }
+#endif
+
   int width, height;
   SDL_GetWindowSize(s_pWindow, &width, &height);
 
-  uint32_t resetFlags = BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
+  uint32_t resetFlags = BGFX_RESET_NONE; // BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
 
   init.resolution.width           = width;
   init.resolution.height          = height;
@@ -198,21 +214,25 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
         break;
         case SDL_KEYDOWN:
         {
-          SDL_KeyboardEvent kev = event.key;
-          mj::input::SetKey(kev.keysym.scancode, true);
-        }
-        break;
-        case SDL_TEXTINPUT:
-        {
-          // char[32] text = the null-terminated input text in UTF-8 encoding
-          ImGui::GetIO().AddInputCharactersUTF8(event.text.text);
+          SDL_Scancode s = event.key.keysym.scancode;
+          auto io        = ImGui::GetIO();
+          mj::input::SetKey(s, true);
+          if (s < MJ_COUNTOF(io.KeysDown))
+          {
+            io.KeysDown[s] = true;
+          }
         }
         break;
         case SDL_KEYUP:
         {
-          SDL_KeyboardEvent kev = event.key;
-          mj::input::SetKey(kev.keysym.scancode, false);
-          switch (kev.keysym.scancode)
+          SDL_Scancode s = event.key.keysym.scancode;
+          auto io        = ImGui::GetIO();
+          mj::input::SetKey(s, false);
+          if (s < MJ_COUNTOF(io.KeysDown))
+          {
+            io.KeysDown[s] = false;
+          }
+          switch (s)
           {
           case SDL_SCANCODE_F11:
           {
@@ -237,6 +257,12 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
             break;
           }
+        }
+        break;
+        case SDL_TEXTINPUT:
+        {
+          // char[32] text = the null-terminated input text in UTF-8 encoding
+          ImGui::GetIO().AddInputCharactersUTF8(event.text.text);
         }
         break;
         default:
@@ -275,6 +301,9 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
       ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
       imguiEndFrame();
     }
+
+    // Use debug font to print information about this example.
+    bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Advance to next frame. Process submitted rendering primitives.
     {

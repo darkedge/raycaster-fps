@@ -31,11 +31,6 @@ void imguiDestroy();
 void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, bgfx::ViewId _view = 255);
 void imguiEndFrame();
 
-#if 0 // MJ
-namespace entry { class AppI; }
-void showExampleDialog(entry::AppI* _app, const char* _errorText = NULL);
-#endif
-
 namespace ImGui
 {
 #define IMGUI_FLAGS_NONE        UINT8_C(0x00)
