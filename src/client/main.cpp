@@ -20,11 +20,19 @@
 
 // WARNING: global variable
 static float mj_DeltaTime;
+static SDL_Window* s_pWindow;
+
 namespace mj
 {
   float GetDeltaTime()
   {
     return mj_DeltaTime;
+  }
+
+  bool IsWindowMouseFocused()
+  {
+    Uint32 flags = SDL_GetWindowFlags(s_pWindow);
+    return (flags & SDL_WINDOW_MOUSE_FOCUS);
   }
 } // namespace mj
 
@@ -42,9 +50,9 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   SDL_SetMainReady();
 
   // Window
-  SDL_Window* pWindow = SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                         MJ_WND_WIDTH, MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
-  if (!pWindow)
+  s_pWindow = SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, MJ_WND_WIDTH,
+                             MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
+  if (!s_pWindow)
   {
     return 1;
   }
@@ -54,7 +62,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(pWindow, &wmInfo);
+  SDL_GetWindowWMInfo(s_pWindow, &wmInfo);
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
   init.platformData.ndt = wmInfo.info.x11.display;
   init.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
@@ -70,7 +78,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 #endif
 
   int width, height;
-  SDL_GetWindowSize(pWindow, &width, &height);
+  SDL_GetWindowSize(s_pWindow, &width, &height);
 
   uint32_t resetFlags = BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
 
@@ -212,7 +220,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             default:
               mode = 0;
             }
-            SDL_SetWindowFullscreen(pWindow, flags);
+            SDL_SetWindowFullscreen(s_pWindow, flags);
           }
           break;
           case SDLK_F12: // Screenshot (.tga)
@@ -271,7 +279,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   imguiDestroy();
 
   bgfx::shutdown();
-  SDL_DestroyWindow(pWindow);
+  SDL_DestroyWindow(s_pWindow);
   SDL_Quit();
 
   return 0;

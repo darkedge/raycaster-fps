@@ -7,6 +7,11 @@
 #include <SDL.h>
 #include <bgfx/bgfx.h>
 
+namespace mj
+{
+  extern bool IsWindowMouseFocused();
+}
+
 static bool s_MouseLook = true;
 static game::Data s_Data;
 static const bgfx::ViewId s_RsViewId = 1;
@@ -55,7 +60,17 @@ void game::Init()
   rs::Init();
 
   // Allow mouse movement tracking outside the window
-  MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
+  if (s_MouseLook)
+  {
+    if (mj::IsWindowMouseFocused())
+    {
+      MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
+    }
+    else
+    {
+      s_MouseLook = false;
+    }
+  }
   bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
 
