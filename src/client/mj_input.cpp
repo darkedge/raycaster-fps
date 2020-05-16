@@ -268,200 +268,200 @@ static void SetKey(Key::Enum key, bool active)
 
 // One massive jump table
 #ifdef MJ_INPUT_SDL
-static Key::Enum MapKey(SDL_Keycode key)
+static Key::Enum MapKey(SDL_Scancode key)
 {
   switch (key)
   {
-  case SDLK_ESCAPE:
+  case SDL_SCANCODE_ESCAPE:
     return Key::Esc;
-  case SDLK_RETURN:
+  case SDL_SCANCODE_RETURN:
     return Key::Return;
-  case SDLK_TAB:
+  case SDL_SCANCODE_TAB:
     return Key::Tab;
-  case SDLK_SPACE:
+  case SDL_SCANCODE_SPACE:
     return Key::Space;
-  case SDLK_BACKSPACE:
+  case SDL_SCANCODE_BACKSPACE:
     return Key::Backspace;
-  case SDLK_UP:
+  case SDL_SCANCODE_UP:
     return Key::Up;
-  case SDLK_DOWN:
+  case SDL_SCANCODE_DOWN:
     return Key::Down;
-  case SDLK_LEFT:
+  case SDL_SCANCODE_LEFT:
     return Key::Left;
-  case SDLK_RIGHT:
+  case SDL_SCANCODE_RIGHT:
     return Key::Right;
-  case SDLK_INSERT:
+  case SDL_SCANCODE_INSERT:
     return Key::Insert;
-  case SDLK_DELETE:
+  case SDL_SCANCODE_DELETE:
     return Key::Delete;
-  case SDLK_HOME:
+  case SDL_SCANCODE_HOME:
     return Key::Home;
-  case SDLK_END:
+  case SDL_SCANCODE_END:
     return Key::End;
-  case SDLK_PAGEUP:
+  case SDL_SCANCODE_PAGEUP:
     return Key::PageUp;
-  case SDLK_PAGEDOWN:
+  case SDL_SCANCODE_PAGEDOWN:
     return Key::PageDown;
-  case SDLK_PRINTSCREEN:
+  case SDL_SCANCODE_PRINTSCREEN:
     return Key::Print;
-  case SDLK_PLUS:
-    return Key::Plus;
-  case SDLK_MINUS:
+  case SDL_SCANCODE_EQUALS:
+    return Key::Equals;
+  case SDL_SCANCODE_MINUS:
     return Key::Minus;
-  case SDLK_LEFTBRACKET:
+  case SDL_SCANCODE_LEFTBRACKET:
     return Key::LeftBracket;
-  case SDLK_RIGHTBRACKET:
+  case SDL_SCANCODE_RIGHTBRACKET:
     return Key::RightBracket;
-  case SDLK_SEMICOLON:
+  case SDL_SCANCODE_SEMICOLON:
     return Key::Semicolon;
-  case SDLK_QUOTE:
+  case SDL_SCANCODE_APOSTROPHE:
     return Key::Quote;
-  case SDLK_COMMA:
+  case SDL_SCANCODE_COMMA:
     return Key::Comma;
-  case SDLK_PERIOD:
+  case SDL_SCANCODE_PERIOD:
     return Key::Period;
-  case SDLK_SLASH:
+  case SDL_SCANCODE_SLASH:
     return Key::Slash;
-  case SDLK_BACKSLASH:
+  case SDL_SCANCODE_BACKSLASH:
     return Key::Backslash;
-  case SDLK_F1:
+  case SDL_SCANCODE_F1:
     return Key::F1;
-  case SDLK_F2:
+  case SDL_SCANCODE_F2:
     return Key::F2;
-  case SDLK_F3:
+  case SDL_SCANCODE_F3:
     return Key::F3;
-  case SDLK_F4:
+  case SDL_SCANCODE_F4:
     return Key::F4;
-  case SDLK_F5:
+  case SDL_SCANCODE_F5:
     return Key::F5;
-  case SDLK_F6:
+  case SDL_SCANCODE_F6:
     return Key::F6;
-  case SDLK_F7:
+  case SDL_SCANCODE_F7:
     return Key::F7;
-  case SDLK_F8:
+  case SDL_SCANCODE_F8:
     return Key::F8;
-  case SDLK_F9:
+  case SDL_SCANCODE_F9:
     return Key::F9;
-  case SDLK_F10:
+  case SDL_SCANCODE_F10:
     return Key::F10;
-  case SDLK_F11:
+  case SDL_SCANCODE_F11:
     return Key::F11;
-  case SDLK_F12:
+  case SDL_SCANCODE_F12:
     return Key::F12;
-  case SDLK_KP_0:
+  case SDL_SCANCODE_KP_0:
     return Key::NumPad0;
-  case SDLK_KP_1:
+  case SDL_SCANCODE_KP_1:
     return Key::NumPad1;
-  case SDLK_KP_2:
+  case SDL_SCANCODE_KP_2:
     return Key::NumPad2;
-  case SDLK_KP_3:
+  case SDL_SCANCODE_KP_3:
     return Key::NumPad3;
-  case SDLK_KP_4:
+  case SDL_SCANCODE_KP_4:
     return Key::NumPad4;
-  case SDLK_KP_5:
+  case SDL_SCANCODE_KP_5:
     return Key::NumPad5;
-  case SDLK_KP_6:
+  case SDL_SCANCODE_KP_6:
     return Key::NumPad6;
-  case SDLK_KP_7:
+  case SDL_SCANCODE_KP_7:
     return Key::NumPad7;
-  case SDLK_KP_8:
+  case SDL_SCANCODE_KP_8:
     return Key::NumPad8;
-  case SDLK_KP_9:
+  case SDL_SCANCODE_KP_9:
     return Key::NumPad9;
-  case SDLK_0:
+  case SDL_SCANCODE_0:
     return Key::Key0;
-  case SDLK_1:
+  case SDL_SCANCODE_1:
     return Key::Key1;
-  case SDLK_2:
+  case SDL_SCANCODE_2:
     return Key::Key2;
-  case SDLK_3:
+  case SDL_SCANCODE_3:
     return Key::Key3;
-  case SDLK_4:
+  case SDL_SCANCODE_4:
     return Key::Key4;
-  case SDLK_5:
+  case SDL_SCANCODE_5:
     return Key::Key5;
-  case SDLK_6:
+  case SDL_SCANCODE_6:
     return Key::Key6;
-  case SDLK_7:
+  case SDL_SCANCODE_7:
     return Key::Key7;
-  case SDLK_8:
+  case SDL_SCANCODE_8:
     return Key::Key8;
-  case SDLK_9:
+  case SDL_SCANCODE_9:
     return Key::Key9;
-  case SDLK_a:
+  case SDL_SCANCODE_A:
     return Key::KeyA;
-  case SDLK_b:
+  case SDL_SCANCODE_B:
     return Key::KeyB;
-  case SDLK_c:
+  case SDL_SCANCODE_C:
     return Key::KeyC;
-  case SDLK_d:
+  case SDL_SCANCODE_D:
     return Key::KeyD;
-  case SDLK_e:
+  case SDL_SCANCODE_E:
     return Key::KeyE;
-  case SDLK_f:
+  case SDL_SCANCODE_F:
     return Key::KeyF;
-  case SDLK_g:
+  case SDL_SCANCODE_G:
     return Key::KeyG;
-  case SDLK_h:
+  case SDL_SCANCODE_H:
     return Key::KeyH;
-  case SDLK_i:
+  case SDL_SCANCODE_I:
     return Key::KeyI;
-  case SDLK_j:
+  case SDL_SCANCODE_J:
     return Key::KeyJ;
-  case SDLK_k:
+  case SDL_SCANCODE_K:
     return Key::KeyK;
-  case SDLK_l:
+  case SDL_SCANCODE_L:
     return Key::KeyL;
-  case SDLK_m:
+  case SDL_SCANCODE_M:
     return Key::KeyM;
-  case SDLK_n:
+  case SDL_SCANCODE_N:
     return Key::KeyN;
-  case SDLK_o:
+  case SDL_SCANCODE_O:
     return Key::KeyO;
-  case SDLK_p:
+  case SDL_SCANCODE_P:
     return Key::KeyP;
-  case SDLK_q:
+  case SDL_SCANCODE_Q:
     return Key::KeyQ;
-  case SDLK_r:
+  case SDL_SCANCODE_R:
     return Key::KeyR;
-  case SDLK_s:
+  case SDL_SCANCODE_S:
     return Key::KeyS;
-  case SDLK_t:
+  case SDL_SCANCODE_T:
     return Key::KeyT;
-  case SDLK_u:
+  case SDL_SCANCODE_U:
     return Key::KeyU;
-  case SDLK_v:
+  case SDL_SCANCODE_V:
     return Key::KeyV;
-  case SDLK_w:
+  case SDL_SCANCODE_W:
     return Key::KeyW;
-  case SDLK_x:
+  case SDL_SCANCODE_X:
     return Key::KeyX;
-  case SDLK_y:
+  case SDL_SCANCODE_Y:
     return Key::KeyY;
-  case SDLK_z:
+  case SDL_SCANCODE_Z:
     return Key::KeyZ;
-  case SDLK_LALT:
+  case SDL_SCANCODE_LALT:
     return Key::LeftAlt;
-  case SDLK_RALT:
+  case SDL_SCANCODE_RALT:
     return Key::RightAlt;
-  case SDLK_LCTRL:
+  case SDL_SCANCODE_LCTRL:
     return Key::LeftCtrl;
-  case SDLK_RCTRL:
+  case SDL_SCANCODE_RCTRL:
     return Key::RightCtrl;
-  case SDLK_LSHIFT:
+  case SDL_SCANCODE_LSHIFT:
     return Key::LeftShift;
-  case SDLK_RSHIFT:
+  case SDL_SCANCODE_RSHIFT:
     return Key::RightShift;
-  case SDLK_LGUI:
+  case SDL_SCANCODE_LGUI:
     return Key::LeftMeta;
-  case SDLK_RGUI:
+  case SDL_SCANCODE_RGUI:
     return Key::RightMeta;
   default:
     return Key::None;
   }
 }
 
-void mj::input::SetKey(SDL_Keycode key, bool active)
+void mj::input::SetKey(SDL_Scancode key, bool active)
 {
   Key::Enum mappedKey = MapKey(key);
   if (mappedKey != Key::None)

@@ -101,7 +101,7 @@ struct Key
     PageUp,
     PageDown,
     Print,
-    Plus,
+    Equals,
     Minus,
     LeftBracket,
     RightBracket,
@@ -239,7 +239,7 @@ namespace mj
 
     // Keyboard
 #ifdef MJ_INPUT_SDL
-    void SetKey(SDL_Keycode key, bool active);
+    void SetKey(SDL_Scancode key, bool active);
 #endif // MJ_INPUT_SDL
     bool IsEscapePressed();
     void SetKeyName(Key::Enum key, const char* keyName);

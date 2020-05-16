@@ -1,4 +1,3 @@
-#include "mj_win32.h"
 #include "mj_common.h"
 #include "imgui_impl_bgfx.h"
 #include "mj_input.h"
@@ -15,6 +14,11 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_syswm.h>
+
+#if BX_PLATFORM_WINDOWS
+#include "mj_win32.h"
+#include "imgui_win32.h"
+#endif
 
 #include "..\..\3rdparty\tracy\Tracy.hpp"
 
@@ -51,7 +55,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   // Window
   s_pWindow = SDL_CreateWindow("raycaster-fps", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, MJ_WND_WIDTH,
-                             MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
+                               MJ_WND_HEIGHT, SDL_WINDOW_RESIZABLE);
   if (!s_pWindow)
   {
     return 1;
@@ -195,16 +199,22 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
         case SDL_KEYDOWN:
         {
           SDL_KeyboardEvent kev = event.key;
-          mj::input::SetKey(kev.keysym.sym, true);
+          mj::input::SetKey(kev.keysym.scancode, true);
+        }
+        break;
+        case SDL_TEXTINPUT:
+        {
+          // char[32] text = the null-terminated input text in UTF-8 encoding
+          ImGui::GetIO().AddInputCharactersUTF8(event.text.text);
         }
         break;
         case SDL_KEYUP:
         {
           SDL_KeyboardEvent kev = event.key;
-          mj::input::SetKey(kev.keysym.sym, false);
-          switch (kev.keysym.sym)
+          mj::input::SetKey(kev.keysym.scancode, false);
+          switch (kev.keysym.scancode)
           {
-          case SDLK_F11:
+          case SDL_SCANCODE_F11:
           {
             static int mode       = 0;
             SDL_WindowFlags flags = (SDL_WindowFlags)0;
@@ -223,7 +233,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             SDL_SetWindowFullscreen(s_pWindow, flags);
           }
           break;
-          case SDLK_F12: // Screenshot (.tga)
+          case SDL_SCANCODE_F12: // Screenshot (.tga)
             bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
             break;
           }
@@ -254,7 +264,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     game::Update(width, height);
 
-#if 0
+#if 1
     {
       ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
       ImGui::ShowDemoWindow();
