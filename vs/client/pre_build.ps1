@@ -5,61 +5,6 @@ Param(
     [String]$TargetDir
 )
 
-# Path to bgfx shaderc executable (after Push-Location of shader folder)
-$Exe = '../../../tools/bgfx/shaderc.exe'
-
-# Path to shader source files
-$ShaderPath = "..\..\src\client\shaders"
-
-if ($Configuration -eq 'Debug') {
-    $Debug = '--debug'
-}
-
-$ShaderPathExists = Test-Path -Path $ShaderPath
-if (-Not $ShaderPathExists) {
-    Write-Output "Could not find shader path $($ShaderPath)!"
-}
-else {
-    Push-Location -Path $ShaderPath
-
-    function BuildShaders ([String]$Filter, [String]$Type, [String]$Profile) {
-        Get-ChildItem -Recurse -Filter $Filter |
-        Foreach-Object {
-            $InFile = (Resolve-Path -Path $_.FullName -Relative)
-            $InTime = (Get-Item $_.FullName).LastWriteTime
-            $OutHeader = (Join-Path -Path $_.Directory -ChildPath ($_.Basename + '.h'))
-
-            # Test if input is newer than output
-            $HeaderExists = Test-Path -Path $OutHeader
-            if ($HeaderExists) {
-                $OutTime = (Get-Item $OutHeader).LastWriteTime
-            }
-
-            if (-Not $HeaderExists -Or ($InTime -gt $OutTime)) {
-                # Write source file name to stdout
-                Write-Output $_.Name
-
-                # Generate compiled header file
-                & $Exe -f $InFile -o $OutHeader --platform windows --Type $Type --Profile $Profile --bin2c $Debug
-            } 
-        }
-    }
-
-    # Compute shaders
-    Write-Output 'Building compute shaders...'
-    BuildShaders 'cs_*.sc' 'c' 'cs_5_0'
-
-    # Vertex shaders
-    Write-Output 'Building vertex shaders...'
-    BuildShaders 'vs_*.sc' 'v' 'vs_5_0'
-
-    # Fragment shaders
-    Write-Output 'Building fragment shaders...'
-    BuildShaders 'fs_*.sc' 'f' 'ps_5_0'
-    
-    Pop-Location
-}
-
 # Code generation
 
 $TxtTemplate = @'

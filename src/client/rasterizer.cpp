@@ -1,5 +1,4 @@
 #include "rasterizer.h"
-#include <bgfx/bgfx.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <vector>
@@ -14,6 +13,7 @@
 #include "shaders/rasterizer/vs_rasterizer.h"
 #include "shaders/rasterizer/fs_rasterizer.h"
 
+#if 0
 struct Vertex
 {
   glm::vec3 position;
@@ -268,9 +268,11 @@ static void LoadLevel()
     map::Free(map);
   }
 }
+#endif
 
 void rs::Init()
 {
+#if 0
   // Rasterizer shader
   auto vsh = bgfx::createShader(bgfx::makeRef(vs_rasterizer, sizeof(vs_rasterizer)));
   bgfx::setName(vsh, "Rasterizer Vertex Shader");
@@ -285,6 +287,7 @@ void rs::Init()
   s_ScreenTriangleVertexLayout.begin().add(bgfx::Attrib::Indices, 1, bgfx::AttribType::Float).end();
 
   InitTexture2DArray();
+#endif
 }
 
 void rs::Resize(int width, int height)
@@ -293,6 +296,7 @@ void rs::Resize(int width, int height)
   MJ_DISCARD(height);
 }
 
+#if 0
 void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 {
   glm::mat4 translate = glm::identity<glm::mat4>();
@@ -313,13 +317,16 @@ void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
 
   bgfx::submit(viewId, s_RasterizerProgram);
 }
+#endif
 
 void rs::Destroy()
 {
+#if 0
   bgfx::destroy(s_RasterizerProgram);
   bgfx::destroy(s_RasterizerTextureArray);
   bgfx::destroy(s_VertexBufferHandle);
   bgfx::destroy(s_IndexBufferHandle);
   bgfx::destroy(s_uTextureArray);
   bgfx::destroy(s_ScreenTriangleSampler);
+#endif
 }

@@ -25,7 +25,6 @@
     <ClInclude Include="..\..\src\client\editor.h" />
     <ClInclude Include="..\..\src\client\game.h" />
     <ClInclude Include="..\..\src\client\generated\text.h" />
-    <ClInclude Include="..\..\src\client\imgui_impl_bgfx.h" />
     <ClInclude Include="..\..\src\client\imgui_win32.h" />
     <ClInclude Include="..\..\src\client\map.h" />
     <ClInclude Include="..\..\src\client\logo.h" />
@@ -44,7 +43,6 @@
     <ClCompile Include="..\..\src\client\camera.cpp" />
     <ClCompile Include="..\..\src\client\editor.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
-    <ClCompile Include="..\..\src\client\imgui_impl_bgfx.cpp" />
     <ClCompile Include="..\..\src\client\imgui_win32.cpp" />
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\main.cpp" />
@@ -144,7 +142,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -175,7 +173,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -206,7 +204,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\Release;..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\SDL2\$(Platform)\Release;..\yojimbo\$(Platform)\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bgfx.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>

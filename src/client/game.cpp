@@ -5,7 +5,6 @@
 #include "generated/text.h"
 #include "mj_input.h"
 #include <SDL.h>
-#include <bgfx/bgfx.h>
 
 namespace mj
 {
@@ -14,7 +13,7 @@ namespace mj
 
 static bool s_MouseLook = true;
 static game::Data s_Data;
-static const bgfx::ViewId s_RsViewId = 1;
+//static const bgfx::ViewId s_RsViewId = 1;
 
 static void Reset()
 {
@@ -71,7 +70,7 @@ void game::Init()
       s_MouseLook = false;
     }
   }
-  bgfx::setViewName(s_RsViewId, "RasterizerViewId");
+  //bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
 
 void game::Resize(int width, int height)
@@ -119,8 +118,8 @@ void game::Update(int width, int height)
 
   // Only clear first view as they both render to the same render target
   // Otherwise we clear twice inbetween renders
-  bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
-  rs::Update(s_RsViewId, width, height, &s_Data);
+  //bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+  //rs::Update(s_RsViewId, width, height, &s_Data);
 }
 
 void game::Destroy()

@@ -1,15 +1,12 @@
 #include "mj_common.h"
-#include "imgui_impl_bgfx.h"
 #include "mj_input.h"
 #include "game.h"
+#include <imgui.h>
 
 #include <stdio.h>
 #include <bx/bx.h>
 #include <bx/timer.h>
-#include <bx/spscqueue.h>
 #include <bx/thread.h>
-#include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 #include "logo.h"
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -61,6 +58,10 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     return 1;
   }
 
+  int width, height;
+  SDL_GetWindowSize(s_pWindow, &width, &height);
+
+#if 0
   // Initialize bgfx using the native window handle and window resolution.
   bgfx::Init init;
 
@@ -97,9 +98,6 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 #endif
 
-  int width, height;
-  SDL_GetWindowSize(s_pWindow, &width, &height);
-
   uint32_t resetFlags = BGFX_RESET_NONE; // BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
 
   init.resolution.width           = width;
@@ -111,10 +109,11 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   {
     return 1;
   }
+#endif
 
   game::Init();
 
-  imguiCreate();
+  // imguiCreate();
 
   int32_t mouseX      = 0;
   int32_t mouseY      = 0;
@@ -123,8 +122,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   mj::input::Init();
 
-  int64_t lastTime = bx::getHPCounter();
-  int64_t perfFreq = bx::getHPFrequency();
+  Uint64 lastTime = SDL_GetPerformanceCounter();
+  Uint64 perfFreq = SDL_GetPerformanceFrequency();
 
   // Run message pump.
   bool exit = false;
@@ -150,13 +149,13 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
           switch (e.button)
           {
           case SDL_BUTTON_LEFT:
-            mouseMask &= ~IMGUI_MBUT_LEFT;
+            // mouseMask &= ~IMGUI_MBUT_LEFT;
             break;
           case SDL_BUTTON_MIDDLE:
-            mouseMask &= ~IMGUI_MBUT_MIDDLE;
+            // mouseMask &= ~IMGUI_MBUT_MIDDLE;
             break;
           case SDL_BUTTON_RIGHT:
-            mouseMask &= ~IMGUI_MBUT_RIGHT;
+            // mouseMask &= ~IMGUI_MBUT_RIGHT;
           default:
             break;
           }
@@ -168,13 +167,13 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
           switch (e.button)
           {
           case SDL_BUTTON_LEFT:
-            mouseMask |= IMGUI_MBUT_LEFT;
+            // mouseMask |= IMGUI_MBUT_LEFT;
             break;
           case SDL_BUTTON_MIDDLE:
-            mouseMask |= IMGUI_MBUT_MIDDLE;
+            // mouseMask |= IMGUI_MBUT_MIDDLE;
             break;
           case SDL_BUTTON_RIGHT:
-            mouseMask |= IMGUI_MBUT_RIGHT;
+            // mouseMask |= IMGUI_MBUT_RIGHT;
             break;
           default:
             break;
@@ -204,7 +203,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             height = wev.data2;
 
             game::Resize(width, height);
-            bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
+            // bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
           }
           break;
           default:
@@ -254,7 +253,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
           }
           break;
           case SDL_SCANCODE_F12: // Screenshot (.tga)
-            bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
+            // bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
             break;
           }
         }
@@ -273,8 +272,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     mj::input::Update();
 
-    int64_t now     = bx::getHPCounter();
-    LONGLONG counts = now - lastTime;
+    Uint64 now     = SDL_GetPerformanceCounter();
+    Uint64 counts = now - lastTime;
     float dt        = (float)counts / perfFreq;
     if (dt > (1.0f / 60.0f))
     {
@@ -285,7 +284,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     {
       ZoneScopedNC("ImGui NewFrame", tracy::Color::BlueViolet);
-      imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
+      // imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
     }
 
     game::Update(width, height);
@@ -299,25 +298,25 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     {
       ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
-      imguiEndFrame();
+      // imguiEndFrame();
     }
 
     // Use debug font to print information about this example.
-    bgfx::setDebug(BGFX_DEBUG_STATS);
+    // bgfx::setDebug(BGFX_DEBUG_STATS);
 
     // Advance to next frame. Process submitted rendering primitives.
     {
       ZoneScopedNC("bgfx::frame()", tracy::Color::Azure);
-      bgfx::frame();
+      // bgfx::frame();
       FrameMark;
     }
   }
 
   game::Destroy();
 
-  imguiDestroy();
+  // imguiDestroy();
 
-  bgfx::shutdown();
+  // bgfx::shutdown();
   SDL_DestroyWindow(s_pWindow);
   SDL_Quit();
 
