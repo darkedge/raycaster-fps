@@ -1,19 +1,89 @@
+#include "stdafx.h"
 #include "game.h"
 #include "mj_common.h"
 #include "rasterizer.h"
-#include <imgui.h>
 #include "generated/text.h"
 #include "mj_input.h"
-#include <SDL.h>
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx11.h"
 
 namespace mj
 {
   extern bool IsWindowMouseFocused();
 }
 
+static ID3D11Device* g_pd3dDevice;
+static ID3D11DeviceContext* g_pd3dDeviceContext;
+static IDXGISwapChain* g_pSwapChain;
+static ID3D11RenderTargetView* g_mainRenderTargetView;
+
+// Helper functions
+
+static void CreateRenderTarget()
+{
+  ID3D11Texture2D* pBackBuffer;
+  g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
+  pBackBuffer->Release();
+}
+
+static bool CreateDeviceD3D(HWND hWnd)
+{
+  // Setup swap chain
+  DXGI_SWAP_CHAIN_DESC sd;
+  ZeroMemory(&sd, sizeof(sd));
+  sd.BufferCount                        = 1;
+  sd.BufferDesc.Width                   = 0;
+  sd.BufferDesc.Height                  = 0;
+  sd.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
+  sd.BufferDesc.RefreshRate.Numerator   = 60;
+  sd.BufferDesc.RefreshRate.Denominator = 1;
+  sd.Flags                              = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+  sd.BufferUsage                        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+  sd.OutputWindow                       = hWnd;
+  sd.SampleDesc.Count                   = 1;
+  sd.SampleDesc.Quality                 = 0;
+  sd.Windowed                           = TRUE;
+  sd.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
+
+  UINT createDeviceFlags = 0;
+#ifdef _DEBUG
+  createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+  D3D_FEATURE_LEVEL featureLevel;
+  const D3D_FEATURE_LEVEL featureLevelArray[2] = {
+    D3D_FEATURE_LEVEL_11_0,
+    D3D_FEATURE_LEVEL_10_0,
+  };
+  if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2,
+                                    D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel,
+                                    &g_pd3dDeviceContext) != S_OK)
+    return false;
+
+  CreateRenderTarget();
+  return true;
+}
+
+static void CleanupRenderTarget()
+{
+  if (g_mainRenderTargetView)
+  {
+    g_mainRenderTargetView->Release();
+    g_mainRenderTargetView = nullptr;
+  }
+}
+
+static void CleanupDeviceD3D()
+{
+  CleanupRenderTarget();
+  SAFE_RELEASE(g_pSwapChain);
+  SAFE_RELEASE(g_pd3dDeviceContext);
+  SAFE_RELEASE(g_pd3dDevice);
+}
+
 static bool s_MouseLook = true;
 static game::Data s_Data;
-//static const bgfx::ViewId s_RsViewId = 1;
+// static const bgfx::ViewId s_RsViewId = 1;
 
 static void Reset()
 {
@@ -49,14 +119,20 @@ static void ShowBuildInfo()
   ImGui::End();
 }
 
-void game::Init()
+void game::Init(HWND hwnd)
 {
   s_Data.s_Width  = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
   s_Data.s_Height = glm::vec4(MJ_RT_HEIGHT, 0.0f, 0.0f, 0.0f);
 
   Reset();
 
-  rs::Init();
+  // Setup Platform/Renderer bindings
+  MJ_DISCARD(CreateDeviceD3D(hwnd));
+  MJ_DISCARD(ImGui::CreateContext());
+  MJ_DISCARD(ImGui_ImplWin32_Init(hwnd));
+  ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+
+  rs::Init(g_pd3dDevice);
 
   // Allow mouse movement tracking outside the window
   if (s_MouseLook)
@@ -70,7 +146,7 @@ void game::Init()
       s_MouseLook = false;
     }
   }
-  //bgfx::setViewName(s_RsViewId, "RasterizerViewId");
+  // bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
 
 void game::Resize(int width, int height)
@@ -80,6 +156,11 @@ void game::Resize(int width, int height)
 
 void game::Update(int width, int height)
 {
+  // Start the Dear ImGui frame
+  ImGui_ImplDX11_NewFrame();
+  ImGui_ImplWin32_NewFrame();
+  ImGui::NewFrame();
+
   if (mj::input::GetKeyDown(Key::F3) || mj::input::GetKeyDown(Key::KeyE))
   {
     s_MouseLook = !s_MouseLook;
@@ -118,11 +199,42 @@ void game::Update(int width, int height)
 
   // Only clear first view as they both render to the same render target
   // Otherwise we clear twice inbetween renders
-  //bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
-  //rs::Update(s_RsViewId, width, height, &s_Data);
+  // bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
+  g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
+  rs::Update(g_pd3dDeviceContext, width, height, &s_Data);
+
+#if 1
+  {
+    ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
+    ImGui::ShowDemoWindow();
+  }
+#endif
+
+  {
+    ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
+    // imguiEndFrame();
+
+    // Rendering
+    ImGui::Render();
+    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+  }
+
+  // Use debug font to print information about this example.
+  // bgfx::setDebug(BGFX_DEBUG_STATS);
+
+  {
+    ZoneScopedNC("bgfx::frame()", tracy::Color::Azure);
+    g_pSwapChain->Present(1, 0); // Present with vsync
+    // g_pSwapChain->Present(0, 0); // Present without vsync
+    FrameMark;
+  }
 }
 
 void game::Destroy()
 {
+  CleanupDeviceD3D();
   rs::Destroy();
+  ImGui_ImplDX11_Shutdown();
+  ImGui_ImplWin32_Shutdown();
+  ImGui::DestroyContext();
 }

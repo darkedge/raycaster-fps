@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "rasterizer.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -8,12 +9,18 @@
 #include <bimg/bimg.h>
 #include <bx/allocator.h>
 #include <bx/error.h>
+#include <d3d11.h>
 
+// Texture2DArray
+static ID3D11Texture2D* s_pTexture;
+static ID3D11SamplerState* s_pTextureSamplerState;
+static ID3D11ShaderResourceView* s_pTextureSrv;
+
+#if 0
 // bgfx shaderc outputs
 #include "shaders/rasterizer/vs_rasterizer.h"
 #include "shaders/rasterizer/fs_rasterizer.h"
 
-#if 0
 struct Vertex
 {
   glm::vec3 position;
@@ -270,7 +277,7 @@ static void LoadLevel()
 }
 #endif
 
-void rs::Init()
+void rs::Init(ID3D11Device* pDevice)
 {
 #if 0
   // Rasterizer shader
@@ -294,6 +301,10 @@ void rs::Resize(int width, int height)
 {
   MJ_DISCARD(width);
   MJ_DISCARD(height);
+}
+
+void rs::Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game::Data* pData)
+{
 }
 
 #if 0

@@ -1,23 +1,13 @@
+#include "stdafx.h"
 #include "mj_common.h"
 #include "mj_input.h"
 #include "game.h"
-#include <imgui.h>
-
-#include <stdio.h>
-#include <bx/bx.h>
-#include <bx/timer.h>
-#include <bx/thread.h>
 #include "logo.h"
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
-#include <SDL_syswm.h>
 
 #if BX_PLATFORM_WINDOWS
 #include "mj_win32.h"
 #include "imgui_win32.h"
 #endif
-
-#include "..\..\3rdparty\tracy\Tracy.hpp"
 
 // WARNING: global variable
 static float mj_DeltaTime;
@@ -60,6 +50,10 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   int width, height;
   SDL_GetWindowSize(s_pWindow, &width, &height);
+
+  SDL_SysWMinfo wmInfo;
+  SDL_VERSION(&wmInfo.version);
+  SDL_GetWindowWMInfo(s_pWindow, &wmInfo);
 
 #if 0
   // Initialize bgfx using the native window handle and window resolution.
@@ -111,7 +105,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 #endif
 
-  game::Init();
+  game::Init(wmInfo.info.win.window);
 
   // imguiCreate();
 
@@ -288,35 +282,11 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     }
 
     game::Update(width, height);
-
-#if 1
-    {
-      ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
-      ImGui::ShowDemoWindow();
-    }
-#endif
-
-    {
-      ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
-      // imguiEndFrame();
-    }
-
-    // Use debug font to print information about this example.
-    // bgfx::setDebug(BGFX_DEBUG_STATS);
-
-    // Advance to next frame. Process submitted rendering primitives.
-    {
-      ZoneScopedNC("bgfx::frame()", tracy::Color::Azure);
-      // bgfx::frame();
-      FrameMark;
-    }
   }
 
+  // Cleanup
   game::Destroy();
 
-  // imguiDestroy();
-
-  // bgfx::shutdown();
   SDL_DestroyWindow(s_pWindow);
   SDL_Quit();
 

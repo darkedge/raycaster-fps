@@ -1,5 +1,4 @@
 #pragma once
-#include <glm/glm.hpp>
 #include "camera.h"
 
 namespace game
@@ -15,7 +14,7 @@ namespace game
     Camera s_Camera;
   };
 
-  void Init();
+  void Init(HWND hwnd);
   void Resize(int width, int height);
   void Update(int width, int height);
   void Destroy();

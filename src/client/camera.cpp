@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "camera.h"
 #include "mj_input.h"
 

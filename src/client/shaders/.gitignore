@@ -1,4 +1,0 @@
-# Generated shader binary header from bgfx shaderc executable
-*.h
-# Generated preprocessed shader from bgfx shaderc executable (for debugging)
-*.hlsl

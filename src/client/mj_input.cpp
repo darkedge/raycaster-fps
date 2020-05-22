@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "mj_input.h"
 #include <queue>
 #include "../../tracy/Tracy.hpp"

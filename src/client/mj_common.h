@@ -14,6 +14,13 @@
 
 #define MJ_COUNTOF(arr) sizeof(arr) / sizeof(arr[0])
 
+#define SAFE_RELEASE(_ptr) \
+  if ((_ptr) != nullptr)   \
+  {                        \
+    (_ptr)->Release();     \
+    (_ptr) = nullptr;      \
+  }
+
 // Raytracer resolution
 static constexpr uint16_t MJ_RT_WIDTH  = 1600;
 static constexpr uint16_t MJ_RT_HEIGHT = 1000;

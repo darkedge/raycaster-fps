@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "map.h"
 #include <SDL.h>
 #include "mj_common.h"

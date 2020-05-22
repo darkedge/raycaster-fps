@@ -25,7 +25,8 @@
     <ClInclude Include="..\..\src\client\editor.h" />
     <ClInclude Include="..\..\src\client\game.h" />
     <ClInclude Include="..\..\src\client\generated\text.h" />
-    <ClInclude Include="..\..\src\client\imgui_win32.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_win32.h" />
     <ClInclude Include="..\..\src\client\map.h" />
     <ClInclude Include="..\..\src\client\logo.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
@@ -33,32 +34,61 @@
     <ClInclude Include="..\..\src\client\mj_platform.h" />
     <ClInclude Include="..\..\src\client\mj_win32.h" />
     <ClInclude Include="..\..\src\client\rasterizer.h" />
+    <ClInclude Include="..\..\src\client\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp" />
-    <ClCompile Include="..\..\3rdparty\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\..\3rdparty\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\3rdparty\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp" />
+    <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\3rdparty\imgui\imgui_demo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\3rdparty\imgui\imgui_draw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\3rdparty\imgui\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\3rdparty\tracy\TracyClient.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\src\client\camera.cpp" />
     <ClCompile Include="..\..\src\client\editor.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
-    <ClCompile Include="..\..\src\client\imgui_win32.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_win32.cpp" />
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\main.cpp" />
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\rasterizer.cpp" />
+    <ClCompile Include="..\..\src\client\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\client\shaders\imgui\fs_imgui_image.sc" />
-    <None Include="..\..\src\client\shaders\imgui\fs_ocornut_imgui.sc" />
-    <None Include="..\..\src\client\shaders\imgui\varying.def.sc" />
-    <None Include="..\..\src\client\shaders\imgui\vs_imgui_image.sc" />
-    <None Include="..\..\src\client\shaders\imgui\vs_ocornut_imgui.sc" />
-    <None Include="..\..\src\client\shaders\rasterizer\fs_rasterizer.sc" />
-    <None Include="..\..\src\client\shaders\rasterizer\varying.def.sc" />
-    <None Include="..\..\src\client\shaders\rasterizer\vs_rasterizer.sc" />
+    <FxCompile Include="..\..\src\client\rasterizer_ps.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="..\..\src\client\rasterizer_vs.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -139,10 +169,11 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -153,6 +184,9 @@
     <PreBuildEvent>
       <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -168,12 +202,13 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -184,6 +219,9 @@
     <PreBuildEvent>
       <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <ClCompile>
@@ -199,12 +237,13 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\Release;..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\SDL2\$(Platform)\Release;..\yojimbo\$(Platform)\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -215,6 +254,9 @@
     <PreBuildEvent>
       <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
     </PreBuildEvent>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

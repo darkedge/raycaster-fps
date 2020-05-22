@@ -1,3 +1,4 @@
+#include "stdafx.h"
 // Win32 platform implementation
 #include "mj_platform.h"
 #include "mj_win32.h"
