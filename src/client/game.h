@@ -16,6 +16,7 @@ namespace game
 
   void Init(HWND hwnd);
   void Resize(int width, int height);
+  void NewFrame();
   void Update(int width, int height);
   void Destroy();
 } // namespace game

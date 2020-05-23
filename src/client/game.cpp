@@ -4,7 +4,6 @@
 #include "rasterizer.h"
 #include "generated/text.h"
 #include "mj_input.h"
-#include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 
 namespace mj
@@ -15,6 +14,10 @@ namespace mj
 static ID3D11Device* s_pDevice;
 static ID3D11DeviceContext* s_pContext;
 static IDXGISwapChain* s_pSwapChain;
+static ID3D11RenderTargetView* s_pRenderTargetView;
+static ID3D11DepthStencilState* s_pDepthStencilState;
+static ID3D11DepthStencilView* s_pDepthStencilView;
+static ID3D11Texture2D* s_pDepthStencilBuffer;
 
 // Helper functions
 
@@ -23,7 +26,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
-  sd.BufferCount                        = 2;
+  sd.BufferCount                        = 1;
   sd.BufferDesc.Width                   = 0;
   sd.BufferDesc.Height                  = 0;
   sd.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -35,7 +38,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   sd.SampleDesc.Count                   = 1;
   sd.SampleDesc.Quality                 = 0;
   sd.Windowed                           = TRUE;
-  sd.SwapEffect                         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+  sd.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
 
   UINT createDeviceFlags = 0;
 #ifdef _DEBUG
@@ -69,7 +72,11 @@ static void CleanupDeviceD3D()
 {
   SAFE_RELEASE(s_pSwapChain);
   SAFE_RELEASE(s_pContext);
+  SAFE_RELEASE(s_pRenderTargetView);
   SAFE_RELEASE(s_pDevice);
+  SAFE_RELEASE(s_pDepthStencilState);
+  SAFE_RELEASE(s_pDepthStencilView);
+  SAFE_RELEASE(s_pDepthStencilBuffer);
 }
 
 static bool s_MouseLook = true;
@@ -109,6 +116,14 @@ static void ShowBuildInfo()
   ImGui::End();
 }
 
+static void CreateRenderTargetView()
+{
+  ID3D11Texture2D* pBackBuffer;
+  s_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+  s_pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &s_pRenderTargetView);
+  pBackBuffer->Release();
+}
+
 void game::Init(HWND hwnd)
 {
   s_Data.s_Width  = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
@@ -119,28 +134,11 @@ void game::Init(HWND hwnd)
   // Setup Platform/Renderer bindings
   MJ_DISCARD(CreateDeviceD3D(hwnd));
 
-  // Setup Dear ImGui context
-  IMGUI_CHECKVERSION();
-  MJ_DISCARD(ImGui::CreateContext());
-  ImGuiIO& io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
-                                                      // io.ConfigViewportsNoAutoMerge = true;
-  // io.ConfigViewportsNoTaskBarIcon = true;
-  // io.ConfigViewportsNoDefaultParent = true;
-  // io.ConfigDockingAlwaysTabBar = true;
-  // io.ConfigDockingTransparentPayload = true;
-
-  // Setup Dear ImGui style
-  ImGui::StyleColorsDark();
-  // ImGui::StyleColorsClassic();
-
-  MJ_DISCARD(ImGui_ImplWin32_Init(hwnd));
   MJ_DISCARD(ImGui_ImplDX11_Init(s_pDevice, s_pContext));
 
-  rs::Init(s_pDevice, s_pSwapChain);
+  CreateRenderTargetView();
+
+  rs::Init(s_pDevice);
 
   // Mouse capture behavior
   if (s_MouseLook)
@@ -158,18 +156,72 @@ void game::Init(HWND hwnd)
       ImGui::GetIO().WantCaptureKeyboard = false;
     }
   }
+
+  {
+    // Depth Stencil
+    D3D11_TEXTURE2D_DESC desc = {};
+
+    desc.ArraySize        = 1;
+    desc.BindFlags        = D3D11_BIND_DEPTH_STENCIL;
+    desc.Format           = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    desc.Width            = 1600;
+    desc.Height           = 1000;
+    desc.MipLevels        = 1;
+    desc.SampleDesc.Count = 1;
+    desc.Usage            = D3D11_USAGE_DEFAULT;
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+    descDSV.Format                        = desc.Format; // DXGI_FORMAT_D32_FLOAT; // DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+    descDSV.ViewDimension                 = D3D11_DSV_DIMENSION_TEXTURE2D;
+    descDSV.Flags                         = 0;
+    descDSV.Texture2D.MipSlice            = 0;
+
+    s_pDevice->CreateTexture2D(&desc, nullptr, &s_pDepthStencilBuffer);
+    s_pDevice->CreateDepthStencilView(s_pDepthStencilBuffer, &descDSV, &s_pDepthStencilView);
+  }
+
+  {
+    D3D11_DEPTH_STENCIL_DESC dsDesc     = {};
+    dsDesc.DepthEnable                  = TRUE;
+    dsDesc.DepthWriteMask               = D3D11_DEPTH_WRITE_MASK_ALL;
+    dsDesc.DepthFunc                    = D3D11_COMPARISON_LESS;
+    dsDesc.StencilEnable                = TRUE;
+    dsDesc.StencilReadMask              = D3D11_DEFAULT_STENCIL_READ_MASK;
+    dsDesc.StencilWriteMask             = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+    dsDesc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+    dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+    dsDesc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
+    dsDesc.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
+    dsDesc.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
+    dsDesc.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_DECR;
+    dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
+    dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
+
+    MJ_DISCARD(s_pDevice->CreateDepthStencilState(&dsDesc, &s_pDepthStencilState));
+  }
+}
+
+static void CleanupRenderTarget()
+{
+  SAFE_RELEASE(s_pRenderTargetView);
 }
 
 void game::Resize(int width, int height)
 {
+  CleanupRenderTarget();
+  s_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+  CreateRenderTargetView();
   rs::Resize(width, height);
+}
+
+void game::NewFrame()
+{
+  // This is a little awkward, but we must call the DX11 NewFrame before calling SDL2 NewFrame.
+  ImGui_ImplDX11_NewFrame();
 }
 
 void game::Update(int width, int height)
 {
-  // Start the Dear ImGui frame
-  ImGui_ImplDX11_NewFrame();
-  ImGui_ImplWin32_NewFrame();
   ImGui::NewFrame();
 
   if (mj::input::GetKeyDown(Key::F3) || mj::input::GetKeyDown(Key::KeyE))
@@ -208,6 +260,9 @@ void game::Update(int width, int height)
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
+  s_pContext->OMSetRenderTargets(1, &s_pRenderTargetView, s_pDepthStencilView);
+  s_pContext->ClearDepthStencilView(s_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  s_pContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
   rs::Update(s_pContext, width, height, &s_Data);
 
 #if 1
@@ -244,6 +299,5 @@ void game::Destroy()
   rs::Destroy();
   CleanupDeviceD3D();
   ImGui_ImplDX11_Shutdown();
-  ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
 }

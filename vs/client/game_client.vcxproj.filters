@@ -22,9 +22,9 @@
     <ClCompile Include="..\..\src\client\game.cpp" />
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\editor.cpp" />
-    <ClCompile Include="..\..\src\client\imgui_impl_win32.cpp" />
     <ClCompile Include="..\..\src\client\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\..\src\client\stdafx.cpp" />
+    <ClCompile Include="..\..\src\client\imgui_impl_sdl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\client\logo.h" />
@@ -58,8 +58,8 @@
     <ClInclude Include="..\..\src\client\map.h" />
     <ClInclude Include="..\..\src\client\editor.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
-    <ClInclude Include="..\..\src\client\imgui_impl_win32.h" />
     <ClInclude Include="..\..\src\client\stdafx.h" />
+    <ClInclude Include="..\..\src\client\imgui_impl_sdl.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

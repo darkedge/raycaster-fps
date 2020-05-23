@@ -19,12 +19,8 @@ static ID3D11VertexShader* s_pVertexShader;
 static ID3D11PixelShader* s_pPixelShader;
 static ID3D11ShaderResourceView* s_pShaderResourceView;
 static ID3D11InputLayout* s_pInputLayout;
-static ID3D11DepthStencilState* s_pDepthStencilState;
-static ID3D11DepthStencilView* s_pDepthStencilView;
-static ID3D11Texture2D* s_pDepthStencilBuffer;
 static ID3D11RasterizerState* s_pRasterizerState;
 static ID3D11BlendState* s_pBlendState;
-static ID3D11RenderTargetView* s_pRenderTargetView;
 static ID3D11Buffer* s_pResource;
 static UINT s_Indices;
 
@@ -332,20 +328,13 @@ static void LoadLevel(ID3D11Device* pDevice)
   }
 }
 
-void rs::Init(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
+void rs::Init(ID3D11Device* pDevice)
 {
   MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &s_pVertexShader));
   // SetDebugName(s_pVertexShader, "s_pVertexShader");
   MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &s_pPixelShader));
   // SetDebugName(s_pPixelShader, "s_pPixelShader");
   LoadLevel(pDevice);
-
-  {
-    ID3D11Texture2D* pBackBuffer;
-    pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &s_pRenderTargetView);
-    pBackBuffer->Release();
-  }
 
   {
     D3D11_INPUT_ELEMENT_DESC desc[2] = {};
@@ -383,49 +372,6 @@ void rs::Init(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
   }
 
   InitTexture2DArray(pDevice);
-
-  {
-    // Depth Stencil
-    D3D11_TEXTURE2D_DESC desc = {};
-
-    desc.ArraySize        = 1;
-    desc.BindFlags        = D3D11_BIND_DEPTH_STENCIL;
-    desc.Format           = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    desc.Width            = 1600;
-    desc.Height           = 1000;
-    desc.MipLevels        = 1;
-    desc.SampleDesc.Count = 1;
-    desc.Usage            = D3D11_USAGE_DEFAULT;
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-    descDSV.Format                        = desc.Format; // DXGI_FORMAT_D32_FLOAT; // DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-    descDSV.ViewDimension                 = D3D11_DSV_DIMENSION_TEXTURE2D;
-    descDSV.Flags                         = 0;
-    descDSV.Texture2D.MipSlice            = 0;
-
-    pDevice->CreateTexture2D(&desc, nullptr, &s_pDepthStencilBuffer);
-    pDevice->CreateDepthStencilView(s_pDepthStencilBuffer, &descDSV, &s_pDepthStencilView);
-  }
-
-  {
-    D3D11_DEPTH_STENCIL_DESC dsDesc     = {};
-    dsDesc.DepthEnable                  = TRUE;
-    dsDesc.DepthWriteMask               = D3D11_DEPTH_WRITE_MASK_ALL;
-    dsDesc.DepthFunc                    = D3D11_COMPARISON_LESS;
-    dsDesc.StencilEnable                = TRUE;
-    dsDesc.StencilReadMask              = D3D11_DEFAULT_STENCIL_READ_MASK;
-    dsDesc.StencilWriteMask             = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-    dsDesc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-    dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-    dsDesc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-    dsDesc.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-    dsDesc.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
-    dsDesc.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_DECR;
-    dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
-    dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
-
-    MJ_DISCARD(pDevice->CreateDepthStencilState(&dsDesc, &s_pDepthStencilState));
-  }
 
   {
     D3D11_BLEND_DESC bs = {};
@@ -468,7 +414,7 @@ void rs::Resize(int width, int height)
   MJ_DISCARD(height);
 }
 
-void rs::Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game::Data* pData)
+void rs::Update(ID3D11DeviceContext* pContext, int width, int height, game::Data* pData)
 {
   glm::mat4 translate  = glm::identity<glm::mat4>();
   translate            = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
@@ -477,20 +423,19 @@ void rs::Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game
   glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
 
   glm::mat4 vp = projection * view;
-  pDeviceContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
-  pDeviceContext->ClearDepthStencilView(s_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  pContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
 
   // Input Assembler
-  pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  pDeviceContext->IASetInputLayout(s_pInputLayout);
-  pDeviceContext->IASetIndexBuffer(s_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
+  pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  pContext->IASetInputLayout(s_pInputLayout);
+  pContext->IASetIndexBuffer(s_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
   UINT strides[] = { sizeof(Vertex) };
   UINT offsets[] = { 0 };
-  pDeviceContext->IASetVertexBuffers(0, 1, &s_pVertexBuffer, strides, offsets);
+  pContext->IASetVertexBuffers(0, 1, &s_pVertexBuffer, strides, offsets);
 
   // Vertex Shader
-  pDeviceContext->VSSetShader(s_pVertexShader, nullptr, 0);
-  pDeviceContext->VSSetConstantBuffers(0, 1, &s_pResource);
+  pContext->VSSetShader(s_pVertexShader, nullptr, 0);
+  pContext->VSSetConstantBuffers(0, 1, &s_pResource);
 
   // Rasterizer
   D3D11_VIEWPORT viewport = {};
@@ -500,20 +445,18 @@ void rs::Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game
   viewport.Height         = (float)height;
   viewport.MinDepth       = 0.0f;
   viewport.MaxDepth       = 1.0f;
-  pDeviceContext->RSSetViewports(1, &viewport);
-  pDeviceContext->RSSetState(s_pRasterizerState);
+  pContext->RSSetViewports(1, &viewport);
+  pContext->RSSetState(s_pRasterizerState);
 
   // Pixel Shader
-  pDeviceContext->PSSetShaderResources(0, 1, &s_pShaderResourceView);
-  pDeviceContext->PSSetShader(s_pPixelShader, nullptr, 0);
-  pDeviceContext->PSSetSamplers(0, 1, &s_pTextureSamplerState);
+  pContext->PSSetShaderResources(0, 1, &s_pShaderResourceView);
+  pContext->PSSetShader(s_pPixelShader, nullptr, 0);
+  pContext->PSSetSamplers(0, 1, &s_pTextureSamplerState);
 
   // Output Merger
-  pDeviceContext->OMSetRenderTargets(1, &s_pRenderTargetView, s_pDepthStencilView);
-  pDeviceContext->OMSetBlendState(s_pBlendState, nullptr, 0xFFFFFFFF);
-  pDeviceContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
+  pContext->OMSetBlendState(s_pBlendState, nullptr, 0xFFFFFFFF);
 
-  pDeviceContext->DrawIndexed(s_Indices, 0, 0);
+  pContext->DrawIndexed(s_Indices, 0, 0);
 }
 
 void rs::Destroy()
@@ -527,10 +470,6 @@ void rs::Destroy()
   SAFE_RELEASE(s_pPixelShader);
   SAFE_RELEASE(s_pInputLayout);
   SAFE_RELEASE(s_pResource);
-  SAFE_RELEASE(s_pDepthStencilState);
-  SAFE_RELEASE(s_pDepthStencilView);
   SAFE_RELEASE(s_pRasterizerState);
   SAFE_RELEASE(s_pBlendState);
-  SAFE_RELEASE(s_pDepthStencilBuffer);
-  SAFE_RELEASE(s_pRenderTargetView);
 }
