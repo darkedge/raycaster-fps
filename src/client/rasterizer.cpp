@@ -11,11 +11,8 @@
 #include <bx/error.h>
 #include <d3d11.h>
 
-// Texture2DArray
 static ID3D11Texture2D* s_pTextureArray;
 static ID3D11SamplerState* s_pTextureSamplerState;
-
-// Vertex buffer
 static ID3D11Buffer* s_pVertexBuffer;
 static ID3D11Buffer* s_pIndexBuffer;
 static ID3D11VertexShader* s_pVertexShader;
@@ -28,7 +25,6 @@ static ID3D11Texture2D* s_pDepthStencilBuffer;
 static ID3D11RasterizerState* s_pRasterizerState;
 static ID3D11BlendState* s_pBlendState;
 static ID3D11RenderTargetView* s_pRenderTargetView;
-
 static ID3D11Buffer* s_pResource;
 static UINT s_Indices;
 

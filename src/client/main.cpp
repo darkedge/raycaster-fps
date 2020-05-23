@@ -3,11 +3,7 @@
 #include "mj_input.h"
 #include "game.h"
 #include "logo.h"
-
-#if BX_PLATFORM_WINDOWS
-#include "mj_win32.h"
-#include "imgui_win32.h"
-#endif
+#include "mj_platform.h"
 
 // WARNING: global variable
 static float mj_DeltaTime;
@@ -179,6 +175,31 @@ static void PumpEvents(EventData* pEventData)
   }
 }
 
+struct Time
+{
+  Uint64 lastTime;
+  Uint64 perfFreq;
+};
+
+static void InitDeltaTime(Time* pTime)
+{
+  pTime->lastTime = SDL_GetPerformanceCounter();
+  pTime->perfFreq = SDL_GetPerformanceFrequency();
+}
+
+static void UpdateDeltaTime(Time* pTime)
+{
+  Uint64 now    = SDL_GetPerformanceCounter();
+  Uint64 counts = now - pTime->lastTime;
+  float dt      = (float)counts / pTime->perfFreq;
+  if (dt > (1.0f / 60.0f))
+  {
+    dt = 1.0f / 60.0f;
+  }
+  mj_DeltaTime    = dt;
+  pTime->lastTime = now;
+}
+
 int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR pCmdLine,
                           _In_ int nCmdShow)
 {
@@ -186,8 +207,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   MJ_DISCARD(hPrevInstance);
   MJ_DISCARD(pCmdLine);
   MJ_DISCARD(nCmdShow);
-#if BX_PLATFORM_WINDOWS && defined(_DEBUG)
-  mj::win32::CreateConsoleWindow();
+#ifdef _DEBUG
+  mj::CreateConsoleWindow();
 #endif
 
   SDL_SetMainReady();
@@ -212,27 +233,16 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   mj::input::Init();
 
-  Uint64 lastTime = SDL_GetPerformanceCounter();
-  Uint64 perfFreq = SDL_GetPerformanceFrequency();
+  MJ_UNINITIALIZED Time time;
+  InitDeltaTime(&time);
 
   // Run message pump.
   while (!eventData.exit)
   {
     ZoneScopedNC("Game loop", tracy::Color::CornflowerBlue);
     PumpEvents(&eventData);
-
     mj::input::Update();
-
-    Uint64 now    = SDL_GetPerformanceCounter();
-    Uint64 counts = now - lastTime;
-    float dt      = (float)counts / perfFreq;
-    if (dt > (1.0f / 60.0f))
-    {
-      dt = 1.0f / 60.0f;
-    }
-    mj_DeltaTime = dt;
-    lastTime     = now;
-
+    UpdateDeltaTime(&time);
     game::Update(eventData.width, eventData.height);
     FrameMark;
   }

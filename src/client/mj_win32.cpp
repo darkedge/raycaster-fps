@@ -1,7 +1,6 @@
 #include "stdafx.h"
 // Win32 platform implementation
 #include "mj_platform.h"
-#include "mj_win32.h"
 #include "mj_common.h"
 
 #include <imgui.h>
@@ -13,7 +12,7 @@
 #include <Shlwapi.h>  // PathRemoveFileSpecW
 #include <stdio.h>
 
-void mj::win32::CreateConsoleWindow()
+void mj::CreateConsoleWindow()
 {
   MJ_DISCARD(AllocConsole());
   MJ_DISCARD(freopen("CONIN$", "r", stdin));

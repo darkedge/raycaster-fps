@@ -148,13 +148,13 @@ void game::Init(HWND hwnd)
     if (mj::IsWindowMouseFocused())
     {
       MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
-      ImGui::GetIO().WantCaptureMouse = true;
+      ImGui::GetIO().WantCaptureMouse    = true;
       ImGui::GetIO().WantCaptureKeyboard = true;
     }
     else
     {
-      s_MouseLook = false;
-      ImGui::GetIO().WantCaptureMouse = false;
+      s_MouseLook                        = false;
+      ImGui::GetIO().WantCaptureMouse    = false;
       ImGui::GetIO().WantCaptureKeyboard = false;
     }
   }

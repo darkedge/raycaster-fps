@@ -49,7 +49,6 @@
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
     <ClInclude Include="..\..\src\client\mj_platform.h" />
-    <ClInclude Include="..\..\src\client\mj_win32.h" />
     <ClInclude Include="..\..\src\client\camera.h" />
     <ClInclude Include="..\..\src\client\generated\text.h">
       <Filter>generated</Filter>

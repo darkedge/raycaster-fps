@@ -2,4 +2,5 @@
 
 namespace mj
 {
+  void CreateConsoleWindow();
 }
