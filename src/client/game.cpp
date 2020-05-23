@@ -32,7 +32,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
-  sd.BufferCount                        = 1;
+  sd.BufferCount                        = 2;
   sd.BufferDesc.Width                   = 0;
   sd.BufferDesc.Height                  = 0;
   sd.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -44,7 +44,7 @@ static bool CreateDeviceD3D(HWND hWnd)
   sd.SampleDesc.Count                   = 1;
   sd.SampleDesc.Quality                 = 0;
   sd.Windowed                           = TRUE;
-  sd.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
+  sd.SwapEffect                         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
   UINT createDeviceFlags = 0;
 #ifdef _DEBUG
@@ -55,10 +55,21 @@ static bool CreateDeviceD3D(HWND hWnd)
     D3D_FEATURE_LEVEL_11_0,
     D3D_FEATURE_LEVEL_10_0,
   };
-  if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2,
-                                    D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel,
+  if (D3D11CreateDeviceAndSwapChain(nullptr,                  //
+                                    D3D_DRIVER_TYPE_HARDWARE, //
+                                    nullptr,                  //
+                                    createDeviceFlags,        //
+                                    featureLevelArray,        //
+                                    2,                        //
+                                    D3D11_SDK_VERSION,        //
+                                    &sd,                      //
+                                    &g_pSwapChain,            //
+                                    &g_pd3dDevice,            //
+                                    &featureLevel,            //
                                     &g_pd3dDeviceContext) != S_OK)
+  {
     return false;
+  }
 
   CreateRenderTarget();
   return true;
@@ -83,7 +94,6 @@ static void CleanupDeviceD3D()
 
 static bool s_MouseLook = true;
 static game::Data s_Data;
-// static const bgfx::ViewId s_RsViewId = 1;
 
 static void Reset()
 {
@@ -146,7 +156,6 @@ void game::Init(HWND hwnd)
       s_MouseLook = false;
     }
   }
-  // bgfx::setViewName(s_RsViewId, "RasterizerViewId");
 }
 
 void game::Resize(int width, int height)
@@ -197,9 +206,6 @@ void game::Update(int width, int height)
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
-  // Only clear first view as they both render to the same render target
-  // Otherwise we clear twice inbetween renders
-  // bgfx::setViewClear(s_RsViewId, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH);
   g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
   rs::Update(g_pd3dDeviceContext, width, height, &s_Data);
 
@@ -212,18 +218,14 @@ void game::Update(int width, int height)
 
   {
     ZoneScopedNC("ImGui render", tracy::Color::BlanchedAlmond);
-    // imguiEndFrame();
 
     // Rendering
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
   }
 
-  // Use debug font to print information about this example.
-  // bgfx::setDebug(BGFX_DEBUG_STATS);
-
   {
-    ZoneScopedNC("bgfx::frame()", tracy::Color::Azure);
+    ZoneScopedNC("Swap Chain Present", tracy::Color::Azure);
     g_pSwapChain->Present(1, 0); // Present with vsync
     // g_pSwapChain->Present(0, 0); // Present without vsync
     FrameMark;

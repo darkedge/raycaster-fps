@@ -12,43 +12,31 @@
 #include <d3d11.h>
 
 // Texture2DArray
-static ID3D11Texture2D* s_pTexture;
+static ID3D11Texture2D* s_pTextureArray;
 static ID3D11SamplerState* s_pTextureSamplerState;
-static ID3D11ShaderResourceView* s_pTextureSrv;
 
-#if 0
-// bgfx shaderc outputs
-#include "shaders/rasterizer/vs_rasterizer.h"
-#include "shaders/rasterizer/fs_rasterizer.h"
+// Vertex buffer
+static ID3D11Buffer* s_pVertexBuffer;
+static ID3D11Buffer* s_pIndexBuffer;
+static ID3D11VertexShader* s_pVertexShader;
+static ID3D11PixelShader* s_pPixelShader;
+static ID3D11ShaderResourceView* s_pShaderResourceView;
+static ID3D11InputLayout* s_pInputLayout;
+static ID3D11DepthStencilState* s_pDepthStencilState;
+
+static ID3D11Buffer* s_pResource;
+static UINT s_Indices;
+
+static bx::DefaultAllocator s_defaultAllocator;
+
+#include "generated/rasterizer_vs.h"
+#include "generated/rasterizer_ps.h"
 
 struct Vertex
 {
   glm::vec3 position;
-  // glm::vec3 normal;
   glm::vec3 texCoord;
-  static void Init()
-  {
-    s_VertexLayout.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        //.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 3, bgfx::AttribType::Float)
-        .end();
-  }
-  static bgfx::VertexLayout s_VertexLayout;
 };
-bgfx::VertexLayout Vertex::s_VertexLayout;
-
-static bgfx::VertexLayout s_ScreenTriangleVertexLayout;
-static bgfx::UniformHandle s_ScreenTriangleSampler;
-
-static bgfx::ProgramHandle s_RasterizerProgram;
-static bgfx::VertexBufferHandle s_VertexBufferHandle;
-static bgfx::IndexBufferHandle s_IndexBufferHandle;
-static bgfx::TextureHandle s_RasterizerTextureArray;
-
-static bx::DefaultAllocator s_defaultAllocator;
-
-static bgfx::UniformHandle s_uTextureArray;
 
 static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
 {
@@ -155,7 +143,7 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   indices.push_back(oldVertexCount + 3);
 }
 
-static void CreateMesh(map::map_t map)
+static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
 {
   int32_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -222,26 +210,44 @@ static void CreateMesh(map::map_t map)
   }
 
   {
-    // Create vertex buffer.
-    const bgfx::Memory* mem = bgfx::copy(vertices.data(), uint32_t(vertices.size() * sizeof(vertices[0])));
-    if (mem)
-    {
-      s_VertexBufferHandle = bgfx::createVertexBuffer(mem, Vertex::s_VertexLayout);
-      bgfx::setName(s_VertexBufferHandle, "Rasterizer Vertex Buffer");
-    }
+    // Fill in a buffer description.
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = uint32_t(vertices.size() * sizeof(vertices[0]));
+    bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Fill in the subresource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = vertices.data();
+    InitData.SysMemPitch      = sizeof(vertices[0]);
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the vertex buffer.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &s_pVertexBuffer));
   }
   {
-    // Create index buffer.
-    const bgfx::Memory* mem = bgfx::copy(indices.data(), uint32_t(indices.size() * sizeof(indices[0])));
-    if (mem)
-    {
-      s_IndexBufferHandle = bgfx::createIndexBuffer(mem);
-      bgfx::setName(s_IndexBufferHandle, "Rasterizer Index Buffer");
-    }
+    s_Indices = (UINT)indices.size();
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = uint32_t(indices.size() * sizeof(indices[0]));
+    bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Define the resource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = indices.data();
+    InitData.SysMemPitch      = sizeof(indices[0]);
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the buffer with the device.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &s_pIndexBuffer));
   }
 }
 
-static void InitTexture2DArray()
+static void InitTexture2DArray(ID3D11Device* pDevice)
 {
   MJ_UNINITIALIZED size_t datasize;
   void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
@@ -252,49 +258,139 @@ static void InitTexture2DArray()
 
     if (pImageContainer)
     {
-      const bgfx::Memory* pMemory = bgfx::copy(pImageContainer->m_data, pImageContainer->m_size);
-      s_RasterizerTextureArray =
-          bgfx::createTexture2D((uint16_t)pImageContainer->m_width, (uint16_t)pImageContainer->m_height, false,
-                                pImageContainer->m_numLayers, (bgfx::TextureFormat::Enum)pImageContainer->m_format,
-                                BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIN_POINT, pMemory);
-      bgfx::setName(s_RasterizerTextureArray, "s_RasterizerTextureArray");
+      D3D11_TEXTURE2D_DESC desc = {};
+      desc.Width                = pImageContainer->m_width;
+      desc.Height               = pImageContainer->m_height;
+      desc.MipLevels            = pImageContainer->m_numMips;
+      desc.ArraySize            = pImageContainer->m_numLayers;
+      desc.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
+      desc.SampleDesc.Count     = 1;
+      desc.SampleDesc.Quality   = 0;
+      desc.Usage                = D3D11_USAGE_IMMUTABLE;
+      desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
+      desc.CPUAccessFlags       = 0;
+      desc.MiscFlags            = 0;
+
+      pImageContainer->m_offset = UINT32_MAX;
+      D3D11_SUBRESOURCE_DATA* srd =
+          (D3D11_SUBRESOURCE_DATA*)alloca(pImageContainer->m_numLayers * sizeof(D3D11_SUBRESOURCE_DATA));
+      MJ_UNINITIALIZED bimg::ImageMip mip;
+      for (uint16_t i = 0; i < pImageContainer->m_numLayers; i++)
+      {
+        const uint8_t lod = 0;
+        if (bimg::imageGetRawData(*pImageContainer, i, lod, nullptr, 0, MJ_REF mip))
+        {
+          srd[i].pSysMem          = mip.m_data;
+          srd[i].SysMemPitch      = mip.m_width * mip.m_bpp / 8;
+          srd[i].SysMemSlicePitch = 0;
+        }
+      }
+
+      MJ_DISCARD(pDevice->CreateTexture2D(&desc, srd, &s_pTextureArray));
+
+      D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+      srvDesc.Format                          = desc.Format;
+      srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+      srvDesc.Texture2DArray.MostDetailedMip  = 0;
+      srvDesc.Texture2DArray.MipLevels        = 1;
+      srvDesc.Texture2DArray.FirstArraySlice  = 0;
+      srvDesc.Texture2DArray.ArraySize        = pImageContainer->m_numLayers;
+
+      MJ_DISCARD(pDevice->CreateShaderResourceView(s_pTextureArray, &srvDesc, &s_pShaderResourceView));
+
+      D3D11_SAMPLER_DESC samplerDesc = {};
+      samplerDesc.Filter             = D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
+      samplerDesc.AddressU           = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.AddressV           = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.AddressW           = D3D11_TEXTURE_ADDRESS_WRAP;
+      samplerDesc.MipLODBias         = 0.0f;
+      samplerDesc.MaxAnisotropy      = 16;
+      samplerDesc.ComparisonFunc     = D3D11_COMPARISON_LESS_EQUAL;
+      samplerDesc.BorderColor[0]     = 0.0f;
+      samplerDesc.BorderColor[1]     = 0.0f;
+      samplerDesc.BorderColor[2]     = 0.0f;
+      samplerDesc.BorderColor[3]     = 0.0f;
+      samplerDesc.MinLOD             = 0.0f;
+      samplerDesc.MaxLOD             = D3D11_FLOAT32_MAX;
+      pDevice->CreateSamplerState(&samplerDesc, &s_pTextureSamplerState);
+
       bimg::imageFree(pImageContainer);
-      s_uTextureArray = bgfx::createUniform("s_TextureArray", bgfx::UniformType::Sampler);
     }
 
     SDL_free(pFile);
   }
 }
 
-static void LoadLevel()
+static void LoadLevel(ID3D11Device* pDevice)
 {
   auto map = map::Load("e1m1.mjm");
   if (map::Valid(map))
   {
-    CreateMesh(map);
+    CreateMesh(map, pDevice);
     map::Free(map);
   }
 }
-#endif
 
 void rs::Init(ID3D11Device* pDevice)
 {
-#if 0
-  // Rasterizer shader
-  auto vsh = bgfx::createShader(bgfx::makeRef(vs_rasterizer, sizeof(vs_rasterizer)));
-  bgfx::setName(vsh, "Rasterizer Vertex Shader");
-  auto fsh = bgfx::createShader(bgfx::makeRef(fs_rasterizer, sizeof(fs_rasterizer)));
-  bgfx::setName(fsh, "Rasterizer Fragment Shader");
-  s_RasterizerProgram = bgfx::createProgram(vsh, fsh, true);
+  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &s_pVertexShader));
+  // SetDebugName(s_pVertexShader, "s_pVertexShader");
+  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &s_pPixelShader));
+  // SetDebugName(s_pPixelShader, "s_pPixelShader");
+  LoadLevel(pDevice);
 
-  Vertex::Init();
-  LoadLevel();
+  {
+    D3D11_INPUT_ELEMENT_DESC desc[2] = {};
 
-  s_ScreenTriangleSampler = bgfx::createUniform("SampleType", bgfx::UniformType::Sampler);
-  s_ScreenTriangleVertexLayout.begin().add(bgfx::Attrib::Indices, 1, bgfx::AttribType::Float).end();
+    // float3 a_position : POSITION
+    desc[0].SemanticName         = "POSITION";
+    desc[0].SemanticIndex        = 0;
+    desc[0].Format               = DXGI_FORMAT_R32G32B32_FLOAT;
+    desc[0].InputSlot            = 0;
+    desc[0].AlignedByteOffset    = 0;
+    desc[0].InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
+    desc[0].InstanceDataStepRate = 0;
 
-  InitTexture2DArray();
-#endif
+    // float3 a_texcoord0 : TEXCOORD0
+    desc[1].SemanticName         = "TEXCOORD";
+    desc[1].SemanticIndex        = 0;
+    desc[1].Format               = DXGI_FORMAT_R32G32B32_FLOAT;
+    desc[1].InputSlot            = 0;
+    desc[1].AlignedByteOffset    = 0;
+    desc[1].InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
+    desc[1].InstanceDataStepRate = 0;
+
+    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), &s_pInputLayout));
+  }
+
+  D3D11_BUFFER_DESC desc   = {};
+  desc.ByteWidth           = sizeof(glm::mat4);
+  desc.Usage               = D3D11_USAGE_DEFAULT;
+  desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
+  desc.CPUAccessFlags      = 0;
+  desc.MiscFlags           = 0;
+  desc.StructureByteStride = 0;
+  MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, &s_pResource));
+
+  InitTexture2DArray(pDevice);
+
+  D3D11_DEPTH_STENCIL_DESC dsDesc     = {};
+  dsDesc.DepthEnable                  = TRUE;
+  dsDesc.DepthWriteMask               = D3D11_DEPTH_WRITE_MASK_ZERO;
+  dsDesc.DepthFunc                    = D3D11_COMPARISON_LESS_EQUAL;
+  dsDesc.StencilEnable                = FALSE;
+  dsDesc.StencilReadMask              = 0;
+  dsDesc.StencilWriteMask             = 0;
+  dsDesc.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+  dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+  dsDesc.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
+  dsDesc.FrontFace.StencilFunc        = D3D11_COMPARISON_LESS_EQUAL;
+  dsDesc.BackFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
+  dsDesc.BackFace.StencilDepthFailOp  = D3D11_STENCIL_OP_KEEP;
+  dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
+  dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_LESS_EQUAL;
+
+  MJ_DISCARD(pDevice->CreateDepthStencilState(&dsDesc, &s_pDepthStencilState));
 }
 
 void rs::Resize(int width, int height)
@@ -305,39 +401,64 @@ void rs::Resize(int width, int height)
 
 void rs::Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game::Data* pData)
 {
-}
-
-#if 0
-void rs::Update(bgfx::ViewId viewId, int width, int height, game::Data* pData)
-{
-  glm::mat4 translate = glm::identity<glm::mat4>();
-  translate           = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
-  glm::mat4 rotate    = glm::transpose(glm::eulerAngleY(pData->s_Camera.yaw));
-
+  glm::mat4 translate  = glm::identity<glm::mat4>();
+  translate            = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
+  glm::mat4 rotate     = glm::transpose(glm::eulerAngleY(pData->s_Camera.yaw));
   glm::mat4 view       = rotate * translate;
   glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
 
-  bgfx::setViewRect(viewId, 0, 0, bgfx::BackbufferRatio::Equal);
-  bgfx::setViewTransform(viewId, &view, &projection);
-
-  bgfx::setTexture(0, s_uTextureArray, s_RasterizerTextureArray);
-  bgfx::setVertexBuffer(0, s_VertexBufferHandle);
-  bgfx::setIndexBuffer(s_IndexBufferHandle);
+#if 0
   bgfx::setState(BGFX_STATE_CULL_CW | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
                  BGFX_STATE_DEPTH_TEST_LESS);
-
-  bgfx::submit(viewId, s_RasterizerProgram);
-}
 #endif
+  glm::mat4 vp = projection * view;
+  pDeviceContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
+
+  // Input Assembler
+  pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  pDeviceContext->IASetInputLayout(s_pInputLayout);
+  pDeviceContext->IASetIndexBuffer(s_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
+  UINT strides[] = { sizeof(Vertex) };
+  UINT offsets[] = { 0 };
+  pDeviceContext->IASetVertexBuffers(0, 1, &s_pVertexBuffer, strides, offsets);
+
+  // Vertex Shader
+  pDeviceContext->VSSetShader(s_pVertexShader, nullptr, 0);
+  pDeviceContext->VSSetConstantBuffers(0, 1, &s_pResource);
+
+  // Rasterizer
+  D3D11_VIEWPORT viewport = {};
+  viewport.TopLeftX       = 0;
+  viewport.TopLeftY       = 0;
+  viewport.Width          = (float)width;
+  viewport.Height         = (float)height;
+  viewport.MinDepth       = 0.0f;
+  viewport.MaxDepth       = 1.0f;
+  pDeviceContext->RSSetViewports(1, &viewport);
+
+  // Pixel Shader
+  pDeviceContext->PSSetShaderResources(0, 1, &s_pShaderResourceView);
+  pDeviceContext->PSSetShader(s_pPixelShader, nullptr, 0);
+  pDeviceContext->PSSetSamplers(0, 1, &s_pTextureSamplerState);
+
+  // Output Merger
+  // pDeviceContext->OMSetRenderTargets;
+  // pDeviceContext->OMSetBlendState;
+  pDeviceContext->OMSetDepthStencilState(s_pDepthStencilState, 0);
+
+  pDeviceContext->DrawIndexed(s_Indices, 0, 0);
+}
 
 void rs::Destroy()
 {
-#if 0
-  bgfx::destroy(s_RasterizerProgram);
-  bgfx::destroy(s_RasterizerTextureArray);
-  bgfx::destroy(s_VertexBufferHandle);
-  bgfx::destroy(s_IndexBufferHandle);
-  bgfx::destroy(s_uTextureArray);
-  bgfx::destroy(s_ScreenTriangleSampler);
-#endif
+  SAFE_RELEASE(s_pTextureArray);
+  SAFE_RELEASE(s_pTextureSamplerState);
+  SAFE_RELEASE(s_pShaderResourceView);
+  SAFE_RELEASE(s_pVertexBuffer);
+  SAFE_RELEASE(s_pIndexBuffer);
+  SAFE_RELEASE(s_pVertexShader);
+  SAFE_RELEASE(s_pPixelShader);
+  SAFE_RELEASE(s_pInputLayout);
+  SAFE_RELEASE(s_pResource);
+  SAFE_RELEASE(s_pDepthStencilState);
 }

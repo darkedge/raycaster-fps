@@ -13,11 +13,8 @@ float4 bgfxTexture2DArrayLod(BgfxSampler2DArray _sampler, float3 _coord, float _
   return _sampler.m_texture.SampleLevel(_sampler.m_sampler, _coord, _lod);
 }
 
-float4 vec4_splat(float _x) { return float4(_x, _x, _x, _x); }
-
 void main(float4 gl_FragCoord : SV_POSITION, float3 v_texcoord0 : TEXCOORD0, out float4 bgfx_FragData0 : SV_TARGET0)
 {
-  float4 bgfx_VoidFrag = vec4_splat(0.0);
-  v_texcoord0.y        = (1.0 - v_texcoord0.y);
-  bgfx_FragData0       = bgfxTexture2DArrayLod(s_TextureArray, v_texcoord0, 0);
+  v_texcoord0.y  = (1.0 - v_texcoord0.y);
+  bgfx_FragData0 = bgfxTexture2DArrayLod(s_TextureArray, v_texcoord0, 0);
 }

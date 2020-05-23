@@ -55,59 +55,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   SDL_VERSION(&wmInfo.version);
   SDL_GetWindowWMInfo(s_pWindow, &wmInfo);
 
-#if 0
-  // Initialize bgfx using the native window handle and window resolution.
-  bgfx::Init init;
-
-  SDL_SysWMinfo wmInfo;
-  SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(s_pWindow, &wmInfo);
-#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-  init.platformData.ndt = wmInfo.info.x11.display;
-  init.platformData.nwh = (void*)(uintptr_t)wmInfo.info.x11.window;
-#elif BX_PLATFORM_OSX
-  init.platformData.nwh = wmInfo.info.cocoa.window;
-#elif BX_PLATFORM_WINDOWS
-  init.platformData.nwh = wmInfo.info.win.window;
-#endif
-#if defined(MJ_DEBUG)
-  init.debug = true;
-#elif defined(MJ_PROFILE)
-  init.profile          = true;
-#endif
-
-#if 0
-  HKEY hKey;
-  LSTATUS lRes = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Video\\{4EE067DF-C76E-11E9-9E1B-8F5419C8F7F3}\\0000", 0, KEY_READ, &hKey);
-  if (lRes == ERROR_SUCCESS)
-  {
-    BYTE szBuffer[1024];
-    DWORD dwBufferSize = sizeof(szBuffer);
-    DWORD type;
-    lRes = RegQueryValueExW(hKey, L"DriverVersion", 0, &type, szBuffer, &dwBufferSize);
-    if (lRes == ERROR_SUCCESS)
-    {
-        printf("%ws\n", (wchar_t*)szBuffer);
-    }
-  }
-#endif
-
-  uint32_t resetFlags = BGFX_RESET_NONE; // BGFX_RESET_FLIP_AFTER_RENDER | BGFX_RESET_FLUSH_AFTER_RENDER;
-
-  init.resolution.width           = width;
-  init.resolution.height          = height;
-  init.resolution.reset           = resetFlags;
-  init.resolution.numBackBuffers  = 1;
-  init.resolution.maxFrameLatency = 1;
-  if (!bgfx::init(init))
-  {
-    return 1;
-  }
-#endif
-
   game::Init(wmInfo.info.win.window);
-
-  // imguiCreate();
 
   int32_t mouseX      = 0;
   int32_t mouseY      = 0;
@@ -139,17 +87,17 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
         break;
         case SDL_MOUSEBUTTONUP:
         {
-          const SDL_MouseButtonEvent& e = event.button;
-          switch (e.button)
+          auto io = ImGui::GetIO();
+          switch (event.button.button)
           {
           case SDL_BUTTON_LEFT:
-            // mouseMask &= ~IMGUI_MBUT_LEFT;
+            io.MouseDown[ImGuiMouseButton_Left] = false;
             break;
           case SDL_BUTTON_MIDDLE:
-            // mouseMask &= ~IMGUI_MBUT_MIDDLE;
+            io.MouseDown[ImGuiMouseButton_Middle] = false;
             break;
           case SDL_BUTTON_RIGHT:
-            // mouseMask &= ~IMGUI_MBUT_RIGHT;
+            io.MouseDown[ImGuiMouseButton_Right] = false;
           default:
             break;
           }
@@ -157,17 +105,17 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
         break;
         case SDL_MOUSEBUTTONDOWN:
         {
-          const SDL_MouseButtonEvent& e = event.button;
-          switch (e.button)
+          auto io = ImGui::GetIO();
+          switch (event.button.button)
           {
           case SDL_BUTTON_LEFT:
-            // mouseMask |= IMGUI_MBUT_LEFT;
+            io.MouseDown[ImGuiMouseButton_Left] = true;
             break;
           case SDL_BUTTON_MIDDLE:
-            // mouseMask |= IMGUI_MBUT_MIDDLE;
+            io.MouseDown[ImGuiMouseButton_Middle] = true;
             break;
           case SDL_BUTTON_RIGHT:
-            // mouseMask |= IMGUI_MBUT_RIGHT;
+            io.MouseDown[ImGuiMouseButton_Right] = true;
             break;
           default:
             break;
@@ -197,7 +145,6 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
             height = wev.data2;
 
             game::Resize(width, height);
-            // bgfx::reset((uint32_t)width, (uint32_t)height, resetFlags);
           }
           break;
           default:
@@ -266,20 +213,15 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
     mj::input::Update();
 
-    Uint64 now     = SDL_GetPerformanceCounter();
+    Uint64 now    = SDL_GetPerformanceCounter();
     Uint64 counts = now - lastTime;
-    float dt        = (float)counts / perfFreq;
+    float dt      = (float)counts / perfFreq;
     if (dt > (1.0f / 60.0f))
     {
       dt = 1.0f / 60.0f;
     }
     mj_DeltaTime = dt;
     lastTime     = now;
-
-    {
-      ZoneScopedNC("ImGui NewFrame", tracy::Color::BlueViolet);
-      // imguiBeginFrame(mouseX, mouseY, mouseMask, mouseScroll, (uint16_t)width, (uint16_t)height);
-    }
 
     game::Update(width, height);
   }

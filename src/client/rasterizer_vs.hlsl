@@ -1,19 +1,18 @@
-uniform float4x4 u_modelViewProj;
-
-struct Output
+cbuffer cbPerObject
 {
-  float4 gl_Position : SV_POSITION;
-  float3 v_texcoord0 : TEXCOORD0;
+  float4x4 u_modelViewProj;
 };
 
-Output main(float3 a_position : POSITION, float3 a_texcoord0 : TEXCOORD0)
+struct VS_OUT
 {
-  Output _varying_;
-  _varying_.v_texcoord0 = float3(0.0, 0.0, 0.0);
-  ;
-  {
-    _varying_.gl_Position = mul(u_modelViewProj, float4(a_position, 1.0));
-    _varying_.v_texcoord0 = a_texcoord0;
-  }
-  return _varying_;
+  float4 position : SV_POSITION;
+  float3 texCoord : TEXCOORD0;
+};
+
+VS_OUT main(float3 a_position : POSITION, float3 a_texcoord0 : TEXCOORD0)
+{
+  VS_OUT vsOut;
+  vsOut.position = mul(u_modelViewProj, float4(a_position, 1.0));
+  vsOut.texCoord = a_texcoord0;
+  return vsOut;
 }

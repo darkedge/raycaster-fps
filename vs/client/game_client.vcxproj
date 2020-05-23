@@ -186,6 +186,9 @@
     </PreBuildEvent>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
+      <VariableName>%(Filename)</VariableName>
+      <HeaderFileOutput>..\..\src\client\generated\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput />
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -221,6 +224,9 @@
     </PreBuildEvent>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
+      <VariableName>%(Filename)</VariableName>
+      <HeaderFileOutput>..\..\src\client\generated\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput />
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
@@ -256,6 +262,9 @@
     </PreBuildEvent>
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
+      <VariableName>%(Filename)</VariableName>
+      <HeaderFileOutput>..\..\src\client\generated\%(Filename).h</HeaderFileOutput>
+      <ObjectFileOutput />
     </FxCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
