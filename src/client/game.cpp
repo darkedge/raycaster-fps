@@ -12,9 +12,9 @@ namespace mj
   extern bool IsWindowMouseFocused();
 }
 
-static ID3D11Device* g_pd3dDevice;
-static ID3D11DeviceContext* g_pd3dDeviceContext;
-static IDXGISwapChain* g_pSwapChain;
+static ID3D11Device* s_pDevice;
+static ID3D11DeviceContext* s_pContext;
+static IDXGISwapChain* s_pSwapChain;
 
 // Helper functions
 
@@ -54,10 +54,10 @@ static bool CreateDeviceD3D(HWND hWnd)
                                     2,                        //
                                     D3D11_SDK_VERSION,        //
                                     &sd,                      //
-                                    &g_pSwapChain,            //
-                                    &g_pd3dDevice,            //
+                                    &s_pSwapChain,            //
+                                    &s_pDevice,               //
                                     &featureLevel,            //
-                                    &g_pd3dDeviceContext) != S_OK)
+                                    &s_pContext) != S_OK)
   {
     return false;
   }
@@ -67,9 +67,9 @@ static bool CreateDeviceD3D(HWND hWnd)
 
 static void CleanupDeviceD3D()
 {
-  SAFE_RELEASE(g_pSwapChain);
-  SAFE_RELEASE(g_pd3dDeviceContext);
-  SAFE_RELEASE(g_pd3dDevice);
+  SAFE_RELEASE(s_pSwapChain);
+  SAFE_RELEASE(s_pContext);
+  SAFE_RELEASE(s_pDevice);
 }
 
 static bool s_MouseLook = true;
@@ -118,22 +118,44 @@ void game::Init(HWND hwnd)
 
   // Setup Platform/Renderer bindings
   MJ_DISCARD(CreateDeviceD3D(hwnd));
+
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
   MJ_DISCARD(ImGui::CreateContext());
+  ImGuiIO& io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // Enable Docking
+  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+                                                      // io.ConfigViewportsNoAutoMerge = true;
+  // io.ConfigViewportsNoTaskBarIcon = true;
+  // io.ConfigViewportsNoDefaultParent = true;
+  // io.ConfigDockingAlwaysTabBar = true;
+  // io.ConfigDockingTransparentPayload = true;
+
+  // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+  // ImGui::StyleColorsClassic();
+
   MJ_DISCARD(ImGui_ImplWin32_Init(hwnd));
-  ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+  MJ_DISCARD(ImGui_ImplDX11_Init(s_pDevice, s_pContext));
 
-  rs::Init(g_pd3dDevice, g_pSwapChain);
+  rs::Init(s_pDevice, s_pSwapChain);
 
-  // Allow mouse movement tracking outside the window
+  // Mouse capture behavior
   if (s_MouseLook)
   {
     if (mj::IsWindowMouseFocused())
     {
       MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
+      ImGui::GetIO().WantCaptureMouse = true;
+      ImGui::GetIO().WantCaptureKeyboard = true;
     }
     else
     {
       s_MouseLook = false;
+      ImGui::GetIO().WantCaptureMouse = false;
+      ImGui::GetIO().WantCaptureKeyboard = false;
     }
   }
 }
@@ -186,7 +208,7 @@ void game::Update(int width, int height)
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
-  rs::Update(g_pd3dDeviceContext, width, height, &s_Data);
+  rs::Update(s_pContext, width, height, &s_Data);
 
 #if 1
   {
@@ -201,13 +223,19 @@ void game::Update(int width, int height)
     // Rendering
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    // Update and Render additional Platform Windows
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+      ImGui::UpdatePlatformWindows();
+      ImGui::RenderPlatformWindowsDefault();
+    }
   }
 
   {
     ZoneScopedNC("Swap Chain Present", tracy::Color::Azure);
-    g_pSwapChain->Present(1, 0); // Present with vsync
-    // g_pSwapChain->Present(0, 0); // Present without vsync
-    FrameMark;
+    s_pSwapChain->Present(1, 0); // Present with vsync
+    // s_pSwapChain->Present(0, 0); // Present without vsync
   }
 }
 

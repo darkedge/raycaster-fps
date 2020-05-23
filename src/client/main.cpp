@@ -27,6 +27,158 @@ namespace mj
   }
 } // namespace mj
 
+struct EventData
+{
+  int32_t mouseX;
+  int32_t mouseY;
+  int32_t mouseScroll;
+  bool exit;
+  int width;
+  int height;
+};
+
+static void PumpEvents(EventData* pEventData)
+{
+  SDL_Event event;
+  {
+    ZoneScopedNC("Window message pump", tracy::Color::Aqua);
+    while (SDL_PollEvent(&event))
+    {
+      switch (event.type)
+      {
+      case SDL_MOUSEWHEEL:
+      {
+        const SDL_MouseWheelEvent& e = event.wheel;
+        pEventData->mouseScroll += e.y;
+      }
+      break;
+      case SDL_MOUSEBUTTONUP:
+      {
+        auto io = ImGui::GetIO();
+        switch (event.button.button)
+        {
+        case SDL_BUTTON_LEFT:
+          io.MouseDown[ImGuiMouseButton_Left] = false;
+          break;
+        case SDL_BUTTON_MIDDLE:
+          io.MouseDown[ImGuiMouseButton_Middle] = false;
+          break;
+        case SDL_BUTTON_RIGHT:
+          io.MouseDown[ImGuiMouseButton_Right] = false;
+        default:
+          break;
+        }
+      }
+      break;
+      case SDL_MOUSEBUTTONDOWN:
+      {
+        auto io = ImGui::GetIO();
+        switch (event.button.button)
+        {
+        case SDL_BUTTON_LEFT:
+          io.MouseDown[ImGuiMouseButton_Left] = true;
+          break;
+        case SDL_BUTTON_MIDDLE:
+          io.MouseDown[ImGuiMouseButton_Middle] = true;
+          break;
+        case SDL_BUTTON_RIGHT:
+          io.MouseDown[ImGuiMouseButton_Right] = true;
+          break;
+        default:
+          break;
+        }
+      }
+      break;
+      case SDL_MOUSEMOTION:
+      {
+        const SDL_MouseMotionEvent& e = event.motion;
+        pEventData->mouseX            = e.x;
+        pEventData->mouseY            = e.y;
+        mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
+      }
+      break;
+      case SDL_QUIT:
+        pEventData->exit = true;
+        break;
+      case SDL_WINDOWEVENT:
+      {
+        const SDL_WindowEvent& wev = event.window;
+        switch (wev.event)
+        {
+        case SDL_WINDOWEVENT_RESIZED:
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+        {
+          pEventData->width  = wev.data1;
+          pEventData->height = wev.data2;
+
+          game::Resize(pEventData->width, pEventData->height);
+        }
+        break;
+        default:
+          break;
+        }
+      }
+      break;
+      case SDL_KEYDOWN:
+      {
+        SDL_Scancode s = event.key.keysym.scancode;
+        auto io        = ImGui::GetIO();
+        mj::input::SetKey(s, true);
+        if (s < MJ_COUNTOF(io.KeysDown))
+        {
+          io.KeysDown[s] = true;
+        }
+      }
+      break;
+      case SDL_KEYUP:
+      {
+        SDL_Scancode s = event.key.keysym.scancode;
+        auto io        = ImGui::GetIO();
+        mj::input::SetKey(s, false);
+        if (s < MJ_COUNTOF(io.KeysDown))
+        {
+          io.KeysDown[s] = false;
+        }
+        switch (s)
+        {
+        case SDL_SCANCODE_F11:
+        {
+          static int mode       = 0;
+          SDL_WindowFlags flags = (SDL_WindowFlags)0;
+          switch (++mode)
+          {
+          case 2:
+            flags = SDL_WINDOW_FULLSCREEN;
+            break;
+          case 1:
+            flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+            break;
+          case 0:
+          default:
+            mode = 0;
+          }
+          SDL_SetWindowFullscreen(s_pWindow, flags);
+        }
+        break;
+        case SDL_SCANCODE_F12: // Screenshot (.tga)
+          // bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
+          break;
+        }
+      }
+      break;
+      case SDL_TEXTINPUT:
+      {
+        // char[32] text = the null-terminated input text in UTF-8 encoding
+        ImGui::GetIO().AddInputCharactersUTF8(event.text.text);
+      }
+      break;
+      default:
+        break;
+      }
+    }
+  }
+}
+
 int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR pCmdLine,
                           _In_ int nCmdShow)
 {
@@ -48,8 +200,9 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     return 1;
   }
 
-  int width, height;
-  SDL_GetWindowSize(s_pWindow, &width, &height);
+  EventData eventData = {};
+
+  SDL_GetWindowSize(s_pWindow, &eventData.width, &eventData.height);
 
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
@@ -57,159 +210,16 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
 
   game::Init(wmInfo.info.win.window);
 
-  int32_t mouseX      = 0;
-  int32_t mouseY      = 0;
-  int32_t mouseScroll = 0;
-  uint8_t mouseMask   = 0;
-
   mj::input::Init();
 
   Uint64 lastTime = SDL_GetPerformanceCounter();
   Uint64 perfFreq = SDL_GetPerformanceFrequency();
 
   // Run message pump.
-  bool exit = false;
-  while (!exit)
+  while (!eventData.exit)
   {
     ZoneScopedNC("Game loop", tracy::Color::CornflowerBlue);
-    SDL_Event event;
-    {
-      ZoneScopedNC("Window message pump", tracy::Color::Aqua);
-      while (SDL_PollEvent(&event))
-      {
-        switch (event.type)
-        {
-        case SDL_MOUSEWHEEL:
-        {
-          const SDL_MouseWheelEvent& e = event.wheel;
-          mouseScroll += e.y;
-        }
-        break;
-        case SDL_MOUSEBUTTONUP:
-        {
-          auto io = ImGui::GetIO();
-          switch (event.button.button)
-          {
-          case SDL_BUTTON_LEFT:
-            io.MouseDown[ImGuiMouseButton_Left] = false;
-            break;
-          case SDL_BUTTON_MIDDLE:
-            io.MouseDown[ImGuiMouseButton_Middle] = false;
-            break;
-          case SDL_BUTTON_RIGHT:
-            io.MouseDown[ImGuiMouseButton_Right] = false;
-          default:
-            break;
-          }
-        }
-        break;
-        case SDL_MOUSEBUTTONDOWN:
-        {
-          auto io = ImGui::GetIO();
-          switch (event.button.button)
-          {
-          case SDL_BUTTON_LEFT:
-            io.MouseDown[ImGuiMouseButton_Left] = true;
-            break;
-          case SDL_BUTTON_MIDDLE:
-            io.MouseDown[ImGuiMouseButton_Middle] = true;
-            break;
-          case SDL_BUTTON_RIGHT:
-            io.MouseDown[ImGuiMouseButton_Right] = true;
-            break;
-          default:
-            break;
-          }
-        }
-        break;
-        case SDL_MOUSEMOTION:
-        {
-          const SDL_MouseMotionEvent& e = event.motion;
-          mouseX                        = e.x;
-          mouseY                        = e.y;
-          mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
-        }
-        break;
-        case SDL_QUIT:
-          exit = true;
-          break;
-        case SDL_WINDOWEVENT:
-        {
-          const SDL_WindowEvent& wev = event.window;
-          switch (wev.event)
-          {
-          case SDL_WINDOWEVENT_RESIZED:
-          case SDL_WINDOWEVENT_SIZE_CHANGED:
-          {
-            width  = wev.data1;
-            height = wev.data2;
-
-            game::Resize(width, height);
-          }
-          break;
-          default:
-            break;
-          }
-        }
-        break;
-        case SDL_KEYDOWN:
-        {
-          SDL_Scancode s = event.key.keysym.scancode;
-          auto io        = ImGui::GetIO();
-          mj::input::SetKey(s, true);
-          if (s < MJ_COUNTOF(io.KeysDown))
-          {
-            io.KeysDown[s] = true;
-          }
-        }
-        break;
-        case SDL_KEYUP:
-        {
-          SDL_Scancode s = event.key.keysym.scancode;
-          auto io        = ImGui::GetIO();
-          mj::input::SetKey(s, false);
-          if (s < MJ_COUNTOF(io.KeysDown))
-          {
-            io.KeysDown[s] = false;
-          }
-          switch (s)
-          {
-          case SDL_SCANCODE_F11:
-          {
-            static int mode       = 0;
-            SDL_WindowFlags flags = (SDL_WindowFlags)0;
-            switch (++mode)
-            {
-            case 2:
-              flags = SDL_WINDOW_FULLSCREEN;
-              break;
-            case 1:
-              flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-              break;
-            case 0:
-            default:
-              mode = 0;
-            }
-            SDL_SetWindowFullscreen(s_pWindow, flags);
-          }
-          break;
-          case SDL_SCANCODE_F12: // Screenshot (.tga)
-            // bgfx::requestScreenShot(BGFX_INVALID_HANDLE, "screenshot");
-            break;
-          }
-        }
-        break;
-        case SDL_TEXTINPUT:
-        {
-          // char[32] text = the null-terminated input text in UTF-8 encoding
-          ImGui::GetIO().AddInputCharactersUTF8(event.text.text);
-        }
-        break;
-        default:
-          break;
-        }
-      }
-    }
+    PumpEvents(&eventData);
 
     mj::input::Update();
 
@@ -223,7 +233,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     mj_DeltaTime = dt;
     lastTime     = now;
 
-    game::Update(width, height);
+    game::Update(eventData.width, eventData.height);
+    FrameMark;
   }
 
   // Cleanup
