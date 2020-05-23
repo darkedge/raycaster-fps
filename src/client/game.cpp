@@ -15,17 +15,8 @@ namespace mj
 static ID3D11Device* g_pd3dDevice;
 static ID3D11DeviceContext* g_pd3dDeviceContext;
 static IDXGISwapChain* g_pSwapChain;
-static ID3D11RenderTargetView* g_mainRenderTargetView;
 
 // Helper functions
-
-static void CreateRenderTarget()
-{
-  ID3D11Texture2D* pBackBuffer;
-  g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
-  pBackBuffer->Release();
-}
 
 static bool CreateDeviceD3D(HWND hWnd)
 {
@@ -71,22 +62,11 @@ static bool CreateDeviceD3D(HWND hWnd)
     return false;
   }
 
-  CreateRenderTarget();
   return true;
-}
-
-static void CleanupRenderTarget()
-{
-  if (g_mainRenderTargetView)
-  {
-    g_mainRenderTargetView->Release();
-    g_mainRenderTargetView = nullptr;
-  }
 }
 
 static void CleanupDeviceD3D()
 {
-  CleanupRenderTarget();
   SAFE_RELEASE(g_pSwapChain);
   SAFE_RELEASE(g_pd3dDeviceContext);
   SAFE_RELEASE(g_pd3dDevice);
@@ -142,7 +122,7 @@ void game::Init(HWND hwnd)
   MJ_DISCARD(ImGui_ImplWin32_Init(hwnd));
   ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
-  rs::Init(g_pd3dDevice);
+  rs::Init(g_pd3dDevice, g_pSwapChain);
 
   // Allow mouse movement tracking outside the window
   if (s_MouseLook)
@@ -206,7 +186,6 @@ void game::Update(int width, int height)
   auto mat     = glm::identity<glm::mat4>();
   s_Data.s_Mat = glm::translate(mat, glm::vec3(s_Data.s_Camera.position)) * glm::mat4_cast(s_Data.s_Camera.rotation);
 
-  g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
   rs::Update(g_pd3dDeviceContext, width, height, &s_Data);
 
 #if 1
@@ -234,8 +213,8 @@ void game::Update(int width, int height)
 
 void game::Destroy()
 {
-  CleanupDeviceD3D();
   rs::Destroy();
+  CleanupDeviceD3D();
   ImGui_ImplDX11_Shutdown();
   ImGui_ImplWin32_Shutdown();
   ImGui::DestroyContext();
