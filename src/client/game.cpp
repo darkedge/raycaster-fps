@@ -2,7 +2,6 @@
 #include "game.h"
 #include "mj_common.h"
 #include "rasterizer.h"
-#include "generated/text.h"
 #include "mj_input.h"
 #include "imgui_impl_dx11.h"
 
@@ -88,6 +87,7 @@ static void Reset()
   CameraInit(MJ_REF s_Data.s_Camera);
 }
 
+#if 0
 static void ShowBuildInfo()
 {
   // FIXME-VIEWPORT: Select a default viewport
@@ -115,6 +115,7 @@ static void ShowBuildInfo()
   }
   ImGui::End();
 }
+#endif
 
 static void CreateRenderTargetView()
 {
@@ -245,7 +246,7 @@ void game::Update(int width, int height)
     Reset();
   }
 
-  ShowBuildInfo();
+  // ShowBuildInfo();
 
   {
     ImGui::Begin("Debug");
@@ -265,7 +266,7 @@ void game::Update(int width, int height)
   s_pContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
   rs::Update(s_pContext, width, height, &s_Data);
 
-#if 1
+#if 0
   {
     ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
     ImGui::ShowDemoWindow();

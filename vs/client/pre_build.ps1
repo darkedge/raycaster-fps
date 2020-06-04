@@ -6,6 +6,8 @@ Param(
 )
 
 # Code generation
+# TODO: Disabled until we load this at run-time instead of compiling it in
+<#
 
 $TxtTemplate = @'
 #pragma once
@@ -45,3 +47,5 @@ If (!(Test-Path -Path $GeneratedPath)) {
 $TxtPath = Join-Path -Path $GeneratedPath -ChildPath 'text.h'
 $TxtTemplate = $TxtTemplate -f $($Strings -join [Environment]::NewLine + '    ')
 [System.IO.File]::WriteAllLines($TxtPath, $TxtTemplate)
+
+#>
