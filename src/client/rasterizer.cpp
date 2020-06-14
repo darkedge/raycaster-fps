@@ -17,7 +17,7 @@ static ID3D11Buffer* s_pVertexBuffer;
 static ID3D11Buffer* s_pIndexBuffer;
 static ID3D11VertexShader* s_pVertexShader;
 static ID3D11PixelShader* s_pPixelShader;
-static ID3D11ShaderResourceView* s_pShaderResourceView;
+static ID3D11ShaderResourceView* s_pShaderResourceView; // Texture array SRV
 static ID3D11InputLayout* s_pInputLayout;
 static ID3D11RasterizerState* s_pRasterizerState;
 static ID3D11BlendState* s_pBlendState;
@@ -472,4 +472,9 @@ void rs::Destroy()
   SAFE_RELEASE(s_pResource);
   SAFE_RELEASE(s_pRasterizerState);
   SAFE_RELEASE(s_pBlendState);
+}
+
+void* rs::GetTileTexture(int x, int y)
+{
+  return s_pShaderResourceView;
 }

@@ -7,4 +7,5 @@ namespace rs
   void Resize(int width, int height);
   void Update(ID3D11DeviceContext* pDeviceContext, int width, int height, game::Data* pData);
   void Destroy();
+  void* GetTileTexture(int x, int y);
 } // namespace rs

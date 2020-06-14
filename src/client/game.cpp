@@ -4,6 +4,7 @@
 #include "rasterizer.h"
 #include "mj_input.h"
 #include "imgui_impl_dx11.h"
+#include "editor.h"
 
 namespace mj
 {
@@ -225,10 +226,12 @@ void game::Update(int width, int height)
 {
   ImGui::NewFrame();
 
-  if (mj::input::GetKeyDown(Key::F3) || mj::input::GetKeyDown(Key::KeyE))
+  if (mj::input::GetKeyDown(Key::F3))
   {
     s_MouseLook = !s_MouseLook;
-    SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook);
+    MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
+    // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
+    // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
     if (!s_MouseLook)
     {
       // Only works if relative mouse mode is off
@@ -241,16 +244,17 @@ void game::Update(int width, int height)
   }
 
   // Reset button
-  if (mj::input::GetKeyDown(Key::KeyR))
+  if (!ImGui::IsAnyWindowFocused() && mj::input::GetKeyDown(Key::KeyR))
   {
     Reset();
   }
 
   // ShowBuildInfo();
+  editor::Show();
 
   {
     ImGui::Begin("Debug");
-    ImGui::Text("R to reset, F3 or E toggles mouselook");
+    ImGui::Text("R to reset, F3 toggles mouselook");
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
                 ImGui::GetIO().Framerate);
     ImGui::SliderFloat("Field of view", &s_Data.s_FieldOfView.x, 5.0f, 170.0f);
@@ -266,7 +270,7 @@ void game::Update(int width, int height)
   s_pContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
   rs::Update(s_pContext, width, height, &s_Data);
 
-#if 0
+#if 1
   {
     ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
     ImGui::ShowDemoWindow();
