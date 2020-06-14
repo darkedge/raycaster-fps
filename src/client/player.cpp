@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "camera.h"
+#include "player.h"
 #include "mj_input.h"
 
 #include "../../3rdparty/tracy/Tracy.hpp"

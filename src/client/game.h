@@ -1,5 +1,5 @@
 #pragma once
-#include "camera.h"
+#include "player.h"
 
 namespace game
 {

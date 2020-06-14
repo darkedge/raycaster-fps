@@ -11,6 +11,15 @@ namespace mj
   extern bool IsWindowMouseFocused();
 }
 
+struct EMode
+{
+  enum Enum
+  {
+    GAMEPLAY,
+    EDITOR
+  };
+};
+
 static ID3D11Device* s_pDevice;
 static ID3D11DeviceContext* s_pContext;
 static IDXGISwapChain* s_pSwapChain;
@@ -79,7 +88,7 @@ static void CleanupDeviceD3D()
   SAFE_RELEASE(s_pDepthStencilBuffer);
 }
 
-static bool s_MouseLook = true;
+static EMode::Enum s_Mode = EMode::GAMEPLAY;
 static game::Data s_Data;
 
 static void Reset()
@@ -143,20 +152,18 @@ void game::Init(HWND hwnd)
   rs::Init(s_pDevice);
 
   // Mouse capture behavior
-  if (s_MouseLook)
+  if (mj::IsWindowMouseFocused())
   {
-    if (mj::IsWindowMouseFocused())
-    {
-      MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
-      ImGui::GetIO().WantCaptureMouse    = true;
-      ImGui::GetIO().WantCaptureKeyboard = true;
-    }
-    else
-    {
-      s_MouseLook                        = false;
-      ImGui::GetIO().WantCaptureMouse    = false;
-      ImGui::GetIO().WantCaptureKeyboard = false;
-    }
+    MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
+    s_Mode                             = EMode::GAMEPLAY;
+    ImGui::GetIO().WantCaptureMouse    = true;
+    ImGui::GetIO().WantCaptureKeyboard = true;
+  }
+  else
+  {
+    s_Mode                             = EMode::EDITOR;
+    ImGui::GetIO().WantCaptureMouse    = false;
+    ImGui::GetIO().WantCaptureKeyboard = false;
   }
 
   {
@@ -228,17 +235,17 @@ void game::Update(int width, int height)
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    s_MouseLook = !s_MouseLook;
-    MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)s_MouseLook));
+    s_Mode = (s_Mode == EMode::GAMEPLAY) ? EMode::EDITOR : EMode::GAMEPLAY;
+    MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)(s_Mode == EMode::GAMEPLAY)));
     // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
     // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
-    if (!s_MouseLook)
+    if (s_Mode == EMode::EDITOR)
     {
       // Only works if relative mouse mode is off
       SDL_WarpMouseInWindow(nullptr, width / 2, height / 2);
     }
   }
-  if (s_MouseLook)
+  if (s_Mode == EMode::GAMEPLAY)
   {
     CameraMovement(MJ_REF s_Data.s_Camera);
   }
