@@ -6,8 +6,10 @@ struct Camera
 {
   glm::vec4 position;
   glm::quat rotation;
+  glm::vec3 yFov;
   float yaw;
-};
 
-void CameraInit(Camera& camera);
-void CameraMovement(Camera& camera);
+  glm::vec4 s_FieldOfView;
+  glm::vec4 s_Width;
+  glm::vec4 s_Height;
+};

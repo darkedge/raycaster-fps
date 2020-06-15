@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "rasterizer.h"
+#include "graphics.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <vector>
@@ -10,6 +10,8 @@
 #include <bx/allocator.h>
 #include <bx/error.h>
 #include <d3d11.h>
+#include "camera.h"
+#include "meta.h"
 
 static ID3D11Texture2D* s_pTextureArray;
 static ID3D11SamplerState* s_pTextureSamplerState;
@@ -193,10 +195,10 @@ static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
   }
 
   // Floor/ceiling pass
-  for (size_t z = 0; z < game::LEVEL_DIM; z++)
+  for (size_t z = 0; z < meta::LEVEL_DIM; z++)
   {
     // Check for blocks in this slice
-    for (size_t x = 0; x < game::LEVEL_DIM; x++)
+    for (size_t x = 0; x < meta::LEVEL_DIM; x++)
     {
       if (map.pBlocks[z * map.width + x] >= 0x006A)
       {
@@ -328,7 +330,7 @@ static void LoadLevel(ID3D11Device* pDevice)
   }
 }
 
-void rs::Init(ID3D11Device* pDevice)
+void gfx::Init(ID3D11Device* pDevice)
 {
   MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &s_pVertexShader));
   // SetDebugName(s_pVertexShader, "s_pVertexShader");
@@ -408,19 +410,29 @@ void rs::Init(ID3D11Device* pDevice)
   }
 }
 
-void rs::Resize(int width, int height)
+void gfx::Resize(int width, int height)
 {
   MJ_DISCARD(width);
   MJ_DISCARD(height);
 }
 
-void rs::Update(ID3D11DeviceContext* pContext, int width, int height, game::Data* pData)
+void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, Camera* pCamera)
 {
+  {
+    ImGui::Begin("Game");
+    ImGui::SliderFloat("Field of view", &pCamera->s_FieldOfView.x, 5.0f, 170.0f);
+    ImGui::Text("Player position: x=%.3f, z=%.3f", pCamera->position.x, pCamera->position.z);
+    ImGui::End();
+  }
+
+  // auto mat     = glm::identity<glm::mat4>();
+  // s_Data.s_Mat = glm::translate(mat, glm::vec3(pCamera->position)) * glm::mat4_cast(pCamera->rotation);
+
   glm::mat4 translate  = glm::identity<glm::mat4>();
-  translate            = glm::translate(translate, -glm::vec3(pData->s_Camera.position));
-  glm::mat4 rotate     = glm::transpose(glm::eulerAngleY(pData->s_Camera.yaw));
+  translate            = glm::translate(translate, -glm::vec3(pCamera->position));
+  glm::mat4 rotate     = glm::transpose(glm::eulerAngleY(pCamera->yaw));
   glm::mat4 view       = rotate * translate;
-  glm::mat4 projection = glm::perspective(glm::radians(pData->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
+  glm::mat4 projection = glm::perspective(glm::radians(pCamera->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
 
   glm::mat4 vp = projection * view;
   pContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
@@ -459,7 +471,7 @@ void rs::Update(ID3D11DeviceContext* pContext, int width, int height, game::Data
   pContext->DrawIndexed(s_Indices, 0, 0);
 }
 
-void rs::Destroy()
+void gfx::Destroy()
 {
   SAFE_RELEASE(s_pTextureArray);
   SAFE_RELEASE(s_pTextureSamplerState);
@@ -474,7 +486,7 @@ void rs::Destroy()
   SAFE_RELEASE(s_pBlendState);
 }
 
-void* rs::GetTileTexture(int x, int y)
+void* gfx::GetTileTexture(int x, int y)
 {
   return s_pShaderResourceView;
 }

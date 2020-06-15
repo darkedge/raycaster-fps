@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mj_common.h"
 #include "mj_input.h"
-#include "game.h"
+#include "meta.h"
 #include "logo.h"
 #include "mj_platform.h"
 #include "imgui_impl_sdl.h"
@@ -104,7 +104,7 @@ static bool PumpEvents(EventData* pEventData)
         {
           pEventData->width  = wev.data1;
           pEventData->height = wev.data2;
-          game::Resize(pEventData->width, pEventData->height);
+          meta::Resize(pEventData->width, pEventData->height);
         }
       }
       break;
@@ -249,7 +249,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 
   MJ_DISCARD(ImGui_ImplSDL2_InitForD3D(s_pWindow));
-  game::Init(wmInfo.info.win.window);
+  meta::Init(wmInfo.info.win.window);
 
   mj::input::Init();
 
@@ -264,16 +264,16 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     {
       break;
     }
-    game::NewFrame();
+    meta::NewFrame();
     ImGui_ImplSDL2_NewFrame(s_pWindow);
     mj::input::Update();
     UpdateDeltaTime(&time);
-    game::Update(eventData.width, eventData.height);
+    meta::Update(eventData.width, eventData.height);
     FrameMark;
   }
 
   // Cleanup
-  game::Destroy();
+  meta::Destroy();
   ImGui_ImplSDL2_Shutdown();
 
   SDL_DestroyWindow(s_pWindow);

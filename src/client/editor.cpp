@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "editor.h"
 #include "mj_input.h"
-#include "rasterizer.h"
+#include "graphics.h"
 
 struct ETool
 {
@@ -15,6 +15,7 @@ struct ETool
   };
 };
 
+#if 0
 void editor::Show()
 {
   ImGui::Begin("Editor");
@@ -66,4 +67,17 @@ void editor::Show()
     ImGui::PopID();
   }
   ImGui::End();
+}
+#endif
+
+void editor::Entry()
+{
+}
+
+void editor::Do(Camera** ppCamera)
+{
+}
+
+void editor::Exit()
+{
 }

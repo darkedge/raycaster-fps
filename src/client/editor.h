@@ -1,6 +1,10 @@
 #pragma once
 
+struct Camera;
+
 namespace editor
 {
-  void Show();
-}
+  void Entry();
+  void Do(Camera** ppCamera);
+  void Exit();
+} // namespace editor
