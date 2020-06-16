@@ -19,13 +19,11 @@ static Camera s_Camera;
 
 void game::Entry()
 {
-  s_Camera.s_FieldOfView.x = 60.0f;
-  s_Camera.s_Width         = glm::vec4(MJ_RT_WIDTH, 0.0f, 0.0f, 0.0f);
-  s_Camera.s_Height        = glm::vec4(MJ_RT_HEIGHT, 0.0f, 0.0f, 0.0f);
+  s_Camera.yFov     = 60.0f;
 
   lastMousePos      = 0.0f;
   currentMousePos   = 0.0f;
-  s_Camera.position = glm::vec4(54.5f, 0.5f, 34.5f, 0.0f);
+  s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
   s_Camera.rotation = glm::quat(glm::vec3(0.0f, -currentMousePos, 0));
   s_Camera.yaw      = -currentMousePos;
 }
@@ -37,30 +35,30 @@ void game::Do(Camera** ppCamera)
 
   if (mj::input::GetKey(Key::KeyW))
   {
-    glm::vec3 vec = s_Camera.rotation * glm::vec3(0, 0, 1);
+    glm::vec3 vec = s_Camera.rotation * axis::POS_Z;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec4(glm::normalize(vec) * dt * s_MovementFactor, 0.0f);
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * s_MovementFactor);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    glm::vec3 vec = s_Camera.rotation * glm::vec3(-1, 0, 0);
+    glm::vec3 vec = s_Camera.rotation * axis::NEG_X;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec4(glm::normalize(vec) * dt * s_MovementFactor, 0.0f);
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * s_MovementFactor);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    glm::vec3 vec = s_Camera.rotation * glm::vec3(0, 0, -1);
+    glm::vec3 vec = s_Camera.rotation * axis::NEG_Z;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec4(glm::normalize(vec) * dt * s_MovementFactor, 0.0f);
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * s_MovementFactor);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    glm::vec3 vec = s_Camera.rotation * glm::vec3(1, 0, 0);
+    glm::vec3 vec = s_Camera.rotation * axis::POS_X;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec4(glm::normalize(vec) * dt * s_MovementFactor, 0.0f);
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * s_MovementFactor);
   }
 
-  int32_t dx, dy;
+  MJ_UNINITIALIZED int32_t dx, dy;
   mj::input::GetRelativeMouseMovement(&dx, &dy);
   currentMousePos -= ROT_SPEED * dx;
   if (currentMousePos != lastMousePos)

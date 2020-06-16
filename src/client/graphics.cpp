@@ -420,7 +420,7 @@ void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, Camera* p
 {
   {
     ImGui::Begin("Game");
-    ImGui::SliderFloat("Field of view", &pCamera->s_FieldOfView.x, 5.0f, 170.0f);
+    ImGui::SliderFloat("Field of view", &pCamera->yFov, 5.0f, 170.0f);
     ImGui::Text("Player position: x=%.3f, z=%.3f", pCamera->position.x, pCamera->position.z);
     ImGui::End();
   }
@@ -432,7 +432,7 @@ void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, Camera* p
   translate            = glm::translate(translate, -glm::vec3(pCamera->position));
   glm::mat4 rotate     = glm::transpose(glm::eulerAngleY(pCamera->yaw));
   glm::mat4 view       = rotate * translate;
-  glm::mat4 projection = glm::perspective(glm::radians(pCamera->s_FieldOfView.x), (float)width / height, 0.01f, 100.0f);
+  glm::mat4 projection = glm::perspective(glm::radians(pCamera->yFov), (float)width / height, 0.01f, 100.0f);
 
   glm::mat4 vp = projection * view;
   pContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);

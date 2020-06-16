@@ -2,14 +2,20 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
+namespace axis
+{
+  const auto POS_X = glm::vec3(1.0f, 0.0f, 0.0f);
+  const auto POS_Y = glm::vec3(0.0f, 1.0f, 0.0f);
+  const auto POS_Z = glm::vec3(0.0f, 0.0f, 1.0f);
+  const auto NEG_X = glm::vec3(-1.0f, 0.0f, 0.0f);
+  const auto NEG_Y = glm::vec3(0.0f, -1.0f, 0.0f);
+  const auto NEG_Z = glm::vec3(0.0f, 0.0f, -1.0f);
+} // namespace axis
+
 struct Camera
 {
-  glm::vec4 position;
+  glm::vec3 position;
   glm::quat rotation;
-  glm::vec3 yFov;
   float yaw;
-
-  glm::vec4 s_FieldOfView;
-  glm::vec4 s_Width;
-  glm::vec4 s_Height;
+  float yFov; // Degrees
 };

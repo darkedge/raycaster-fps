@@ -2,6 +2,7 @@
 #include "editor.h"
 #include "mj_input.h"
 #include "graphics.h"
+#include "camera.h"
 
 struct ETool
 {
@@ -14,6 +15,8 @@ struct ETool
     COUNT
   };
 };
+
+static Camera s_Camera;
 
 #if 0
 void editor::Show()
@@ -76,6 +79,9 @@ void editor::Entry()
 
 void editor::Do(Camera** ppCamera)
 {
+  s_Camera.position = glm::vec3(0.0f, 0.5f, 0.0f);
+  s_Camera.yFov     = 90.0f;
+  *ppCamera         = &s_Camera;
 }
 
 void editor::Exit()

@@ -233,7 +233,7 @@ void meta::Update(int width, int height)
   if (mj::input::GetKeyDown(Key::F3))
   {
     s_StateMachine.pStateNext = (s_StateMachine.pStateCurrent == &s_StateGame) ? &s_StateEditor : &s_StateGame;
-    MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)(s_StateMachine.pStateCurrent == &s_StateGame)));
+    MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool)(s_StateMachine.pStateCurrent == &s_StateEditor)));
     // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
     // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
     if (s_StateMachine.pStateCurrent == &s_StateEditor)
