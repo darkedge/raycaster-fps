@@ -256,8 +256,8 @@ namespace mj
     void GetRelativeMouseMovement(int32_t* dx, int32_t* dy);
     bool SetMouseLock(bool locked);
     bool IsMouseLocked();
-    const glm::ivec3& GetMousePosition();
-    void SetMousePosition(const glm::ivec3& pos);
+    const glm::vec3& GetMousePosition();
+    void SetMousePosition(const glm::vec3& pos);
 
     Control GetNewControl();
 

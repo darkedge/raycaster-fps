@@ -37,7 +37,7 @@ static bool mouseActive[INPUT_NUM_MOUSE_BUTTONS];
 static bool mouseMake[INPUT_NUM_MOUSE_BUTTONS];
 static bool mouseBreak[INPUT_NUM_MOUSE_BUTTONS];
 static bool s_MouseLock;
-static glm::ivec3 s_MousePosition;
+static glm::vec3 s_MousePosition;
 
 /**
  * @brief      Imported from bgfx.
@@ -825,7 +825,7 @@ const char* mj::input::GetControlName(const Control& control)
  *
  * @param[in]  pos   The position
  */
-void mj::input::SetMousePosition(const glm::ivec3& pos)
+void mj::input::SetMousePosition(const glm::vec3& pos)
 {
   s_MousePosition = pos;
 }
@@ -835,7 +835,7 @@ void mj::input::SetMousePosition(const glm::ivec3& pos)
  *
  * @return     The mouse position.
  */
-const glm::ivec3& mj::input::GetMousePosition()
+const glm::vec3& mj::input::GetMousePosition()
 {
   return s_MousePosition;
 }

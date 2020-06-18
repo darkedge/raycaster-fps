@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "graphics.h"
 #include <glm/glm.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include <vector>
 #include "mj_common.h"
 #include "map.h"
@@ -416,25 +415,26 @@ void gfx::Resize(int width, int height)
   MJ_DISCARD(height);
 }
 
-void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, Camera* pCamera)
+/// <summary>
+/// Note: Eventually, we will have to renderer a list of draw commands (command buffer).
+/// Draw commands will contain matrices, textures, buffers, and all other bindings.
+/// </summary>
+/// <param name="pContext"></param>
+/// <param name="width"></param>
+/// <param name="height"></param>
+/// <param name="pCamera"></param>
+void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, const Camera* pCamera)
 {
+#if 0
   {
     ImGui::Begin("Game");
     ImGui::SliderFloat("Field of view", &pCamera->yFov, 5.0f, 170.0f);
     ImGui::Text("Player position: x=%.3f, z=%.3f", pCamera->position.x, pCamera->position.z);
     ImGui::End();
   }
+#endif
 
-  // auto mat     = glm::identity<glm::mat4>();
-  // s_Data.s_Mat = glm::translate(mat, glm::vec3(pCamera->position)) * glm::mat4_cast(pCamera->rotation);
-
-  glm::mat4 translate  = glm::identity<glm::mat4>();
-  translate            = glm::translate(translate, -glm::vec3(pCamera->position));
-  glm::mat4 rotate     = glm::transpose(glm::eulerAngleY(pCamera->yaw));
-  glm::mat4 view       = rotate * translate;
-  glm::mat4 projection = glm::perspective(glm::radians(pCamera->yFov), (float)width / height, 0.01f, 100.0f);
-
-  glm::mat4 vp = projection * view;
+  glm::mat4 vp = pCamera->projection * pCamera->view;
   pContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
 
   // Input Assembler

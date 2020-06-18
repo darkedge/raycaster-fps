@@ -3,6 +3,10 @@
 #include "mj_input.h"
 #include "graphics.h"
 #include "camera.h"
+#include "main.h"
+#include "mj_common.h"
+
+static const float MOVEMENT_FACTOR = 3.0f;
 
 struct ETool
 {
@@ -75,13 +79,72 @@ void editor::Show()
 
 void editor::Entry()
 {
+  MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
+  // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
+  // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
+  // Only works if relative mouse mode is off
+  float w, h;
+  mj::GetWindowSize(&w, &h);
+  SDL_WarpMouseInWindow(nullptr, w / 2, h / 2);
+
+  s_Camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
 }
 
 void editor::Do(Camera** ppCamera)
 {
-  s_Camera.position = glm::vec3(0.0f, 0.5f, 0.0f);
-  s_Camera.yFov     = 90.0f;
-  *ppCamera         = &s_Camera;
+  const float dt = mj::GetDeltaTime();
+
+  if (mj::input::GetKey(Key::KeyW))
+  {
+    glm::vec3 vec = axis::POS_Z;
+    vec.y         = 0.0f;
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+  }
+  if (mj::input::GetKey(Key::KeyA))
+  {
+    glm::vec3 vec = axis::NEG_X;
+    vec.y         = 0.0f;
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+  }
+  if (mj::input::GetKey(Key::KeyS))
+  {
+    glm::vec3 vec = axis::NEG_Z;
+    vec.y         = 0.0f;
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+  }
+  if (mj::input::GetKey(Key::KeyD))
+  {
+    glm::vec3 vec = axis::POS_X;
+    vec.y         = 0.0f;
+    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+  }
+
+  glm::mat4 rotate =
+      glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + axis::NEG_Y), axis::POS_Y)));
+  glm::mat4 translate = glm::identity<glm::mat4>();
+  translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
+
+  s_Camera.view        = rotate * translate;
+  s_Camera.yFov        = 90.0f;
+  s_Camera.viewport[0] = 0.0f;
+  s_Camera.viewport[1] = 0.0f;
+  mj::GetWindowSize(&s_Camera.viewport[2], &s_Camera.viewport[3]);
+  s_Camera.projection = glm::perspective(glm::radians(s_Camera.yFov),                 //
+                                         s_Camera.viewport[2] / s_Camera.viewport[3], //
+                                         0.01f,                                       //
+                                         100.0f);
+#if 0
+  s_Camera.projection = glm::ortho(s_Camera.viewport[0], //
+                                   s_Camera.viewport[1], //
+                                   s_Camera.viewport[2], //
+                                   s_Camera.viewport[3], //
+                                   0.01f,                //
+                                   100.0f);
+#endif
+
+  // auto bla = glm::unProject(mj::input::GetMousePosition(), s_Camera.model, s_Camera.projection, s_Camera.viewport);
+
+  *ppCamera = &s_Camera;
 }
 
 void editor::Exit()

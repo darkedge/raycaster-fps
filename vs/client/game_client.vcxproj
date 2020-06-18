@@ -23,6 +23,7 @@
     <ClInclude Include="..\..\3rdparty\imgui\imstb_truetype.h" />
     <ClInclude Include="..\..\src\client\editor.h" />
     <ClInclude Include="..\..\src\client\game.h" />
+    <ClInclude Include="..\..\src\client\main.h" />
     <ClInclude Include="..\..\src\client\meta.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_sdl.h" />

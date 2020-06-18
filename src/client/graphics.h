@@ -8,7 +8,7 @@ namespace gfx
 {
   void Init(ID3D11Device* pDevice);
   void Resize(int width, int height);
-  void Update(ID3D11DeviceContext* pDeviceContext, int width, int height, Camera* pCamera);
+  void Update(ID3D11DeviceContext* pDeviceContext, int width, int height, const Camera* pCamera);
   void Destroy();
   void* GetTileTexture(int x, int y);
 } // namespace gfx

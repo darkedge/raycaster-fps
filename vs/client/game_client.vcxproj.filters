@@ -60,6 +60,7 @@
     <ClInclude Include="..\..\src\client\game.h" />
     <ClInclude Include="..\..\src\client\graphics.h" />
     <ClInclude Include="..\..\src\client\camera.h" />
+    <ClInclude Include="..\..\src\client\main.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -17,6 +17,14 @@ namespace mj
     return mj_DeltaTime;
   }
 
+  void GetWindowSize(float* w, float* h)
+  {
+    int x, y;
+    SDL_GetWindowSize(s_pWindow, &x, &y);
+    *w = (float)x;
+    *h = (float)y;
+  }
+
   bool IsWindowMouseFocused()
   {
     Uint32 flags = SDL_GetWindowFlags(s_pWindow);
@@ -82,6 +90,7 @@ static bool PumpEvents(EventData* pEventData)
       const SDL_MouseMotionEvent& e = event.motion;
       pEventData->mouseX            = e.x;
       pEventData->mouseY            = e.y;
+      mj::input::SetMousePosition(glm::vec3(e.x, e.y, 0.0f));
       mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
     }
     break;

@@ -15,7 +15,9 @@ namespace axis
 struct Camera
 {
   glm::vec3 position;
-  glm::quat rotation;
-  float yaw;
-  float yFov; // Degrees
+  // glm::mat4 model;
+  glm::mat4 projection;
+  glm::mat4 view;
+  glm::vec4 viewport; // x, y, w, h
+  float yFov;         // Degrees
 };
