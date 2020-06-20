@@ -15,6 +15,8 @@ static int32_t mouseDXNext;
 static int32_t mouseDYNext;
 static int32_t mouseDX;
 static int32_t mouseDY;
+static int32_t mouseScroll;
+static int32_t mouseScrollNext;
 
 // Keyboard
 static uint32_t keyActivePrev[INPUT_NUM_INTS];
@@ -610,10 +612,12 @@ void mj::input::Reset()
 void mj::input::Update()
 {
   ZoneScoped;
-  mouseDX     = mouseDXNext;
-  mouseDY     = mouseDYNext;
-  mouseDXNext = 0;
-  mouseDYNext = 0;
+  mouseDX         = mouseDXNext;
+  mouseDY         = mouseDYNext;
+  mouseDXNext     = 0;
+  mouseDYNext     = 0;
+  mouseScroll     = mouseScrollNext;
+  mouseScrollNext = 0;
 
   for (int32_t i = 0; i < INPUT_NUM_INTS; i++)
   {
@@ -655,10 +659,12 @@ void mj::input::ReleaseEverything()
   memset(mouseActivePrev, 0, sizeof(mouseActivePrev));
   memset(mouseBreak, 0, sizeof(mouseBreak));
   memset(mouseMake, 0, sizeof(mouseMake));
-  mouseDX     = 0;
-  mouseDY     = 0;
-  mouseDXNext = 0;
-  mouseDYNext = 0;
+  mouseDX         = 0;
+  mouseDY         = 0;
+  mouseDXNext     = 0;
+  mouseDYNext     = 0;
+  mouseScroll     = 0;
+  mouseScrollNext = 0;
 }
 
 /**
@@ -683,6 +689,26 @@ void mj::input::GetRelativeMouseMovement(int32_t* dx, int32_t* dy)
 {
   *dx = mouseDX;
   *dy = mouseDY;
+}
+
+/**
+ * @brief      Adds mouse scroll movement.
+ *
+ * @param      scroll Amount of scroll increments
+ */
+void mj::input::AddMouseScroll(int32_t scroll)
+{
+  mouseScrollNext += scroll;
+}
+
+/**
+ * @brief      Gets mouse scroll movement.
+ *
+ * @return     Mouse scroll movement
+ */
+int32_t mj::input::GetMouseScroll()
+{
+  return mouseScroll;
 }
 
 /**

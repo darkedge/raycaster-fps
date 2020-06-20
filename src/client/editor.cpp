@@ -23,6 +23,7 @@ struct ETool
 };
 
 static Camera s_Camera;
+static int32_t s_MouseScrollFactor = 1;
 
 #if 0
 void editor::Show()
@@ -93,7 +94,7 @@ void editor::Entry()
   // Only works if relative mouse mode is off
   float w, h;
   mj::GetWindowSize(&w, &h);
-  SDL_WarpMouseInWindow(nullptr, w / 2, h / 2);
+  SDL_WarpMouseInWindow(nullptr, (int)w / 2, (int)h / 2);
 
   s_Camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
 
@@ -139,6 +140,12 @@ void editor::Do(Camera** ppCamera)
     s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, (float)y * MOUSE_DRAG_FACTOR, 0.0f);
   }
 
+  s_MouseScrollFactor -= mj::input::GetMouseScroll();
+  if (s_MouseScrollFactor <= 1)
+  {
+    s_MouseScrollFactor = 1;
+  }
+
   glm::mat4 rotate =
       glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + 2.0f * axis::NEG_Y), axis::POS_Y)));
   glm::mat4 translate = glm::identity<glm::mat4>();
@@ -147,11 +154,11 @@ void editor::Do(Camera** ppCamera)
   s_Camera.view       = rotate * translate;
   s_Camera.yFov       = 90.0f;
   float aspect        = s_Camera.viewport[2] / s_Camera.viewport[3];
-  s_Camera.projection = glm::orthoLH_ZO(-10.0f * aspect, //
-                                        10.0f * aspect,  //
-                                        -10.0f,          //
-                                        10.0f,           //
-                                        0.1f,            //
+  s_Camera.projection = glm::orthoLH_ZO(-10.0f * s_MouseScrollFactor * aspect, //
+                                        10.0f * s_MouseScrollFactor * aspect,  //
+                                        -10.0f * s_MouseScrollFactor,          //
+                                        10.0f * s_MouseScrollFactor,           //
+                                        0.1f,                                  //
                                         1000.0f);
 
   // auto bla = glm::unProject(mj::input::GetMousePosition(), s_Camera.model, s_Camera.projection, s_Camera.viewport);

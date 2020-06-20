@@ -254,6 +254,8 @@ namespace mj
     void SetMouseButton(MouseButton::Enum button, bool active);
     void AddRelativeMouseMovement(int32_t dx, int32_t dy);
     void GetRelativeMouseMovement(int32_t* dx, int32_t* dy);
+    void AddMouseScroll(int32_t scroll);
+    int32_t GetMouseScroll();
     bool SetMouseLock(bool locked);
     bool IsMouseLocked();
     const glm::vec3& GetMousePosition();

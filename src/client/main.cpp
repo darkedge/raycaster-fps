@@ -54,6 +54,7 @@ static bool PumpEvents(EventData* pEventData)
     {
       const SDL_MouseWheelEvent& e = event.wheel;
       pEventData->mouseScroll += e.y;
+      mj::input::AddMouseScroll(e.y);
     }
     break;
     case SDL_MOUSEBUTTONUP:
