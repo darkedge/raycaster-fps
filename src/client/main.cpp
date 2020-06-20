@@ -19,7 +19,7 @@ namespace mj
 
   void GetWindowSize(float* w, float* h)
   {
-    int x, y;
+    MJ_UNINITIALIZED int x, y;
     SDL_GetWindowSize(s_pWindow, &x, &y);
     *w = (float)x;
     *h = (float)y;

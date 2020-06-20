@@ -23,8 +23,8 @@ static ID3D11Texture2D* s_pDepthStencilBuffer;
 
 static void Reset();
 
-static State s_StateGame   = { Reset, game::Do, nullptr };
-static State s_StateEditor = { editor::Entry, editor::Do, nullptr };
+static State s_StateGame   = { nullptr, Reset, game::Do, nullptr };
+static State s_StateEditor = { editor::Resize, editor::Entry, editor::Do, nullptr };
 
 static Camera* s_pCamera;
 
@@ -217,6 +217,7 @@ void meta::Resize(int width, int height)
   s_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
   CreateRenderTargetView();
   gfx::Resize(width, height);
+  StateMachineResize(&s_StateMachine, (float)width, (float)height);
 }
 
 void meta::NewFrame()
@@ -253,6 +254,8 @@ void meta::Update(int width, int height)
 
   s_pContext->OMSetRenderTargets(1, &s_pRenderTargetView, s_pDepthStencilView);
   s_pContext->ClearDepthStencilView(s_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+  s_pContext->ClearRenderTargetView(s_pRenderTargetView, clearColor);
   s_pContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
 
   gfx::Update(s_pContext, width, height, s_pCamera);

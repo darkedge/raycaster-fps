@@ -5,6 +5,7 @@
 #include "camera.h"
 #include "main.h"
 #include "mj_common.h"
+#include <glm/gtc/type_ptr.hpp>
 
 static const float MOVEMENT_FACTOR = 3.0f;
 
@@ -77,6 +78,12 @@ void editor::Show()
 }
 #endif
 
+void editor::Resize(float w, float h)
+{
+  s_Camera.viewport[2] = w;
+  s_Camera.viewport[3] = h;
+}
+
 void editor::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
@@ -88,6 +95,11 @@ void editor::Entry()
   SDL_WarpMouseInWindow(nullptr, w / 2, h / 2);
 
   s_Camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
+
+  s_Camera.viewport[0] = 0.0f;
+  s_Camera.viewport[1] = 0.0f;
+  s_Camera.viewport[2] = w;
+  s_Camera.viewport[3] = h;
 }
 
 void editor::Do(Camera** ppCamera)
@@ -124,23 +136,21 @@ void editor::Do(Camera** ppCamera)
   glm::mat4 translate = glm::identity<glm::mat4>();
   translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
 
-  s_Camera.view        = rotate * translate;
-  s_Camera.yFov        = 90.0f;
-  s_Camera.viewport[0] = 0.0f;
-  s_Camera.viewport[1] = 0.0f;
-  mj::GetWindowSize(&s_Camera.viewport[2], &s_Camera.viewport[3]);
-  s_Camera.projection = glm::perspective(glm::radians(s_Camera.yFov),                 //
-                                         s_Camera.viewport[2] / s_Camera.viewport[3], //
-                                         0.01f,                                       //
-                                         100.0f);
-#if 0
-  s_Camera.projection = glm::ortho(s_Camera.viewport[0], //
-                                   s_Camera.viewport[1], //
-                                   s_Camera.viewport[2], //
-                                   s_Camera.viewport[3], //
-                                   0.01f,                //
-                                   100.0f);
-#endif
+  s_Camera.view       = rotate * translate;
+  s_Camera.yFov       = 90.0f;
+  s_Camera.projection = glm::orthoLH_ZO(-10.0f, //
+                                        10.0f,  //
+                                        -10.0f, //
+                                        10.0f,  //
+                                        0.1f,   //
+                                        100.0f);
+
+  ImGui::Begin("kekW");
+  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[0]), 3);
+  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[1]), 3);
+  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[2]), 3);
+  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[3]), 3);
+  ImGui::End();
 
   // auto bla = glm::unProject(mj::input::GetMousePosition(), s_Camera.model, s_Camera.projection, s_Camera.viewport);
 

@@ -2,6 +2,20 @@
 #include "state_machine.h"
 #include "camera.h"
 
+void StateMachineResize(StateMachine* pStateMachine, float width, float height)
+{
+  if (pStateMachine)
+  {
+    if (pStateMachine->pStateCurrent)
+    {
+      if (pStateMachine->pStateCurrent->Resize)
+      {
+        pStateMachine->pStateCurrent->Resize(width, height);
+      }
+    }
+  }
+}
+
 void StateMachineUpdate(StateMachine* pStateMachine, Camera** ppCamera)
 {
   if (pStateMachine)
