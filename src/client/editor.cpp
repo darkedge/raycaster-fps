@@ -131,6 +131,12 @@ void editor::Do(Camera** ppCamera)
     s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
   }
 
+  if (mj::input::GetMouseButton(MouseButton::Middle))
+  {
+    ImGui::Begin("Middle Mouse Down!");
+    ImGui::End();
+  }
+
   glm::mat4 rotate =
       glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + axis::NEG_Y), axis::POS_Y)));
   glm::mat4 translate = glm::identity<glm::mat4>();

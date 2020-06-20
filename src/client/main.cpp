@@ -61,10 +61,13 @@ static bool PumpEvents(EventData* pEventData)
       switch (event.button.button)
       {
       case SDL_BUTTON_LEFT:
+        mj::input::SetMouseButton(MouseButton::Left, false);
         break;
       case SDL_BUTTON_MIDDLE:
+        mj::input::SetMouseButton(MouseButton::Middle, false);
         break;
       case SDL_BUTTON_RIGHT:
+        mj::input::SetMouseButton(MouseButton::Right, false);
       default:
         break;
       }
@@ -75,10 +78,13 @@ static bool PumpEvents(EventData* pEventData)
       switch (event.button.button)
       {
       case SDL_BUTTON_LEFT:
+        mj::input::SetMouseButton(MouseButton::Left, true);
         break;
       case SDL_BUTTON_MIDDLE:
+        mj::input::SetMouseButton(MouseButton::Middle, true);
         break;
       case SDL_BUTTON_RIGHT:
+        mj::input::SetMouseButton(MouseButton::Right, true);
         break;
       default:
         break;
