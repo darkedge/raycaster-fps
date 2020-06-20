@@ -7,7 +7,8 @@
 #include "mj_common.h"
 #include <glm/gtc/type_ptr.hpp>
 
-static const float MOVEMENT_FACTOR = 3.0f;
+static const float MOVEMENT_FACTOR   = 3.0f;
+static const float MOUSE_DRAG_FACTOR = 0.025f;
 
 struct ETool
 {
@@ -133,30 +134,25 @@ void editor::Do(Camera** ppCamera)
 
   if (mj::input::GetMouseButton(MouseButton::Middle))
   {
-    ImGui::Begin("Middle Mouse Down!");
-    ImGui::End();
+    MJ_UNINITIALIZED int32_t x, y;
+    mj::input::GetRelativeMouseMovement(&x, &y);
+    s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, (float)y * MOUSE_DRAG_FACTOR, 0.0f);
   }
 
   glm::mat4 rotate =
-      glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + axis::NEG_Y), axis::POS_Y)));
+      glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + 2.0f * axis::NEG_Y), axis::POS_Y)));
   glm::mat4 translate = glm::identity<glm::mat4>();
   translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
 
   s_Camera.view       = rotate * translate;
   s_Camera.yFov       = 90.0f;
-  s_Camera.projection = glm::orthoLH_ZO(-10.0f, //
-                                        10.0f,  //
-                                        -10.0f, //
-                                        10.0f,  //
-                                        0.1f,   //
-                                        100.0f);
-
-  ImGui::Begin("kekW");
-  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[0]), 3);
-  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[1]), 3);
-  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[2]), 3);
-  ImGui::InputFloat4("bla", glm::value_ptr(s_Camera.projection[3]), 3);
-  ImGui::End();
+  float aspect        = s_Camera.viewport[2] / s_Camera.viewport[3];
+  s_Camera.projection = glm::orthoLH_ZO(-10.0f * aspect, //
+                                        10.0f * aspect,  //
+                                        -10.0f,          //
+                                        10.0f,           //
+                                        0.1f,            //
+                                        1000.0f);
 
   // auto bla = glm::unProject(mj::input::GetMousePosition(), s_Camera.model, s_Camera.projection, s_Camera.viewport);
 
