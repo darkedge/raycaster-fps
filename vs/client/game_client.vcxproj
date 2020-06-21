@@ -226,8 +226,6 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
-      <LinkTimeCodeGeneration>
-      </LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Command>powershell -File post_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
@@ -266,8 +264,6 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
-      <LinkTimeCodeGeneration>
-      </LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Command>powershell -File post_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
