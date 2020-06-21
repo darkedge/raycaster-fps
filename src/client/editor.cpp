@@ -6,9 +6,11 @@
 #include "main.h"
 #include "mj_common.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 static const float MOVEMENT_FACTOR   = 3.0f;
 static const float MOUSE_DRAG_FACTOR = 0.025f;
+static const float MOUSE_LOOK_FACTOR = 0.0025f;
 
 struct ETool
 {
@@ -104,7 +106,7 @@ void editor::Entry()
   s_Camera.viewport[2] = w;
   s_Camera.viewport[3] = h;
 
-  s_Rotation = glm::quatLookAt(glm::normalize(axis::POS_Z + 2.0f * axis::NEG_Y), axis::POS_Y);
+  s_Rotation = glm::quatLookAt(glm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 }
 
 static void DoMenu()
@@ -125,31 +127,39 @@ static void DoInput()
 
   if (mj::input::GetMouseButton(MouseButton::Right))
   {
+    float speed = MOVEMENT_FACTOR;
+    if (mj::input::GetKey(Key::LeftShift))
+    {
+      speed *= 3.0f;
+    }
     if (mj::input::GetKey(Key::KeyW))
     {
-      glm::vec3 vec = axis::POS_Z;
-      vec.y         = 0.0f;
-      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+      s_Camera.position += s_Rotation * axis::FORWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyA))
     {
-      glm::vec3 vec = axis::NEG_X;
-      vec.y         = 0.0f;
-      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+      s_Camera.position += s_Rotation * axis::LEFT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyS))
     {
-      glm::vec3 vec = axis::NEG_Z;
-      vec.y         = 0.0f;
-      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+      s_Camera.position += s_Rotation * axis::BACKWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyD))
     {
-      glm::vec3 vec = axis::POS_X;
-      vec.y         = 0.0f;
-      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+      s_Camera.position += s_Rotation * axis::RIGHT * dt * speed;
     }
 
+    {
+      // mouse x = yaw (left/right), mouse y = pitch (up/down)
+      MJ_UNINITIALIZED int32_t dx, dy;
+      mj::input::GetRelativeMouseMovement(&dx, &dy);
+      s_Rotation = glm::angleAxis(MOUSE_LOOK_FACTOR * dx, axis::UP) * s_Rotation;
+      s_Rotation = glm::angleAxis(MOUSE_LOOK_FACTOR * dy, s_Rotation * axis::RIGHT) * s_Rotation;
+    }
+  }
+
+  if (mj::input::GetKey(Key::LeftAlt) && mj::input::GetMouseButton(MouseButton::Left))
+  {
     // Arcball rotation
     MJ_UNINITIALIZED int32_t dx, dy;
     mj::input::GetRelativeMouseMovement(&dx, &dy);
@@ -184,7 +194,8 @@ static void DoInput()
   {
     MJ_UNINITIALIZED int32_t x, y;
     mj::input::GetRelativeMouseMovement(&x, &y);
-    s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
+    // s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
+    // s_Camera.position += s_Rotation * axis::RIGHT
   }
 
   s_MouseScrollFactor -= mj::input::GetMouseScroll();

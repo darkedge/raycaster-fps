@@ -4,12 +4,12 @@
 
 namespace axis
 {
-  const auto POS_X = glm::vec3(1.0f, 0.0f, 0.0f);
-  const auto POS_Y = glm::vec3(0.0f, 1.0f, 0.0f);
-  const auto POS_Z = glm::vec3(0.0f, 0.0f, 1.0f);
-  const auto NEG_X = glm::vec3(-1.0f, 0.0f, 0.0f);
-  const auto NEG_Y = glm::vec3(0.0f, -1.0f, 0.0f);
-  const auto NEG_Z = glm::vec3(0.0f, 0.0f, -1.0f);
+  const auto RIGHT    = glm::vec3(1.0f, 0.0f, 0.0f);
+  const auto UP       = glm::vec3(0.0f, 1.0f, 0.0f);
+  const auto FORWARD  = glm::vec3(0.0f, 0.0f, 1.0f);
+  const auto LEFT     = glm::vec3(-1.0f, 0.0f, 0.0f);
+  const auto DOWN     = glm::vec3(0.0f, -1.0f, 0.0f);
+  const auto BACKWARD = glm::vec3(0.0f, 0.0f, -1.0f);
 } // namespace axis
 
 struct Camera

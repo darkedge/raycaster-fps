@@ -38,25 +38,25 @@ void game::Do(Camera** ppCamera)
 
   if (mj::input::GetKey(Key::KeyW))
   {
-    glm::vec3 vec = s_Rotation * axis::POS_Z;
+    glm::vec3 vec = s_Rotation * axis::FORWARD;
     vec.y         = 0.0f;
     s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    glm::vec3 vec = s_Rotation * axis::NEG_X;
+    glm::vec3 vec = s_Rotation * axis::LEFT;
     vec.y         = 0.0f;
     s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    glm::vec3 vec = s_Rotation * axis::NEG_Z;
+    glm::vec3 vec = s_Rotation * axis::BACKWARD;
     vec.y         = 0.0f;
     s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    glm::vec3 vec = s_Rotation * axis::POS_X;
+    glm::vec3 vec = s_Rotation * axis::RIGHT;
     vec.y         = 0.0f;
     s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
   }
