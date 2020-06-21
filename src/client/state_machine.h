@@ -2,12 +2,26 @@
 
 struct Camera;
 
+/// <summary>
+/// Interface for a state.
+/// </summary>
 struct State
 {
-  void (*Resize)(float w, float h);
-  void (*Entry)();
-  void (*Do)(Camera** ppCamera);
-  void (*Exit)();
+  virtual void Resize(float w, float h)
+  {
+    (void)w;
+    (void)h;
+  }
+  virtual void Entry()
+  {
+  }
+  virtual void Do(Camera** ppCamera)
+  {
+    (void)ppCamera;
+  }
+  virtual void Exit()
+  {
+  }
 };
 
 struct StateMachine

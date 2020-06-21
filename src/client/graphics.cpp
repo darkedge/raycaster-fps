@@ -11,6 +11,7 @@
 #include <d3d11.h>
 #include "camera.h"
 #include "meta.h"
+#include "main.h"
 
 static ID3D11Texture2D* s_pTextureArray;
 static ID3D11SamplerState* s_pTextureSamplerState;
@@ -423,7 +424,7 @@ void gfx::Resize(int width, int height)
 /// <param name="width"></param>
 /// <param name="height"></param>
 /// <param name="pCamera"></param>
-void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, const Camera* pCamera)
+void gfx::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
 {
 #if 0
   {
@@ -453,10 +454,10 @@ void gfx::Update(ID3D11DeviceContext* pContext, int width, int height, const Cam
   D3D11_VIEWPORT viewport = {};
   viewport.TopLeftX       = 0;
   viewport.TopLeftY       = 0;
-  viewport.Width          = (float)width;
-  viewport.Height         = (float)height;
   viewport.MinDepth       = 0.0f;
   viewport.MaxDepth       = 1.0f;
+  mj::GetWindowSize(&viewport.Width, &viewport.Height);
+
   pContext->RSSetViewports(1, &viewport);
   pContext->RSSetState(s_pRasterizerState);
 
@@ -488,5 +489,7 @@ void gfx::Destroy()
 
 void* gfx::GetTileTexture(int x, int y)
 {
+  (void)x;
+  (void)y;
   return s_pShaderResourceView;
 }

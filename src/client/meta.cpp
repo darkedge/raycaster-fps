@@ -8,29 +8,9 @@
 #include "state_machine.h"
 #include "game.h"
 
-namespace mj
-{
-  extern bool IsWindowMouseFocused();
-}
-
-static ID3D11Device* s_pDevice;
-static ID3D11DeviceContext* s_pContext;
-static IDXGISwapChain* s_pSwapChain;
-static ID3D11RenderTargetView* s_pRenderTargetView;
-static ID3D11DepthStencilState* s_pDepthStencilState;
-static ID3D11DepthStencilView* s_pDepthStencilView;
-static ID3D11Texture2D* s_pDepthStencilBuffer;
-
-static State s_StateGame   = { nullptr, game::Entry, game::Do, nullptr };
-static State s_StateEditor = { editor::Resize, editor::Entry, editor::Do, nullptr };
-
-static Camera* s_pCamera;
-
-static StateMachine s_StateMachine;
-
 // Helper functions
 
-static bool CreateDeviceD3D(HWND hWnd)
+static bool CreateDeviceD3D(meta::Global* pGlobal, HWND hWnd)
 {
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
@@ -66,10 +46,10 @@ static bool CreateDeviceD3D(HWND hWnd)
                                     2,                        //
                                     D3D11_SDK_VERSION,        //
                                     &sd,                      //
-                                    &s_pSwapChain,            //
-                                    &s_pDevice,               //
+                                    &pGlobal->pSwapChain,     //
+                                    &pGlobal->pDevice,        //
                                     &featureLevel,            //
-                                    &s_pContext) != S_OK)
+                                    &pGlobal->pContext) != S_OK)
   {
     return false;
   }
@@ -77,15 +57,15 @@ static bool CreateDeviceD3D(HWND hWnd)
   return true;
 }
 
-static void CleanupDeviceD3D()
+static void CleanupDeviceD3D(meta::Global* pGlobal)
 {
-  SAFE_RELEASE(s_pSwapChain);
-  SAFE_RELEASE(s_pContext);
-  SAFE_RELEASE(s_pRenderTargetView);
-  SAFE_RELEASE(s_pDevice);
-  SAFE_RELEASE(s_pDepthStencilState);
-  SAFE_RELEASE(s_pDepthStencilView);
-  SAFE_RELEASE(s_pDepthStencilBuffer);
+  SAFE_RELEASE(pGlobal->pSwapChain);
+  SAFE_RELEASE(pGlobal->pContext);
+  SAFE_RELEASE(pGlobal->pRenderTargetView);
+  SAFE_RELEASE(pGlobal->pDevice);
+  SAFE_RELEASE(pGlobal->pDepthStencilState);
+  SAFE_RELEASE(pGlobal->pDepthStencilView);
+  SAFE_RELEASE(pGlobal->pDepthStencilBuffer);
 }
 
 #if 0
@@ -100,15 +80,15 @@ static void ShowBuildInfo()
     ImVec2 window_pos =
         ImVec2((corner & 1) ? (viewport->Pos.x + viewport->Size.x - DISTANCE) : (viewport->Pos.x + DISTANCE),
                (corner & 2) ? (viewport->Pos.y + viewport->Size.y - DISTANCE) : (viewport->Pos.y + DISTANCE));
-    ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+    ImVec2 window_popivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_popivot);
     ImGui::SetNextWindowViewport(viewport->ID);
   }
   ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
   if (ImGui::Begin("Overlay", nullptr,
-                   (corner != -1 ? ImGuiWindowFlags_NoMove : 0) | ImGuiWindowFlags_NoDocking |
-                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
-                       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
+                   (corner != -1 ? ImGuiWindowFlagNoMove : 0) | ImGuiWindowFlagNoDocking |
+                       ImGuiWindowFlagNoTitleBar | ImGuiWindowFlagNoResize | ImGuiWindowFlagAlwaysAutoResize |
+                       ImGuiWindowFlagNoSavedSettings | ImGuiWindowFlagNoFocusOnAppearing | ImGuiWindowFlagNoNav))
   {
     ImGui::Text("%s, %s (%s #%s), %s\nStaged:%s\nUnstaged:%s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId,
                 mj::txt::pGitBranch, mj::txt::pGitRevision, mj::txt::pDateTime, mj::txt::pGitDiffStaged,
@@ -118,24 +98,24 @@ static void ShowBuildInfo()
 }
 #endif
 
-static void CreateRenderTargetView()
+static void CreateRenderTargetView(meta::Global* pGlobal)
 {
   ID3D11Texture2D* pBackBuffer;
-  s_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  s_pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &s_pRenderTargetView);
+  pGlobal->pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+  pGlobal->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &pGlobal->pRenderTargetView);
   pBackBuffer->Release();
 }
 
-void meta::Init(HWND hwnd)
+void meta::Init(meta::Global* pGlobal, HWND hwnd)
 {
   // Setup Platform/Renderer bindings
-  MJ_DISCARD(CreateDeviceD3D(hwnd));
+  MJ_DISCARD(CreateDeviceD3D(pGlobal, hwnd));
 
-  MJ_DISCARD(ImGui_ImplDX11_Init(s_pDevice, s_pContext));
+  MJ_DISCARD(ImGui_ImplDX11_Init(pGlobal->pDevice, pGlobal->pContext));
 
-  CreateRenderTargetView();
+  CreateRenderTargetView(pGlobal);
 
-  gfx::Init(s_pDevice);
+  gfx::Init(pGlobal->pDevice);
 
   {
     // Depth Stencil
@@ -156,8 +136,8 @@ void meta::Init(HWND hwnd)
     descDSV.Flags                         = 0;
     descDSV.Texture2D.MipSlice            = 0;
 
-    s_pDevice->CreateTexture2D(&desc, nullptr, &s_pDepthStencilBuffer);
-    s_pDevice->CreateDepthStencilView(s_pDepthStencilBuffer, &descDSV, &s_pDepthStencilView);
+    pGlobal->pDevice->CreateTexture2D(&desc, nullptr, &pGlobal->pDepthStencilBuffer);
+    pGlobal->pDevice->CreateDepthStencilView(pGlobal->pDepthStencilBuffer, &descDSV, &pGlobal->pDepthStencilView);
   }
 
   {
@@ -177,7 +157,7 @@ void meta::Init(HWND hwnd)
     dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
     dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
 
-    MJ_DISCARD(s_pDevice->CreateDepthStencilState(&dsDesc, &s_pDepthStencilState));
+    MJ_DISCARD(pGlobal->pDevice->CreateDepthStencilState(&dsDesc, &pGlobal->pDepthStencilState));
   }
 
   // Mouse capture behavior
@@ -186,31 +166,31 @@ void meta::Init(HWND hwnd)
     MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
     ImGui::GetIO().WantCaptureMouse    = true;
     ImGui::GetIO().WantCaptureKeyboard = true;
-    s_StateMachine.pStateNext          = &s_StateGame;
+    pGlobal->StateMachine.pStateNext   = &pGlobal->StateGame;
   }
   else
   {
     ImGui::GetIO().WantCaptureMouse    = false;
     ImGui::GetIO().WantCaptureKeyboard = false;
-    s_StateMachine.pStateNext          = &s_StateEditor;
+    pGlobal->StateMachine.pStateNext   = &pGlobal->StateEditor;
   }
 
   // Fire Entry action for next state
-  StateMachineUpdate(&s_StateMachine, nullptr);
+  StateMachineUpdate(&pGlobal->StateMachine, nullptr);
 }
 
-static void CleanupRenderTarget()
+static void CleanupRenderTarget(meta::Global* pGlobal)
 {
-  SAFE_RELEASE(s_pRenderTargetView);
+  SAFE_RELEASE(pGlobal->pRenderTargetView);
 }
 
-void meta::Resize(int width, int height)
+void meta::Resize(meta::Global* pGlobal, int width, int height)
 {
-  CleanupRenderTarget();
-  s_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-  CreateRenderTargetView();
+  CleanupRenderTarget(pGlobal);
+  pGlobal->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+  CreateRenderTargetView(pGlobal);
   gfx::Resize(width, height);
-  StateMachineResize(&s_StateMachine, (float)width, (float)height);
+  StateMachineResize(&pGlobal->StateMachine, (float)width, (float)height);
 }
 
 void meta::NewFrame()
@@ -220,24 +200,26 @@ void meta::NewFrame()
   ImGui_ImplDX11_NewFrame();
 }
 
-void meta::Update(int width, int height)
+void meta::Update(meta::Global* pGlobal)
 {
   ImGui::NewFrame();
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    s_StateMachine.pStateNext = (s_StateMachine.pStateCurrent == &s_StateGame) ? &s_StateEditor : &s_StateGame;
+    pGlobal->StateMachine.pStateNext = (pGlobal->StateMachine.pStateCurrent == &pGlobal->StateGame)
+                                           ? (State*)&pGlobal->StateEditor
+                                           : (State*)&pGlobal->StateGame;
   }
 
-  StateMachineUpdate(&s_StateMachine, &s_pCamera);
+  StateMachineUpdate(&pGlobal->StateMachine, &pGlobal->pCamera);
 
-  s_pContext->OMSetRenderTargets(1, &s_pRenderTargetView, s_pDepthStencilView);
-  s_pContext->ClearDepthStencilView(s_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  pGlobal->pContext->OMSetRenderTargets(1, &pGlobal->pRenderTargetView, pGlobal->pDepthStencilView);
+  pGlobal->pContext->ClearDepthStencilView(pGlobal->pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
   FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-  s_pContext->ClearRenderTargetView(s_pRenderTargetView, clearColor);
-  s_pContext->OMSetDepthStencilState(s_pDepthStencilState, 1);
+  pGlobal->pContext->ClearRenderTargetView(pGlobal->pRenderTargetView, clearColor);
+  pGlobal->pContext->OMSetDepthStencilState(pGlobal->pDepthStencilState, 1);
 
-  gfx::Update(s_pContext, width, height, s_pCamera);
+  gfx::Update(pGlobal->pContext, pGlobal->pCamera);
 
 #if 0
   {
@@ -263,15 +245,15 @@ void meta::Update(int width, int height)
 
   {
     ZoneScopedNC("Swap Chain Present", tracy::Color::Azure);
-    s_pSwapChain->Present(1, 0); // Present with vsync
-    // s_pSwapChain->Present(0, 0); // Present without vsync
+    pGlobal->pSwapChain->Present(1, 0); // Present with vsync
+    // pSwapChain->Present(0, 0); // Present without vsync
   }
 }
 
-void meta::Destroy()
+void meta::Destroy(meta::Global* pGlobal)
 {
   gfx::Destroy();
-  CleanupDeviceD3D();
+  CleanupDeviceD3D(pGlobal);
   ImGui_ImplDX11_Shutdown();
   ImGui::DestroyContext();
 }

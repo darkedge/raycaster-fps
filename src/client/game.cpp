@@ -6,32 +6,22 @@
 #include <glm/gtx/euler_angles.hpp>
 #include "main.h"
 
-static const float MOVEMENT_FACTOR = 3.0f;
-static const float ROT_SPEED       = 0.0025f;
-
-static float s_LastMousePos;
-static float s_CurrentMousePos;
-static float s_Yaw;
-static glm::quat s_Rotation;
-
-static Camera s_Camera;
-
-void game::Entry()
+void game::Game::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) true));
-  // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
-  // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
+  // ImGui::GetIO().WantCaptureMouse    = this->MouseLook;
+  // ImGui::GetIO().WantCaptureKeyboard = this->MouseLook;
 
-  s_Camera.yFov = 60.0f;
+  this->camera.yFov = 60.0f;
 
-  s_LastMousePos    = 0.0f;
-  s_CurrentMousePos = 0.0f;
-  s_Camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
-  s_Rotation        = glm::quat(glm::vec3(0.0f, -s_CurrentMousePos, 0));
-  s_Yaw             = -s_CurrentMousePos;
+  this->lastMousePos    = 0.0f;
+  this->currentMousePos = 0.0f;
+  this->camera.position = glm::vec3(54.5f, 0.5f, 34.5f);
+  this->rotation        = glm::quat(glm::vec3(0.0f, -this->currentMousePos, 0));
+  this->yaw             = -this->currentMousePos;
 }
 
-void game::Do(Camera** ppCamera)
+void game::Game::Do(Camera** ppCamera)
 {
   ZoneScoped;
 
@@ -53,49 +43,49 @@ void game::Do(Camera** ppCamera)
 
   if (mj::input::GetKey(Key::KeyW))
   {
-    glm::vec3 vec = s_Rotation * axis::FORWARD;
+    glm::vec3 vec = this->rotation * axis::FORWARD;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    glm::vec3 vec = s_Rotation * axis::LEFT;
+    glm::vec3 vec = this->rotation * axis::LEFT;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    glm::vec3 vec = s_Rotation * axis::BACKWARD;
+    glm::vec3 vec = this->rotation * axis::BACKWARD;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    glm::vec3 vec = s_Rotation * axis::RIGHT;
+    glm::vec3 vec = this->rotation * axis::RIGHT;
     vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
   }
 
   MJ_UNINITIALIZED int32_t dx, dy;
   mj::input::GetRelativeMouseMovement(&dx, &dy);
-  s_CurrentMousePos -= ROT_SPEED * dx;
-  if (s_CurrentMousePos != s_LastMousePos)
+  this->currentMousePos -= game::Game::ROT_SPEED * dx;
+  if (this->currentMousePos != this->lastMousePos)
   {
-    s_Rotation     = glm::quat(glm::vec3(0.0f, -s_CurrentMousePos, 0));
-    s_Yaw          = -s_CurrentMousePos;
-    s_LastMousePos = s_CurrentMousePos;
+    this->rotation     = glm::quat(glm::vec3(0.0f, -this->currentMousePos, 0));
+    this->yaw          = -this->currentMousePos;
+    this->lastMousePos = this->currentMousePos;
   }
 
-  glm::mat4 rotate    = glm::transpose(glm::eulerAngleY(s_Yaw));
+  glm::mat4 rotate    = glm::transpose(glm::eulerAngleY(this->yaw));
   glm::mat4 translate = glm::identity<glm::mat4>();
-  translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
+  translate           = glm::translate(translate, -glm::vec3(this->camera.position));
 
-  s_Camera.view        = rotate * translate;
-  s_Camera.viewport[0] = 0.0f;
-  s_Camera.viewport[1] = 0.0f;
-  mj::GetWindowSize(&s_Camera.viewport[2], &s_Camera.viewport[3]);
-  s_Camera.projection =
-      glm::perspective(glm::radians(s_Camera.yFov), s_Camera.viewport[2] / s_Camera.viewport[3], 0.01f, 100.0f);
+  this->camera.view        = rotate * translate;
+  this->camera.viewport[0] = 0.0f;
+  this->camera.viewport[1] = 0.0f;
+  mj::GetWindowSize(&this->camera.viewport[2], &this->camera.viewport[3]);
+  this->camera.projection = glm::perspective(
+      glm::radians(this->camera.yFov), this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
 
-  *ppCamera = &s_Camera;
+  *ppCamera = &this->camera;
 }

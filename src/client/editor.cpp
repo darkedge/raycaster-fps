@@ -8,10 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-static const float MOVEMENT_FACTOR   = 3.0f;
-static const float MOUSE_DRAG_FACTOR = 0.025f;
-static const float MOUSE_LOOK_FACTOR = 0.0025f;
-
+#if 0
 struct ETool
 {
   enum Enum
@@ -24,11 +21,6 @@ struct ETool
   };
 };
 
-static Camera s_Camera;
-static int32_t s_MouseScrollFactor = 1;
-static glm::quat s_Rotation;
-
-#if 0
 void editor::Show()
 {
   ImGui::Begin("Editor");
@@ -83,30 +75,30 @@ void editor::Show()
 }
 #endif
 
-void editor::Resize(float w, float h)
+void editor::Editor::Resize(float w, float h)
 {
-  s_Camera.viewport[2] = w;
-  s_Camera.viewport[3] = h;
+  this->camera.viewport[2] = w;
+  this->camera.viewport[3] = h;
 }
 
-void editor::Entry()
+void editor::Editor::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
-  // ImGui::GetIO().WantCaptureMouse    = s_MouseLook;
-  // ImGui::GetIO().WantCaptureKeyboard = s_MouseLook;
+  // ImGui::GetIO().WantCaptureMouse    = pEditor->MouseLook;
+  // ImGui::GetIO().WantCaptureKeyboard = pEditor->MouseLook;
   // Only works if relative mouse mode is off
   float w, h;
   mj::GetWindowSize(&w, &h);
   SDL_WarpMouseInWindow(nullptr, (int)w / 2, (int)h / 2);
 
-  s_Camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
+  this->camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
 
-  s_Camera.viewport[0] = 0.0f;
-  s_Camera.viewport[1] = 0.0f;
-  s_Camera.viewport[2] = w;
-  s_Camera.viewport[3] = h;
+  this->camera.viewport[0] = 0.0f;
+  this->camera.viewport[1] = 0.0f;
+  this->camera.viewport[2] = w;
+  this->camera.viewport[3] = h;
 
-  s_Rotation = glm::quatLookAt(glm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
+  this->rotation = glm::quatLookAt(glm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 }
 
 static void DoMenu()
@@ -121,40 +113,40 @@ static void DoMenu()
   }
 }
 
-static void DoInput()
+static void DoInput(editor::Editor* pEditor)
 {
   const float dt = mj::GetDeltaTime();
 
   if (mj::input::GetMouseButton(MouseButton::Right))
   {
-    float speed = MOVEMENT_FACTOR;
+    float speed = editor::Editor::MOVEMENT_FACTOR;
     if (mj::input::GetKey(Key::LeftShift))
     {
       speed *= 3.0f;
     }
     if (mj::input::GetKey(Key::KeyW))
     {
-      s_Camera.position += s_Rotation * axis::FORWARD * dt * speed;
+      pEditor->camera.position += pEditor->rotation * axis::FORWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyA))
     {
-      s_Camera.position += s_Rotation * axis::LEFT * dt * speed;
+      pEditor->camera.position += pEditor->rotation * axis::LEFT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyS))
     {
-      s_Camera.position += s_Rotation * axis::BACKWARD * dt * speed;
+      pEditor->camera.position += pEditor->rotation * axis::BACKWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyD))
     {
-      s_Camera.position += s_Rotation * axis::RIGHT * dt * speed;
+      pEditor->camera.position += pEditor->rotation * axis::RIGHT * dt * speed;
     }
 
     {
       // mouse x = yaw (left/right), mouse y = pitch (up/down)
       MJ_UNINITIALIZED int32_t dx, dy;
       mj::input::GetRelativeMouseMovement(&dx, &dy);
-      s_Rotation = glm::angleAxis(MOUSE_LOOK_FACTOR * dx, axis::UP) * s_Rotation;
-      s_Rotation = glm::angleAxis(MOUSE_LOOK_FACTOR * dy, s_Rotation * axis::RIGHT) * s_Rotation;
+      pEditor->rotation = glm::angleAxis(editor::Editor::MOUSE_LOOK_FACTOR * dx, axis::UP) * pEditor->rotation;
+      pEditor->rotation = glm::angleAxis(editor::Editor::MOUSE_LOOK_FACTOR * dy, pEditor->rotation * axis::RIGHT) * pEditor->rotation;
     }
   }
 
@@ -165,17 +157,17 @@ static void DoInput()
     mj::input::GetRelativeMouseMovement(&dx, &dy);
     if (dx != 0 || dy != 0)
     {
-      glm::vec3 center(s_Camera.position.x, 0.0f, s_Camera.position.z);
+      glm::vec3 center(pEditor->camera.position.x, 0.0f, pEditor->camera.position.z);
 
       // Unit vector center->current
       glm::vec3 currentPos = mj::input::GetMousePosition();
       glm::vec3 to =
-          glm::unProject(currentPos, glm::identity<glm::mat4>(), s_Camera.projection, s_Camera.viewport) - center;
+          glm::unProject(currentPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) - center;
 
       // Unit vector center->old
       glm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
       glm::vec3 from =
-          glm::unProject(oldPos, glm::identity<glm::mat4>(), s_Camera.projection, s_Camera.viewport) - center;
+          glm::unProject(oldPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) - center;
 
       ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
       ImGui::Begin("Arcball");
@@ -186,7 +178,7 @@ static void DoInput()
       ImGui::InputFloat3("to", glm::value_ptr(to), 7);
       ImGui::End();
 
-      s_Rotation *= glm::quat(from, to);
+      pEditor->rotation *= glm::quat(from, to);
     }
   }
 
@@ -194,44 +186,44 @@ static void DoInput()
   {
     MJ_UNINITIALIZED int32_t x, y;
     mj::input::GetRelativeMouseMovement(&x, &y);
-    // s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
-    // s_Camera.position += s_Rotation * axis::RIGHT
+    // pEditor->camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
+    // pEditor->camera.position += pEditor->rotation * axis::RIGHT
   }
 
-  s_MouseScrollFactor -= mj::input::GetMouseScroll();
-  if (s_MouseScrollFactor <= 1)
+  pEditor->mouseScrollFactor -= mj::input::GetMouseScroll();
+  if (pEditor->mouseScrollFactor <= 1)
   {
-    s_MouseScrollFactor = 1;
+    pEditor->mouseScrollFactor = 1;
   }
 }
 
-void editor::Do(Camera** ppCamera)
+void editor::Editor::Do(Camera** ppCamera)
 {
   DoMenu();
-  DoInput();
+  DoInput(this);
 
-  glm::mat4 rotate    = glm::transpose(glm::mat4_cast(s_Rotation));
+  glm::mat4 rotate    = glm::transpose(glm::mat4_cast(this->rotation));
   glm::mat4 translate = glm::identity<glm::mat4>();
-  translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
+  translate           = glm::translate(translate, -glm::vec3(this->camera.position));
 
-  s_Camera.view = rotate * translate;
-  s_Camera.yFov = 90.0f;
-  float aspect  = s_Camera.viewport[2] / s_Camera.viewport[3];
+  this->camera.view = rotate * translate;
+  this->camera.yFov = 90.0f;
+  float aspect  = this->camera.viewport[2] / this->camera.viewport[3];
 #if 0
-  s_Camera.projection = glm::ortho(-10.0f * s_MouseScrollFactor * aspect, //
-                                   10.0f * s_MouseScrollFactor * aspect,  //
-                                   -10.0f * s_MouseScrollFactor,          //
-                                   10.0f * s_MouseScrollFactor,           //
+  pEditor->camera.projection = glm::ortho(-10.0f * pEditor->mouseScrollFactor * aspect, //
+                                   10.0f * pEditor->mouseScrollFactor * aspect,  //
+                                   -10.0f * pEditor->mouseScrollFactor,          //
+                                   10.0f * pEditor->mouseScrollFactor,           //
                                    0.1f,                                  //
                                    1000.0f);
 #else
-  s_Camera.projection =
-      glm::perspective(glm::radians(s_Camera.yFov), s_Camera.viewport[2] / s_Camera.viewport[3], 0.01f, 100.0f);
+  this->camera.projection =
+      glm::perspective(glm::radians(this->camera.yFov), this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
 #endif
 
-  *ppCamera = &s_Camera;
+  *ppCamera = &this->camera;
 }
 
-void editor::Exit()
+void editor::Editor::Exit()
 {
 }
