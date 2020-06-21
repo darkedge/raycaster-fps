@@ -21,9 +21,7 @@ static ID3D11DepthStencilState* s_pDepthStencilState;
 static ID3D11DepthStencilView* s_pDepthStencilView;
 static ID3D11Texture2D* s_pDepthStencilBuffer;
 
-static void Reset();
-
-static State s_StateGame   = { nullptr, Reset, game::Do, nullptr };
+static State s_StateGame   = { nullptr, game::Entry, game::Do, nullptr };
 static State s_StateEditor = { editor::Resize, editor::Entry, editor::Do, nullptr };
 
 static Camera* s_pCamera;
@@ -88,11 +86,6 @@ static void CleanupDeviceD3D()
   SAFE_RELEASE(s_pDepthStencilState);
   SAFE_RELEASE(s_pDepthStencilView);
   SAFE_RELEASE(s_pDepthStencilBuffer);
-}
-
-static void Reset()
-{
-  game::Entry();
 }
 
 #if 0
@@ -238,20 +231,6 @@ void meta::Update(int width, int height)
 
   StateMachineUpdate(&s_StateMachine, &s_pCamera);
 
-  // Reset button
-  if (!ImGui::IsAnyWindowFocused() && mj::input::GetKeyDown(Key::KeyR))
-  {
-    Reset();
-  }
-
-  {
-    ImGui::Begin("Debug");
-    ImGui::Text("R to reset, F3 toggles mouselook");
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
-                ImGui::GetIO().Framerate);
-    ImGui::End();
-  }
-
   s_pContext->OMSetRenderTargets(1, &s_pRenderTargetView, s_pDepthStencilView);
   s_pContext->ClearDepthStencilView(s_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
   FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -260,7 +239,7 @@ void meta::Update(int width, int height)
 
   gfx::Update(s_pContext, width, height, s_pCamera);
 
-#if 1
+#if 0
   {
     ZoneScopedNC("ImGui Demo", tracy::Color::Burlywood);
     ImGui::ShowDemoWindow();

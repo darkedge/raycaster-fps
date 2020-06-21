@@ -34,6 +34,21 @@ void game::Entry()
 void game::Do(Camera** ppCamera)
 {
   ZoneScoped;
+
+  // Reset button
+  if (!ImGui::IsAnyWindowFocused() && mj::input::GetKeyDown(Key::KeyR))
+  {
+    Entry();
+  }
+
+  {
+    ImGui::Begin("Debug");
+    ImGui::Text("R to reset, F3 toggles editor");
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                ImGui::GetIO().Framerate);
+    ImGui::End();
+  }
+
   const float dt = mj::GetDeltaTime();
 
   if (mj::input::GetKey(Key::KeyW))
