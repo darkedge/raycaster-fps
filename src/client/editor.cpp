@@ -24,6 +24,7 @@ struct ETool
 
 static Camera s_Camera;
 static int32_t s_MouseScrollFactor = 1;
+static glm::quat s_Rotation;
 
 #if 0
 void editor::Show()
@@ -102,42 +103,88 @@ void editor::Entry()
   s_Camera.viewport[1] = 0.0f;
   s_Camera.viewport[2] = w;
   s_Camera.viewport[3] = h;
+
+  s_Rotation = glm::quatLookAt(glm::normalize(axis::POS_Z + 2.0f * axis::NEG_Y), axis::POS_Y);
 }
 
-void editor::Do(Camera** ppCamera)
+static void DoMenu()
+{
+  if (ImGui::BeginMainMenuBar())
+  {
+    if (ImGui::BeginMenu("File"))
+    {
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+}
+
+static void DoInput()
 {
   const float dt = mj::GetDeltaTime();
 
-  if (mj::input::GetKey(Key::KeyW))
+  if (mj::input::GetMouseButton(MouseButton::Right))
   {
-    glm::vec3 vec = axis::POS_Z;
-    vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
-  }
-  if (mj::input::GetKey(Key::KeyA))
-  {
-    glm::vec3 vec = axis::NEG_X;
-    vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
-  }
-  if (mj::input::GetKey(Key::KeyS))
-  {
-    glm::vec3 vec = axis::NEG_Z;
-    vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
-  }
-  if (mj::input::GetKey(Key::KeyD))
-  {
-    glm::vec3 vec = axis::POS_X;
-    vec.y         = 0.0f;
-    s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    if (mj::input::GetKey(Key::KeyW))
+    {
+      glm::vec3 vec = axis::POS_Z;
+      vec.y         = 0.0f;
+      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    }
+    if (mj::input::GetKey(Key::KeyA))
+    {
+      glm::vec3 vec = axis::NEG_X;
+      vec.y         = 0.0f;
+      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    }
+    if (mj::input::GetKey(Key::KeyS))
+    {
+      glm::vec3 vec = axis::NEG_Z;
+      vec.y         = 0.0f;
+      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    }
+    if (mj::input::GetKey(Key::KeyD))
+    {
+      glm::vec3 vec = axis::POS_X;
+      vec.y         = 0.0f;
+      s_Camera.position += glm::vec3(glm::normalize(vec) * dt * MOVEMENT_FACTOR);
+    }
+
+    // Arcball rotation
+    MJ_UNINITIALIZED int32_t dx, dy;
+    mj::input::GetRelativeMouseMovement(&dx, &dy);
+    if (dx != 0 || dy != 0)
+    {
+      glm::vec3 center(s_Camera.position.x, 0.0f, s_Camera.position.z);
+
+      // Unit vector center->current
+      glm::vec3 currentPos = mj::input::GetMousePosition();
+      glm::vec3 to =
+          glm::unProject(currentPos, glm::identity<glm::mat4>(), s_Camera.projection, s_Camera.viewport) - center;
+
+      // Unit vector center->old
+      glm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
+      glm::vec3 from =
+          glm::unProject(oldPos, glm::identity<glm::mat4>(), s_Camera.projection, s_Camera.viewport) - center;
+
+      ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
+      ImGui::Begin("Arcball");
+      ImGui::InputFloat3("center", glm::value_ptr(center), 7);
+      auto diff = currentPos - oldPos;
+      ImGui::InputFloat3("diff", glm::value_ptr(diff), 7);
+      ImGui::InputFloat3("from", glm::value_ptr(from), 7);
+      ImGui::InputFloat3("to", glm::value_ptr(to), 7);
+      ImGui::End();
+
+      s_Rotation *= glm::quat(from, to);
+    }
   }
 
   if (mj::input::GetMouseButton(MouseButton::Middle))
   {
     MJ_UNINITIALIZED int32_t x, y;
     mj::input::GetRelativeMouseMovement(&x, &y);
-    s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, (float)y * MOUSE_DRAG_FACTOR, 0.0f);
+    s_Camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
   }
 
   s_MouseScrollFactor -= mj::input::GetMouseScroll();
@@ -145,23 +192,31 @@ void editor::Do(Camera** ppCamera)
   {
     s_MouseScrollFactor = 1;
   }
+}
 
-  glm::mat4 rotate =
-      glm::transpose(glm::mat4_cast(glm::quatLookAt(glm::normalize(axis::POS_Z + 2.0f * axis::NEG_Y), axis::POS_Y)));
+void editor::Do(Camera** ppCamera)
+{
+  DoMenu();
+  DoInput();
+
+  glm::mat4 rotate    = glm::transpose(glm::mat4_cast(s_Rotation));
   glm::mat4 translate = glm::identity<glm::mat4>();
   translate           = glm::translate(translate, -glm::vec3(s_Camera.position));
 
-  s_Camera.view       = rotate * translate;
-  s_Camera.yFov       = 90.0f;
-  float aspect        = s_Camera.viewport[2] / s_Camera.viewport[3];
-  s_Camera.projection = glm::orthoLH_ZO(-10.0f * s_MouseScrollFactor * aspect, //
-                                        10.0f * s_MouseScrollFactor * aspect,  //
-                                        -10.0f * s_MouseScrollFactor,          //
-                                        10.0f * s_MouseScrollFactor,           //
-                                        0.1f,                                  //
-                                        1000.0f);
-
-  // auto bla = glm::unProject(mj::input::GetMousePosition(), s_Camera.model, s_Camera.projection, s_Camera.viewport);
+  s_Camera.view = rotate * translate;
+  s_Camera.yFov = 90.0f;
+  float aspect  = s_Camera.viewport[2] / s_Camera.viewport[3];
+#if 0
+  s_Camera.projection = glm::ortho(-10.0f * s_MouseScrollFactor * aspect, //
+                                   10.0f * s_MouseScrollFactor * aspect,  //
+                                   -10.0f * s_MouseScrollFactor,          //
+                                   10.0f * s_MouseScrollFactor,           //
+                                   0.1f,                                  //
+                                   1000.0f);
+#else
+  s_Camera.projection =
+      glm::perspective(glm::radians(s_Camera.yFov), s_Camera.viewport[2] / s_Camera.viewport[3], 0.01f, 100.0f);
+#endif
 
   *ppCamera = &s_Camera;
 }
