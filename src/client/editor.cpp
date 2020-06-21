@@ -146,7 +146,8 @@ static void DoInput(editor::Editor* pEditor)
       MJ_UNINITIALIZED int32_t dx, dy;
       mj::input::GetRelativeMouseMovement(&dx, &dy);
       pEditor->rotation = glm::angleAxis(editor::Editor::MOUSE_LOOK_FACTOR * dx, axis::UP) * pEditor->rotation;
-      pEditor->rotation = glm::angleAxis(editor::Editor::MOUSE_LOOK_FACTOR * dy, pEditor->rotation * axis::RIGHT) * pEditor->rotation;
+      pEditor->rotation =
+          glm::angleAxis(editor::Editor::MOUSE_LOOK_FACTOR * dy, pEditor->rotation * axis::RIGHT) * pEditor->rotation;
     }
   }
 
@@ -162,12 +163,14 @@ static void DoInput(editor::Editor* pEditor)
       // Unit vector center->current
       glm::vec3 currentPos = mj::input::GetMousePosition();
       glm::vec3 to =
-          glm::unProject(currentPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) - center;
+          glm::unProject(currentPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) -
+          center;
 
       // Unit vector center->old
       glm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
       glm::vec3 from =
-          glm::unProject(oldPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) - center;
+          glm::unProject(oldPos, glm::identity<glm::mat4>(), pEditor->camera.projection, pEditor->camera.viewport) -
+          center;
 
       ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
       ImGui::Begin("Arcball");
@@ -208,8 +211,8 @@ void editor::Editor::Do(Camera** ppCamera)
 
   this->camera.view = rotate * translate;
   this->camera.yFov = 90.0f;
-  float aspect  = this->camera.viewport[2] / this->camera.viewport[3];
 #if 0
+  float aspect      = this->camera.viewport[2] / this->camera.viewport[3];
   pEditor->camera.projection = glm::ortho(-10.0f * pEditor->mouseScrollFactor * aspect, //
                                    10.0f * pEditor->mouseScrollFactor * aspect,  //
                                    -10.0f * pEditor->mouseScrollFactor,          //
@@ -217,8 +220,8 @@ void editor::Editor::Do(Camera** ppCamera)
                                    0.1f,                                  //
                                    1000.0f);
 #else
-  this->camera.projection =
-      glm::perspective(glm::radians(this->camera.yFov), this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
+  this->camera.projection = glm::perspective(glm::radians(this->camera.yFov),
+                                             this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
 #endif
 
   *ppCamera = &this->camera;

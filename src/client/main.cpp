@@ -5,44 +5,31 @@
 #include "logo.h"
 #include "mj_platform.h"
 #include "imgui_impl_sdl.h"
+#include "main.h"
 
 // WARNING: global variable
 static float mj_DeltaTime;
 static SDL_Window* s_pWindow;
 static meta::Global s_Meta;
 
-namespace mj
+float mj::GetDeltaTime()
 {
-  float GetDeltaTime()
-  {
-    return mj_DeltaTime;
-  }
+  return mj_DeltaTime;
+}
 
-  void GetWindowSize(float* w, float* h)
-  {
-    MJ_UNINITIALIZED int x, y;
-    SDL_GetWindowSize(s_pWindow, &x, &y);
-    *w = (float)x;
-    *h = (float)y;
-  }
-
-  bool IsWindowMouseFocused()
-  {
-    Uint32 flags = SDL_GetWindowFlags(s_pWindow);
-    return (flags & SDL_WINDOW_MOUSE_FOCUS);
-  }
-} // namespace mj
-
-#if 0
-struct EventData
+void mj::GetWindowSize(float* w, float* h)
 {
-  int32_t mouseX;
-  int32_t mouseY;
-  int32_t mouseScroll;
-  int width;
-  int height;
-};
-#endif
+  MJ_UNINITIALIZED int x, y;
+  SDL_GetWindowSize(s_pWindow, &x, &y);
+  *w = (float)x;
+  *h = (float)y;
+}
+
+bool mj::IsWindowMouseFocused()
+{
+  Uint32 flags = SDL_GetWindowFlags(s_pWindow);
+  return (flags & SDL_WINDOW_MOUSE_FOCUS);
+}
 
 static bool PumpEvents()
 {
@@ -56,7 +43,6 @@ static bool PumpEvents()
     case SDL_MOUSEWHEEL:
     {
       const SDL_MouseWheelEvent& e = event.wheel;
-      //pEventData->mouseScroll += e.y;
       mj::input::AddMouseScroll(e.y);
     }
     break;
@@ -98,8 +84,6 @@ static bool PumpEvents()
     case SDL_MOUSEMOTION:
     {
       const SDL_MouseMotionEvent& e = event.motion;
-      //pEventData->mouseX            = e.x;
-      //pEventData->mouseY            = e.y;
       mj::input::SetMousePosition(glm::vec3(e.x, e.y, 0.0f));
       mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
     }
@@ -121,8 +105,6 @@ static bool PumpEvents()
       {
         if (event.window.windowID == SDL_GetWindowID(s_pWindow)) // Skip ImGui window IDs
         {
-          //pEventData->width  = wev.data1;
-          //pEventData->height = wev.data2;
           meta::Resize(&s_Meta, wev.data1, wev.data2);
         }
       }
@@ -232,10 +214,6 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   {
     return 1;
   }
-
-  //EventData eventData = {};
-
-  //SDL_GetWindowSize(s_pWindow, &eventData.width, &eventData.height);
 
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
