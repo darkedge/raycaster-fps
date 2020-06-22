@@ -28,7 +28,6 @@
     <ClCompile Include="..\..\src\client\graphics.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\client\logo.h" />
     <ClInclude Include="..\..\3rdparty\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>

@@ -28,7 +28,6 @@
     <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_sdl.h" />
     <ClInclude Include="..\..\src\client\map.h" />
-    <ClInclude Include="..\..\src\client\logo.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
     <ClInclude Include="..\..\src\client\mj_platform.h" />

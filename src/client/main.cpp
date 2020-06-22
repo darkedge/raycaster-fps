@@ -2,7 +2,6 @@
 #include "mj_common.h"
 #include "mj_input.h"
 #include "meta.h"
-#include "logo.h"
 #include "mj_platform.h"
 #include "imgui_impl_sdl.h"
 #include "main.h"

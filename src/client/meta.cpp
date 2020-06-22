@@ -100,7 +100,7 @@ static void ShowBuildInfo()
 
 static void CreateRenderTargetView(meta::Global* pGlobal)
 {
-  ID3D11Texture2D* pBackBuffer;
+  MJ_UNINITIALIZED ID3D11Texture2D* pBackBuffer;
   pGlobal->pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
   pGlobal->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &pGlobal->pRenderTargetView);
   pBackBuffer->Release();
