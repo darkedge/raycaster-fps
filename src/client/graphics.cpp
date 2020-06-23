@@ -144,7 +144,7 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
 
 static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
 {
-  int32_t xz[] = { 0, 0 }; // xz yzx zxy
+  uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
   std::vector<Vertex> vertices;
   std::vector<int16_t> indices;
@@ -158,10 +158,10 @@ static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
     int32_t primaryAxis   = i & 1;           //  x  z  x  z
     int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
-    int32_t arr_xz[] = { 0, 0, 1, 1 };
-    int32_t neighbor = arr_xz[i] * 2 - 1; // -1 -1 +1 +1
-    int32_t cur_z    = (i + 3) & 3;       // 1, 0, 0, 1
-    int32_t next_x   = (i + 1) & 3;       // 0, 1, 1, 0
+    int8_t arr_xz[] = { 0, 0, 1, 1 };
+    int8_t neighbor = arr_xz[i] * 2 - 1; // -1 -1 +1 +1
+    int32_t cur_z   = (i + 3) & 3;       // 1, 0, 0, 1
+    int32_t next_x  = (i + 1) & 3;       // 0, 1, 1, 0
 
     // Traverse the level slice by slice from a single direction
     for (xz[primaryAxis] = 0; xz[primaryAxis] < mapDim[primaryAxis]; xz[primaryAxis]++)
