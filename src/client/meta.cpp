@@ -46,8 +46,8 @@ bool Meta::CreateDeviceD3D(HWND hWnd)
                                     2,                        //
                                     D3D11_SDK_VERSION,        //
                                     &sd,                      //
-                                    &this->pSwapChain,     //
-                                    &this->pDevice,        //
+                                    &this->pSwapChain,        //
+                                    &this->pDevice,           //
                                     &featureLevel,            //
                                     &this->pContext) != S_OK)
   {
@@ -166,13 +166,13 @@ void Meta::Init(HWND hwnd)
     MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
     ImGui::GetIO().WantCaptureMouse    = true;
     ImGui::GetIO().WantCaptureKeyboard = true;
-    this->StateMachine.pStateNext   = &this->StateGame;
+    this->StateMachine.pStateNext      = &this->StateGame;
   }
   else
   {
     ImGui::GetIO().WantCaptureMouse    = false;
     ImGui::GetIO().WantCaptureKeyboard = false;
-    this->StateMachine.pStateNext   = &this->StateEditor;
+    this->StateMachine.pStateNext      = &this->StateEditor;
   }
 
   // Fire Entry action for next state
@@ -207,8 +207,8 @@ void Meta::Update()
   if (mj::input::GetKeyDown(Key::F3))
   {
     this->StateMachine.pStateNext = (this->StateMachine.pStateCurrent == &this->StateGame)
-                                           ? (StateBase*)&this->StateEditor
-                                           : (StateBase*)&this->StateGame;
+                                        ? (StateBase*)&this->StateEditor
+                                        : (StateBase*)&this->StateGame;
   }
 
   StateMachineUpdate(&this->StateMachine, &this->pCamera);

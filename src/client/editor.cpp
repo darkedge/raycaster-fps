@@ -94,7 +94,7 @@ static void SaveFileDialog()
 
   // Create the FileSaveDialog object.
   HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, nullptr, CLSCTX_ALL, IID_IFileSaveDialog,
-                        reinterpret_cast<void**>(&pFileSave));
+                                reinterpret_cast<void**>(&pFileSave));
 
   if (SUCCEEDED(hr))
   {
@@ -113,7 +113,7 @@ static void SaveFileDialog()
 
         if (SUCCEEDED(hr))
         {
-          //MessageBoxW(nullptr, pszFilePath, L"File Path", MB_OK);
+          // MessageBoxW(nullptr, pszFilePath, L"File Path", MB_OK);
           CoTaskMemFree(pszFilePath);
         }
         pItem->Release();
@@ -129,7 +129,7 @@ static void OpenFileDialog()
 
   // Create the FileOpenDialog object.
   HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_IFileOpenDialog,
-                        reinterpret_cast<void**>(&pFileOpen));
+                                reinterpret_cast<void**>(&pFileOpen));
 
   if (SUCCEEDED(hr))
   {
@@ -148,7 +148,7 @@ static void OpenFileDialog()
 
         if (SUCCEEDED(hr))
         {
-          //MessageBoxW(nullptr, pszFilePath, L"File Path", MB_OK);
+          // MessageBoxW(nullptr, pszFilePath, L"File Path", MB_OK);
           CoTaskMemFree(pszFilePath);
         }
         pItem->Release();
@@ -274,8 +274,7 @@ void EditorState::DoInput()
       // Unit vector center->old
       glm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
       glm::vec3 from =
-          glm::unProject(oldPos, glm::identity<glm::mat4>(), this->camera.projection, this->camera.viewport) -
-          center;
+          glm::unProject(oldPos, glm::identity<glm::mat4>(), this->camera.projection, this->camera.viewport) - center;
 
       ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
       ImGui::Begin("Arcball");

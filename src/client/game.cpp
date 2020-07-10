@@ -84,8 +84,8 @@ void GameState::Do(Camera** ppCamera)
   this->camera.viewport[0] = 0.0f;
   this->camera.viewport[1] = 0.0f;
   mj::GetWindowSize(&this->camera.viewport[2], &this->camera.viewport[3]);
-  this->camera.projection = glm::perspective(
-      glm::radians(this->camera.yFov), this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
+  this->camera.projection = glm::perspective(glm::radians(this->camera.yFov),
+                                             this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
 
   *ppCamera = &this->camera;
 }
