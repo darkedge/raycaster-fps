@@ -6,7 +6,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include "main.h"
 
-void game::Game::Entry()
+void GameState::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) true));
   // ImGui::GetIO().WantCaptureMouse    = this->MouseLook;
@@ -21,7 +21,7 @@ void game::Game::Entry()
   this->yaw             = -this->currentMousePos;
 }
 
-void game::Game::Do(Camera** ppCamera)
+void GameState::Do(Camera** ppCamera)
 {
   ZoneScoped;
 
@@ -45,30 +45,30 @@ void game::Game::Do(Camera** ppCamera)
   {
     glm::vec3 vec = this->rotation * axis::FORWARD;
     vec.y         = 0.0f;
-    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
     glm::vec3 vec = this->rotation * axis::LEFT;
     vec.y         = 0.0f;
-    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
     glm::vec3 vec = this->rotation * axis::BACKWARD;
     vec.y         = 0.0f;
-    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
     glm::vec3 vec = this->rotation * axis::RIGHT;
     vec.y         = 0.0f;
-    this->camera.position += glm::vec3(glm::normalize(vec) * dt * game::Game::MOVEMENT_FACTOR);
+    this->camera.position += glm::vec3(glm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
 
   MJ_UNINITIALIZED int32_t dx, dy;
   mj::input::GetRelativeMouseMovement(&dx, &dy);
-  this->currentMousePos -= game::Game::ROT_SPEED * dx;
+  this->currentMousePos -= GameState::ROT_SPEED * dx;
   if (this->currentMousePos != this->lastMousePos)
   {
     this->rotation     = glm::quat(glm::vec3(0.0f, -this->currentMousePos, 0));

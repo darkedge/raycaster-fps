@@ -2,21 +2,20 @@
 #include "state_machine.h"
 #include "camera.h"
 
-namespace game
+class GameState : public StateBase
 {
-  struct Game : public State
-  {
-    static constexpr float MOVEMENT_FACTOR = 3.0f;
-    static constexpr float ROT_SPEED       = 0.0025f;
+public:
+  void Entry() override;
+  void Do(Camera** ppCamera) override;
 
-    float lastMousePos;
-    float currentMousePos;
-    float yaw;
-    glm::quat rotation;
+private:
+  static constexpr float MOVEMENT_FACTOR = 3.0f;
+  static constexpr float ROT_SPEED       = 0.0025f;
 
-    Camera camera;
+  float lastMousePos;
+  float currentMousePos;
+  float yaw;
+  glm::quat rotation;
 
-    void Entry() override;
-    void Do(Camera** ppCamera) override;
-  };
-} // namespace game
+  Camera camera;
+};

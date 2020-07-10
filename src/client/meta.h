@@ -17,8 +17,8 @@ namespace meta
     ID3D11DepthStencilView* pDepthStencilView;
     ID3D11Texture2D* pDepthStencilBuffer;
 
-    game::Game StateGame;
-    editor::Editor StateEditor;
+    GameState StateGame;
+    EditorState StateEditor;
 
     Camera* pCamera;
 

@@ -207,8 +207,8 @@ void meta::Update(meta::Global* pGlobal)
   if (mj::input::GetKeyDown(Key::F3))
   {
     pGlobal->StateMachine.pStateNext = (pGlobal->StateMachine.pStateCurrent == &pGlobal->StateGame)
-                                           ? (State*)&pGlobal->StateEditor
-                                           : (State*)&pGlobal->StateGame;
+                                           ? (StateBase*)&pGlobal->StateEditor
+                                           : (StateBase*)&pGlobal->StateGame;
   }
 
   StateMachineUpdate(&pGlobal->StateMachine, &pGlobal->pCamera);

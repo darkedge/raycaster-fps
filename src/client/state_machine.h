@@ -5,7 +5,7 @@ struct Camera;
 /// <summary>
 /// Interface for a state.
 /// </summary>
-struct State
+struct StateBase
 {
   virtual void Resize(float w, float h)
   {
@@ -26,8 +26,8 @@ struct State
 
 struct StateMachine
 {
-  State* pStateCurrent;
-  State* pStateNext;
+  StateBase* pStateCurrent;
+  StateBase* pStateNext;
 };
 
 void StateMachineResize(StateMachine* pStateMachine, float width, float height);

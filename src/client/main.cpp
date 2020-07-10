@@ -24,6 +24,11 @@ void mj::GetWindowSize(float* w, float* h)
   *h = (float)y;
 }
 
+void mj::MoveMouse(int x, int y)
+{
+  SDL_WarpMouseInWindow(s_pWindow, x, y);
+}
+
 bool mj::IsWindowMouseFocused()
 {
   Uint32 flags = SDL_GetWindowFlags(s_pWindow);

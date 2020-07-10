@@ -22,6 +22,7 @@ static ID3D11PixelShader* s_pPixelShader;
 static ID3D11ShaderResourceView* s_pShaderResourceView; // Texture array SRV
 static ID3D11InputLayout* s_pInputLayout;
 static ID3D11RasterizerState* s_pRasterizerState;
+static ID3D11RasterizerState* s_pRasterizerStateCullNone;
 static ID3D11BlendState* s_pBlendState;
 static ID3D11Buffer* s_pResource;
 static UINT s_Indices;
@@ -396,17 +397,20 @@ void gfx::Init(ID3D11Device* pDevice)
     // Rasterizer State
     D3D11_RASTERIZER_DESC rasterizerDesc = {};
 
-    rasterizerDesc.AntialiasedLineEnable = FALSE;
+    rasterizerDesc.FillMode              = D3D11_FILL_SOLID;
     rasterizerDesc.CullMode              = D3D11_CULL_BACK;
+    rasterizerDesc.FrontCounterClockwise = TRUE;
     rasterizerDesc.DepthBias             = 0;
     rasterizerDesc.DepthBiasClamp        = 0.0f;
-    rasterizerDesc.DepthClipEnable       = TRUE;
-    rasterizerDesc.FillMode              = D3D11_FILL_SOLID;
-    rasterizerDesc.FrontCounterClockwise = TRUE;
-    rasterizerDesc.MultisampleEnable     = FALSE;
-    rasterizerDesc.ScissorEnable         = FALSE;
     rasterizerDesc.SlopeScaledDepthBias  = 0.0f;
+    rasterizerDesc.DepthClipEnable       = TRUE;
+    rasterizerDesc.ScissorEnable         = FALSE;
+    rasterizerDesc.MultisampleEnable     = FALSE;
+    rasterizerDesc.AntialiasedLineEnable = FALSE;
     pDevice->CreateRasterizerState(&rasterizerDesc, &s_pRasterizerState);
+
+    rasterizerDesc.CullMode = D3D11_CULL_NONE;
+    pDevice->CreateRasterizerState(&rasterizerDesc, &s_pRasterizerStateCullNone);
   }
 }
 
@@ -484,6 +488,7 @@ void gfx::Destroy()
   SAFE_RELEASE(s_pInputLayout);
   SAFE_RELEASE(s_pResource);
   SAFE_RELEASE(s_pRasterizerState);
+  SAFE_RELEASE(s_pRasterizerStateCullNone);
   SAFE_RELEASE(s_pBlendState);
 }
 
