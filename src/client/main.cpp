@@ -9,7 +9,7 @@
 // WARNING: global variable
 static float mj_DeltaTime;
 static SDL_Window* s_pWindow;
-static meta::Global s_Meta;
+static Meta s_Meta;
 
 float mj::GetDeltaTime()
 {
@@ -109,7 +109,7 @@ static bool PumpEvents()
       {
         if (event.window.windowID == SDL_GetWindowID(s_pWindow)) // Skip ImGui window IDs
         {
-          meta::Resize(&s_Meta, wev.data1, wev.data2);
+          s_Meta.Resize(wev.data1, wev.data2);
         }
       }
       break;
@@ -250,7 +250,7 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 
   MJ_DISCARD(ImGui_ImplSDL2_InitForD3D(s_pWindow));
-  meta::Init(&s_Meta, wmInfo.info.win.window);
+  s_Meta.Init(wmInfo.info.win.window);
 
   mj::input::Init();
 
@@ -265,16 +265,16 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
     {
       break;
     }
-    meta::NewFrame();
+    s_Meta.NewFrame();
     ImGui_ImplSDL2_NewFrame(s_pWindow);
     mj::input::Update();
     UpdateDeltaTime(&time);
-    meta::Update(&s_Meta);
+    s_Meta.Update();
     FrameMark;
   }
 
   // Cleanup
-  meta::Destroy(&s_Meta);
+  s_Meta.Destroy();
   ImGui_ImplSDL2_Shutdown();
 
   SDL_DestroyWindow(s_pWindow);

@@ -10,7 +10,7 @@
 
 // Helper functions
 
-static bool CreateDeviceD3D(meta::Global* pGlobal, HWND hWnd)
+bool Meta::CreateDeviceD3D(HWND hWnd)
 {
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
@@ -46,10 +46,10 @@ static bool CreateDeviceD3D(meta::Global* pGlobal, HWND hWnd)
                                     2,                        //
                                     D3D11_SDK_VERSION,        //
                                     &sd,                      //
-                                    &pGlobal->pSwapChain,     //
-                                    &pGlobal->pDevice,        //
+                                    &this->pSwapChain,     //
+                                    &this->pDevice,        //
                                     &featureLevel,            //
-                                    &pGlobal->pContext) != S_OK)
+                                    &this->pContext) != S_OK)
   {
     return false;
   }
@@ -57,15 +57,15 @@ static bool CreateDeviceD3D(meta::Global* pGlobal, HWND hWnd)
   return true;
 }
 
-static void CleanupDeviceD3D(meta::Global* pGlobal)
+void Meta::CleanupDeviceD3D()
 {
-  SAFE_RELEASE(pGlobal->pSwapChain);
-  SAFE_RELEASE(pGlobal->pContext);
-  SAFE_RELEASE(pGlobal->pRenderTargetView);
-  SAFE_RELEASE(pGlobal->pDevice);
-  SAFE_RELEASE(pGlobal->pDepthStencilState);
-  SAFE_RELEASE(pGlobal->pDepthStencilView);
-  SAFE_RELEASE(pGlobal->pDepthStencilBuffer);
+  SAFE_RELEASE(this->pSwapChain);
+  SAFE_RELEASE(this->pContext);
+  SAFE_RELEASE(this->pRenderTargetView);
+  SAFE_RELEASE(this->pDevice);
+  SAFE_RELEASE(this->pDepthStencilState);
+  SAFE_RELEASE(this->pDepthStencilView);
+  SAFE_RELEASE(this->pDepthStencilBuffer);
 }
 
 #if 0
@@ -98,24 +98,24 @@ static void ShowBuildInfo()
 }
 #endif
 
-static void CreateRenderTargetView(meta::Global* pGlobal)
+void Meta::CreateRenderTargetView()
 {
   MJ_UNINITIALIZED ID3D11Texture2D* pBackBuffer;
-  pGlobal->pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  pGlobal->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &pGlobal->pRenderTargetView);
+  this->pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
+  this->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &this->pRenderTargetView);
   pBackBuffer->Release();
 }
 
-void meta::Init(meta::Global* pGlobal, HWND hwnd)
+void Meta::Init(HWND hwnd)
 {
   // Setup Platform/Renderer bindings
-  MJ_DISCARD(CreateDeviceD3D(pGlobal, hwnd));
+  MJ_DISCARD(CreateDeviceD3D(hwnd));
 
-  MJ_DISCARD(ImGui_ImplDX11_Init(pGlobal->pDevice, pGlobal->pContext));
+  MJ_DISCARD(ImGui_ImplDX11_Init(this->pDevice, this->pContext));
 
-  CreateRenderTargetView(pGlobal);
+  this->CreateRenderTargetView();
 
-  gfx::Init(pGlobal->pDevice);
+  gfx::Init(this->pDevice);
 
   {
     // Depth Stencil
@@ -136,8 +136,8 @@ void meta::Init(meta::Global* pGlobal, HWND hwnd)
     descDSV.Flags                         = 0;
     descDSV.Texture2D.MipSlice            = 0;
 
-    pGlobal->pDevice->CreateTexture2D(&desc, nullptr, &pGlobal->pDepthStencilBuffer);
-    pGlobal->pDevice->CreateDepthStencilView(pGlobal->pDepthStencilBuffer, &descDSV, &pGlobal->pDepthStencilView);
+    this->pDevice->CreateTexture2D(&desc, nullptr, &this->pDepthStencilBuffer);
+    this->pDevice->CreateDepthStencilView(this->pDepthStencilBuffer, &descDSV, &this->pDepthStencilView);
   }
 
   {
@@ -157,7 +157,7 @@ void meta::Init(meta::Global* pGlobal, HWND hwnd)
     dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
     dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
 
-    MJ_DISCARD(pGlobal->pDevice->CreateDepthStencilState(&dsDesc, &pGlobal->pDepthStencilState));
+    MJ_DISCARD(this->pDevice->CreateDepthStencilState(&dsDesc, &this->pDepthStencilState));
   }
 
   // Mouse capture behavior
@@ -166,60 +166,60 @@ void meta::Init(meta::Global* pGlobal, HWND hwnd)
     MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
     ImGui::GetIO().WantCaptureMouse    = true;
     ImGui::GetIO().WantCaptureKeyboard = true;
-    pGlobal->StateMachine.pStateNext   = &pGlobal->StateGame;
+    this->StateMachine.pStateNext   = &this->StateGame;
   }
   else
   {
     ImGui::GetIO().WantCaptureMouse    = false;
     ImGui::GetIO().WantCaptureKeyboard = false;
-    pGlobal->StateMachine.pStateNext   = &pGlobal->StateEditor;
+    this->StateMachine.pStateNext   = &this->StateEditor;
   }
 
   // Fire Entry action for next state
-  StateMachineUpdate(&pGlobal->StateMachine, nullptr);
+  StateMachineUpdate(&this->StateMachine, nullptr);
 }
 
-static void CleanupRenderTarget(meta::Global* pGlobal)
+void Meta::CleanupRenderTarget()
 {
-  SAFE_RELEASE(pGlobal->pRenderTargetView);
+  SAFE_RELEASE(this->pRenderTargetView);
 }
 
-void meta::Resize(meta::Global* pGlobal, int width, int height)
+void Meta::Resize(int width, int height)
 {
-  CleanupRenderTarget(pGlobal);
-  pGlobal->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
-  CreateRenderTargetView(pGlobal);
+  this->CleanupRenderTarget();
+  this->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+  this->CreateRenderTargetView();
   gfx::Resize(width, height);
-  StateMachineResize(&pGlobal->StateMachine, (float)width, (float)height);
+  StateMachineResize(&this->StateMachine, (float)width, (float)height);
 }
 
-void meta::NewFrame()
+void Meta::NewFrame()
 {
   // This is a little awkward, but we must call the DX11 NewFrame before calling SDL2 NewFrame.
   // SDL2 NewFrame is called in main.cpp, but we do not have the DX11 ImGui implementation header included there.
   ImGui_ImplDX11_NewFrame();
 }
 
-void meta::Update(meta::Global* pGlobal)
+void Meta::Update()
 {
   ImGui::NewFrame();
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    pGlobal->StateMachine.pStateNext = (pGlobal->StateMachine.pStateCurrent == &pGlobal->StateGame)
-                                           ? (StateBase*)&pGlobal->StateEditor
-                                           : (StateBase*)&pGlobal->StateGame;
+    this->StateMachine.pStateNext = (this->StateMachine.pStateCurrent == &this->StateGame)
+                                           ? (StateBase*)&this->StateEditor
+                                           : (StateBase*)&this->StateGame;
   }
 
-  StateMachineUpdate(&pGlobal->StateMachine, &pGlobal->pCamera);
+  StateMachineUpdate(&this->StateMachine, &this->pCamera);
 
-  pGlobal->pContext->OMSetRenderTargets(1, &pGlobal->pRenderTargetView, pGlobal->pDepthStencilView);
-  pGlobal->pContext->ClearDepthStencilView(pGlobal->pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  this->pContext->OMSetRenderTargets(1, &this->pRenderTargetView, this->pDepthStencilView);
+  this->pContext->ClearDepthStencilView(this->pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
   FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-  pGlobal->pContext->ClearRenderTargetView(pGlobal->pRenderTargetView, clearColor);
-  pGlobal->pContext->OMSetDepthStencilState(pGlobal->pDepthStencilState, 1);
+  this->pContext->ClearRenderTargetView(this->pRenderTargetView, clearColor);
+  this->pContext->OMSetDepthStencilState(this->pDepthStencilState, 1);
 
-  gfx::Update(pGlobal->pContext, pGlobal->pCamera);
+  gfx::Update(this->pContext, this->pCamera);
 
 #if 0
   {
@@ -245,15 +245,15 @@ void meta::Update(meta::Global* pGlobal)
 
   {
     ZoneScopedNC("Swap Chain Present", tracy::Color::Azure);
-    pGlobal->pSwapChain->Present(1, 0); // Present with vsync
+    this->pSwapChain->Present(1, 0); // Present with vsync
     // pSwapChain->Present(0, 0); // Present without vsync
   }
 }
 
-void meta::Destroy(meta::Global* pGlobal)
+void Meta::Destroy()
 {
   gfx::Destroy();
-  CleanupDeviceD3D(pGlobal);
+  this->CleanupDeviceD3D();
   ImGui_ImplDX11_Shutdown();
   ImGui::DestroyContext();
 }

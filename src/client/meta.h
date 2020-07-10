@@ -3,31 +3,35 @@
 #include "camera.h"
 #include "editor.h"
 
-namespace meta
+class Meta
 {
-  constexpr uint32_t LEVEL_DIM = 64;
+public:
+  static constexpr uint32_t LEVEL_DIM = 64;
 
-  struct Global
-  {
-    ID3D11Device* pDevice;
-    ID3D11DeviceContext* pContext;
-    IDXGISwapChain* pSwapChain;
-    ID3D11RenderTargetView* pRenderTargetView;
-    ID3D11DepthStencilState* pDepthStencilState;
-    ID3D11DepthStencilView* pDepthStencilView;
-    ID3D11Texture2D* pDepthStencilBuffer;
-
-    GameState StateGame;
-    EditorState StateEditor;
-
-    Camera* pCamera;
-
-    StateMachine StateMachine;
-  };
-
-  void Init(Global* pGlobal, HWND hwnd);
-  void Resize(Global* pGlobal, int width, int height);
+  void Init(HWND hwnd);
+  void Resize(int width, int height);
   void NewFrame();
-  void Update(Global* pGlobal);
-  void Destroy(Global* pGlobal);
-} // namespace meta
+  void Update();
+  void Destroy();
+
+private:
+  bool CreateDeviceD3D(HWND hWnd);
+  void CleanupDeviceD3D();
+  void CreateRenderTargetView();
+  void CleanupRenderTarget();
+
+  ID3D11Device* pDevice;
+  ID3D11DeviceContext* pContext;
+  IDXGISwapChain* pSwapChain;
+  ID3D11RenderTargetView* pRenderTargetView;
+  ID3D11DepthStencilState* pDepthStencilState;
+  ID3D11DepthStencilView* pDepthStencilView;
+  ID3D11Texture2D* pDepthStencilBuffer;
+
+  GameState StateGame;
+  EditorState StateEditor;
+
+  Camera* pCamera;
+
+  StateMachine StateMachine;
+};

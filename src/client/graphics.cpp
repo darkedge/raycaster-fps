@@ -196,10 +196,10 @@ static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
   }
 
   // Floor/ceiling pass
-  for (size_t z = 0; z < meta::LEVEL_DIM; z++)
+  for (size_t z = 0; z < Meta::LEVEL_DIM; z++)
   {
     // Check for blocks in this slice
-    for (size_t x = 0; x < meta::LEVEL_DIM; x++)
+    for (size_t x = 0; x < Meta::LEVEL_DIM; x++)
     {
       if (map.pBlocks[z * map.width + x] >= 0x006A)
       {
