@@ -2,6 +2,7 @@
 #include "game.h"
 #include "camera.h"
 #include "editor.h"
+#include "graphics.h"
 
 class Meta
 {
@@ -28,10 +29,11 @@ private:
   ID3D11DepthStencilView* pDepthStencilView;
   ID3D11Texture2D* pDepthStencilBuffer;
 
-  GameState StateGame;
-  EditorState StateEditor;
+  GameState stateGame;
+  EditorState stateEditor;
+  Graphics graphics;
 
   Camera* pCamera;
 
-  StateMachine StateMachine;
+  StateMachine stateMachine;
 };

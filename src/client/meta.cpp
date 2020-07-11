@@ -115,7 +115,7 @@ void Meta::Init(HWND hwnd)
 
   this->CreateRenderTargetView();
 
-  gfx::Init(this->pDevice);
+  graphics.Init(this->pDevice);
 
   {
     // Depth Stencil
@@ -166,17 +166,17 @@ void Meta::Init(HWND hwnd)
     MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
     ImGui::GetIO().WantCaptureMouse    = true;
     ImGui::GetIO().WantCaptureKeyboard = true;
-    this->StateMachine.pStateNext      = &this->StateGame;
+    this->stateMachine.pStateNext      = &this->stateGame;
   }
   else
   {
     ImGui::GetIO().WantCaptureMouse    = false;
     ImGui::GetIO().WantCaptureKeyboard = false;
-    this->StateMachine.pStateNext      = &this->StateEditor;
+    this->stateMachine.pStateNext      = &this->stateEditor;
   }
 
   // Fire Entry action for next state
-  StateMachineUpdate(&this->StateMachine, nullptr);
+  StateMachineUpdate(&this->stateMachine, nullptr);
 }
 
 void Meta::CleanupRenderTarget()
@@ -189,8 +189,8 @@ void Meta::Resize(int width, int height)
   this->CleanupRenderTarget();
   this->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
   this->CreateRenderTargetView();
-  gfx::Resize(width, height);
-  StateMachineResize(&this->StateMachine, (float)width, (float)height);
+  graphics.Resize(width, height);
+  StateMachineResize(&this->stateMachine, (float)width, (float)height);
 }
 
 void Meta::NewFrame()
@@ -206,12 +206,12 @@ void Meta::Update()
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    this->StateMachine.pStateNext = (this->StateMachine.pStateCurrent == &this->StateGame)
-                                        ? (StateBase*)&this->StateEditor
-                                        : (StateBase*)&this->StateGame;
+    this->stateMachine.pStateNext = (this->stateMachine.pStateCurrent == &this->stateGame)
+                                        ? (StateBase*)&this->stateEditor
+                                        : (StateBase*)&this->stateGame;
   }
 
-  StateMachineUpdate(&this->StateMachine, &this->pCamera);
+  StateMachineUpdate(&this->stateMachine, &this->pCamera);
 
   this->pContext->OMSetRenderTargets(1, &this->pRenderTargetView, this->pDepthStencilView);
   this->pContext->ClearDepthStencilView(this->pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -219,7 +219,7 @@ void Meta::Update()
   this->pContext->ClearRenderTargetView(this->pRenderTargetView, clearColor);
   this->pContext->OMSetDepthStencilState(this->pDepthStencilState, 1);
 
-  gfx::Update(this->pContext, this->pCamera);
+  graphics.Update(this->pContext, this->pCamera);
 
 #if 0
   {
@@ -252,7 +252,7 @@ void Meta::Update()
 
 void Meta::Destroy()
 {
-  gfx::Destroy();
+  graphics.Destroy();
   this->CleanupDeviceD3D();
   ImGui_ImplDX11_Shutdown();
   ImGui::DestroyContext();

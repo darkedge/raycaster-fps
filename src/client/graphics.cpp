@@ -13,22 +13,6 @@
 #include "meta.h"
 #include "main.h"
 
-static ID3D11Texture2D* s_pTextureArray;
-static ID3D11SamplerState* s_pTextureSamplerState;
-static ID3D11Buffer* s_pVertexBuffer;
-static ID3D11Buffer* s_pIndexBuffer;
-static ID3D11VertexShader* s_pVertexShader;
-static ID3D11PixelShader* s_pPixelShader;
-static ID3D11ShaderResourceView* s_pShaderResourceView; // Texture array SRV
-static ID3D11InputLayout* s_pInputLayout;
-static ID3D11RasterizerState* s_pRasterizerState;
-static ID3D11RasterizerState* s_pRasterizerStateCullNone;
-static ID3D11BlendState* s_pBlendState;
-static ID3D11Buffer* s_pResource;
-static UINT s_Indices;
-
-static bx::DefaultAllocator s_defaultAllocator;
-
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
@@ -143,7 +127,7 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   indices.push_back(oldVertexCount + 3);
 }
 
-static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
+void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -225,10 +209,10 @@ static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
     InitData.SysMemSlicePitch = 0;
 
     // Create the vertex buffer.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &s_pVertexBuffer));
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &this->pVertexBuffer));
   }
   {
-    s_Indices = (UINT)indices.size();
+    this->Indices = (UINT)indices.size();
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
     bufferDesc.ByteWidth      = uint32_t(indices.size() * sizeof(indices[0]));
@@ -243,18 +227,19 @@ static void CreateMesh(map::map_t map, ID3D11Device* pDevice)
     InitData.SysMemSlicePitch = 0;
 
     // Create the buffer with the device.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &s_pIndexBuffer));
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &this->pIndexBuffer));
   }
 }
 
-static void InitTexture2DArray(ID3D11Device* pDevice)
+void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
 {
   MJ_UNINITIALIZED size_t datasize;
   void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
   if (pFile)
   {
     bx::Error error;
-    bimg::ImageContainer* pImageContainer = bimg::imageParseDds(&s_defaultAllocator, pFile, (uint32_t)datasize, &error);
+    bimg::ImageContainer* pImageContainer =
+        bimg::imageParseDds(&this->defaultAllocator, pFile, (uint32_t)datasize, &error);
 
     if (pImageContainer)
     {
@@ -286,7 +271,7 @@ static void InitTexture2DArray(ID3D11Device* pDevice)
         }
       }
 
-      MJ_DISCARD(pDevice->CreateTexture2D(&desc, srd, &s_pTextureArray));
+      MJ_DISCARD(pDevice->CreateTexture2D(&desc, srd, &this->pTextureArray));
 
       D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
       srvDesc.Format                          = desc.Format;
@@ -296,7 +281,7 @@ static void InitTexture2DArray(ID3D11Device* pDevice)
       srvDesc.Texture2DArray.FirstArraySlice  = 0;
       srvDesc.Texture2DArray.ArraySize        = pImageContainer->m_numLayers;
 
-      MJ_DISCARD(pDevice->CreateShaderResourceView(s_pTextureArray, &srvDesc, &s_pShaderResourceView));
+      MJ_DISCARD(pDevice->CreateShaderResourceView(this->pTextureArray, &srvDesc, &this->pShaderResourceView));
 
       D3D11_SAMPLER_DESC samplerDesc = {};
       samplerDesc.Filter             = D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
@@ -312,7 +297,7 @@ static void InitTexture2DArray(ID3D11Device* pDevice)
       samplerDesc.BorderColor[3]     = 0.0f;
       samplerDesc.MinLOD             = 0.0f;
       samplerDesc.MaxLOD             = D3D11_FLOAT32_MAX;
-      pDevice->CreateSamplerState(&samplerDesc, &s_pTextureSamplerState);
+      pDevice->CreateSamplerState(&samplerDesc, &this->pTextureSamplerState);
 
       bimg::imageFree(pImageContainer);
     }
@@ -321,7 +306,7 @@ static void InitTexture2DArray(ID3D11Device* pDevice)
   }
 }
 
-static void LoadLevel(ID3D11Device* pDevice)
+void Graphics::LoadLevel(ID3D11Device* pDevice)
 {
   auto map = map::Load("e1m1.mjm");
   if (map::Valid(map))
@@ -331,12 +316,12 @@ static void LoadLevel(ID3D11Device* pDevice)
   }
 }
 
-void gfx::Init(ID3D11Device* pDevice)
+void Graphics::Init(ID3D11Device* pDevice)
 {
-  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &s_pVertexShader));
-  // SetDebugName(s_pVertexShader, "s_pVertexShader");
-  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &s_pPixelShader));
-  // SetDebugName(s_pPixelShader, "s_pPixelShader");
+  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &this->pVertexShader));
+  // SetDebugName(this->pVertexShader, "this->pVertexShader");
+  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &this->pPixelShader));
+  // SetDebugName(this->pPixelShader, "this->pPixelShader");
   LoadLevel(pDevice);
 
   {
@@ -360,7 +345,7 @@ void gfx::Init(ID3D11Device* pDevice)
     desc[1].InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
     desc[1].InstanceDataStepRate = 0;
 
-    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), &s_pInputLayout));
+    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), &this->pInputLayout));
   }
 
   {
@@ -371,7 +356,7 @@ void gfx::Init(ID3D11Device* pDevice)
     desc.CPUAccessFlags      = 0;
     desc.MiscFlags           = 0;
     desc.StructureByteStride = 0;
-    MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, &s_pResource));
+    MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, &this->pResource));
   }
 
   InitTexture2DArray(pDevice);
@@ -390,7 +375,7 @@ void gfx::Init(ID3D11Device* pDevice)
       bs.RenderTarget[i].DestBlendAlpha        = D3D11_BLEND_ONE;
     }
 
-    MJ_DISCARD(pDevice->CreateBlendState(&bs, &s_pBlendState));
+    MJ_DISCARD(pDevice->CreateBlendState(&bs, &this->pBlendState));
   }
 
   {
@@ -407,14 +392,14 @@ void gfx::Init(ID3D11Device* pDevice)
     rasterizerDesc.ScissorEnable         = FALSE;
     rasterizerDesc.MultisampleEnable     = FALSE;
     rasterizerDesc.AntialiasedLineEnable = FALSE;
-    pDevice->CreateRasterizerState(&rasterizerDesc, &s_pRasterizerState);
+    pDevice->CreateRasterizerState(&rasterizerDesc, &this->pRasterizerState);
 
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
-    pDevice->CreateRasterizerState(&rasterizerDesc, &s_pRasterizerStateCullNone);
+    pDevice->CreateRasterizerState(&rasterizerDesc, &this->pRasterizerStateCullNone);
   }
 }
 
-void gfx::Resize(int width, int height)
+void Graphics::Resize(int width, int height)
 {
   MJ_DISCARD(width);
   MJ_DISCARD(height);
@@ -428,7 +413,7 @@ void gfx::Resize(int width, int height)
 /// <param name="width"></param>
 /// <param name="height"></param>
 /// <param name="pCamera"></param>
-void gfx::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
+void Graphics::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
 {
 #if 0
   {
@@ -440,19 +425,19 @@ void gfx::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
 #endif
 
   glm::mat4 vp = pCamera->projection * pCamera->view;
-  pContext->UpdateSubresource(s_pResource, 0, 0, &vp, 0, 0);
+  pContext->UpdateSubresource(this->pResource, 0, 0, &vp, 0, 0);
 
   // Input Assembler
   pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  pContext->IASetInputLayout(s_pInputLayout);
-  pContext->IASetIndexBuffer(s_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
+  pContext->IASetInputLayout(this->pInputLayout);
+  pContext->IASetIndexBuffer(this->pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
   UINT strides[] = { sizeof(Vertex) };
   UINT offsets[] = { 0 };
-  pContext->IASetVertexBuffers(0, 1, &s_pVertexBuffer, strides, offsets);
+  pContext->IASetVertexBuffers(0, 1, &this->pVertexBuffer, strides, offsets);
 
   // Vertex Shader
-  pContext->VSSetShader(s_pVertexShader, nullptr, 0);
-  pContext->VSSetConstantBuffers(0, 1, &s_pResource);
+  pContext->VSSetShader(this->pVertexShader, nullptr, 0);
+  pContext->VSSetConstantBuffers(0, 1, &this->pResource);
 
   // Rasterizer
   D3D11_VIEWPORT viewport = {};
@@ -463,38 +448,38 @@ void gfx::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
   mj::GetWindowSize(&viewport.Width, &viewport.Height);
 
   pContext->RSSetViewports(1, &viewport);
-  pContext->RSSetState(s_pRasterizerState);
+  pContext->RSSetState(this->pRasterizerState);
 
   // Pixel Shader
-  pContext->PSSetShaderResources(0, 1, &s_pShaderResourceView);
-  pContext->PSSetShader(s_pPixelShader, nullptr, 0);
-  pContext->PSSetSamplers(0, 1, &s_pTextureSamplerState);
+  pContext->PSSetShaderResources(0, 1, &this->pShaderResourceView);
+  pContext->PSSetShader(this->pPixelShader, nullptr, 0);
+  pContext->PSSetSamplers(0, 1, &this->pTextureSamplerState);
 
   // Output Merger
-  pContext->OMSetBlendState(s_pBlendState, nullptr, 0xFFFFFFFF);
+  pContext->OMSetBlendState(this->pBlendState, nullptr, 0xFFFFFFFF);
 
-  pContext->DrawIndexed(s_Indices, 0, 0);
+  pContext->DrawIndexed(this->Indices, 0, 0);
 }
 
-void gfx::Destroy()
+void Graphics::Destroy()
 {
-  SAFE_RELEASE(s_pTextureArray);
-  SAFE_RELEASE(s_pTextureSamplerState);
-  SAFE_RELEASE(s_pShaderResourceView);
-  SAFE_RELEASE(s_pVertexBuffer);
-  SAFE_RELEASE(s_pIndexBuffer);
-  SAFE_RELEASE(s_pVertexShader);
-  SAFE_RELEASE(s_pPixelShader);
-  SAFE_RELEASE(s_pInputLayout);
-  SAFE_RELEASE(s_pResource);
-  SAFE_RELEASE(s_pRasterizerState);
-  SAFE_RELEASE(s_pRasterizerStateCullNone);
-  SAFE_RELEASE(s_pBlendState);
+  SAFE_RELEASE(this->pTextureArray);
+  SAFE_RELEASE(this->pTextureSamplerState);
+  SAFE_RELEASE(this->pShaderResourceView);
+  SAFE_RELEASE(this->pVertexBuffer);
+  SAFE_RELEASE(this->pIndexBuffer);
+  SAFE_RELEASE(this->pVertexShader);
+  SAFE_RELEASE(this->pPixelShader);
+  SAFE_RELEASE(this->pInputLayout);
+  SAFE_RELEASE(this->pResource);
+  SAFE_RELEASE(this->pRasterizerState);
+  SAFE_RELEASE(this->pRasterizerStateCullNone);
+  SAFE_RELEASE(this->pBlendState);
 }
 
-void* gfx::GetTileTexture(int x, int y)
+void* Graphics::GetTileTexture(int x, int y)
 {
   (void)x;
   (void)y;
-  return s_pShaderResourceView;
+  return this->pShaderResourceView;
 }
