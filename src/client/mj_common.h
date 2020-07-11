@@ -157,27 +157,6 @@ namespace mj
     }
 
     template <typename T>
-    void Fetch(T*&&) = delete;
-
-    // Return the current position as a typed pointer.
-    // Advances the position afterwards.
-    template <typename T>
-    MemoryBuffer& Fetch(T*& t)
-    {
-      if (SizeLeft() >= sizeof(T))
-      {
-        t = (T*)this->position;
-        this->position += sizeof(T);
-      }
-      else
-      {
-        this->end      = nullptr;
-        this->position = nullptr;
-      }
-      return *this;
-    }
-
-    template <typename T>
     T* ReserveArrayUnaligned(size_t numElements)
     {
       if (SizeLeft() >= (numElements * sizeof(T)))

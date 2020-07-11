@@ -11,7 +11,7 @@
 // 1 byte height
 // array of 2 byte values
 
-// TODO: Add map name, author, date, etc etc
+// TODO: Add map name, author, date, layers (floor, ceiling, objects)
 
 static constexpr uint32_t s_MagicWord = 0x464D4A4D;
 static constexpr uint8_t s_Version    = 0;
@@ -25,17 +25,17 @@ map::map_t map::Load(const char* path)
   if (pFile)
   {
     mj::MemoryBuffer reader(pFile, dataSize);
-    MJ_UNINITIALIZED uint32_t* magicWord;
-    MJ_UNINITIALIZED uint8_t* versionNumber;
+    MJ_UNINITIALIZED uint32_t magicWord;
+    MJ_UNINITIALIZED uint8_t versionNumber;
     MJ_UNINITIALIZED size_t size;
     if (reader
-            .Fetch(magicWord)            //
-            .Fetch(versionNumber)        //
-            .Read(map.width)             //
-            .Read(map.height)            //
-            .Good()                      //
-        && (*magicWord == s_MagicWord)   //
-        && (*versionNumber == s_Version) //
+            .Read(magicWord)            //
+            .Read(versionNumber)        //
+            .Read(map.width)            //
+            .Read(map.height)           //
+            .Good()                     //
+        && (magicWord == s_MagicWord)   //
+        && (versionNumber == s_Version) //
         && (reader.SizeLeft() >= (size = sizeof(uint16_t) * map.width * map.height)))
     {
       map.pBlocks = (uint16_t*)bx::alloc(&s_defaultAllocator, size, 0, __FILE__, __LINE__);
