@@ -145,21 +145,21 @@
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bgfx\include;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -173,27 +173,23 @@
       <SupportJustMyCode>false</SupportJustMyCode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
     </Link>
-    <PostBuildEvent>
-      <Command>powershell -File post_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PreBuildEvent>
+    <PostBuildEvent />
+    <PreBuildEvent />
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
       <VariableName>%(Filename)</VariableName>
@@ -209,29 +205,25 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_EXPLICIT_CTOR;GLM_FORCE_LEFT_HANDED;MJ_INPUT_SDL;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_WIN64</PreprocessorDefinitions>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\$(Configuration);..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\SDL2\$(Platform)\$(Configuration);..\yojimbo\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
     </Link>
-    <PostBuildEvent>
-      <Command>powershell -File post_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PreBuildEvent>
+    <PostBuildEvent />
+    <PreBuildEvent />
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
       <VariableName>%(Filename)</VariableName>
@@ -247,29 +239,25 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_EXPLICIT_CTOR;GLM_FORCE_LEFT_HANDED;MJ_INPUT_SDL;__STDC_LIMIT_MACROS;__STDC_FORMAT_MACROS;__STDC_CONSTANT_MACROS;WIN32;_WIN32;_HAS_EXCEPTIONS=0;_HAS_ITERATOR_DEBUGGING=0;_ITERATOR_DEBUG_LEVEL=0;_SCL_SECURE=0;_SECURE_SCL=0;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_WIN64;MJ_PROFILE;TRACY_ENABLE</PreprocessorDefinitions>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <DisableSpecificWarnings>4201;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\3rdparty\yojimbo\windows;..\bgfx\$(Platform)\Release;..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\SDL2\$(Platform)\Release;..\yojimbo\$(Platform)\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;sodium.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;Shlwapi.lib;bimg.lib;bx.lib;SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
     </Link>
-    <PostBuildEvent>
-      <Command>powershell -File post_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PostBuildEvent>
-    <PreBuildEvent>
-      <Command>powershell -File pre_build.ps1 -Platform $(Platform) -Configuration $(Configuration) -TargetDir $(TargetDir)</Command>
-    </PreBuildEvent>
+    <PostBuildEvent />
+    <PreBuildEvent />
     <FxCompile>
       <ShaderModel>5.0</ShaderModel>
       <VariableName>%(Filename)</VariableName>
