@@ -2,7 +2,6 @@
 #include "map.h"
 #include <SDL.h>
 #include "mj_common.h"
-#include <bx/readerwriter.h>
 
 // Level file format (*.mjl)
 // 4 byte magic word (MJMF)

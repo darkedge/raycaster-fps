@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "editor.h"
 #include "graphics.h"
+#include "map.h"
 
 class Meta
 {
@@ -20,6 +21,7 @@ private:
   void CleanupDeviceD3D();
   void CreateRenderTargetView();
   void CleanupRenderTarget();
+  void LoadLevel();
 
   ID3D11Device* pDevice;
   ID3D11DeviceContext* pContext;
@@ -32,6 +34,7 @@ private:
   GameState stateGame;
   EditorState stateEditor;
   Graphics graphics;
+  map::map_t map;
 
   Camera* pCamera;
 

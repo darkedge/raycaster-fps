@@ -306,23 +306,12 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
   }
 }
 
-void Graphics::LoadLevel(ID3D11Device* pDevice)
-{
-  auto map = map::Load("e1m1.mjm");
-  if (map::Valid(map))
-  {
-    CreateMesh(map, pDevice);
-    map::Free(map);
-  }
-}
-
 void Graphics::Init(ID3D11Device* pDevice)
 {
   MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &this->pVertexShader));
   // SetDebugName(this->pVertexShader, "this->pVertexShader");
   MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &this->pPixelShader));
   // SetDebugName(this->pPixelShader, "this->pPixelShader");
-  LoadLevel(pDevice);
 
   {
     D3D11_INPUT_ELEMENT_DESC desc[2] = {};

@@ -106,6 +106,16 @@ void Meta::CreateRenderTargetView()
   pBackBuffer->Release();
 }
 
+void Meta::LoadLevel()
+{
+  map = map::Load("e1m1.mjm");
+  if (map::Valid(map))
+  {
+    graphics.CreateMesh(map, pDevice);
+    map::Free(map);
+  }
+}
+
 void Meta::Init(HWND hwnd)
 {
   // Setup Platform/Renderer bindings
@@ -116,6 +126,8 @@ void Meta::Init(HWND hwnd)
   this->CreateRenderTargetView();
 
   graphics.Init(this->pDevice);
+
+  LoadLevel();
 
   {
     // Depth Stencil

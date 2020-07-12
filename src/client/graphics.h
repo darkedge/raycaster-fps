@@ -13,11 +13,10 @@ public:
   void Update(ID3D11DeviceContext* pDeviceContext, const Camera* pCamera);
   void Destroy();
   void* GetTileTexture(int x, int y);
+  void CreateMesh(map::map_t map, ID3D11Device* pDevice);
 
 private:
-  void CreateMesh(map::map_t map, ID3D11Device* pDevice);
   void InitTexture2DArray(ID3D11Device* pDevice);
-  void LoadLevel(ID3D11Device* pDevice);
 
   ID3D11Texture2D* pTextureArray;
   ID3D11SamplerState* pTextureSamplerState;
