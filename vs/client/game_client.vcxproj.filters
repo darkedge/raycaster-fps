@@ -26,6 +26,7 @@
     <ClCompile Include="..\..\src\client\meta.cpp" />
     <ClCompile Include="..\..\src\client\game.cpp" />
     <ClCompile Include="..\..\src\client\graphics.cpp" />
+    <ClCompile Include="..\..\src\client\mj_math.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rdparty\imgui\imconfig.h">
@@ -60,6 +61,7 @@
     <ClInclude Include="..\..\src\client\graphics.h" />
     <ClInclude Include="..\..\src\client\camera.h" />
     <ClInclude Include="..\..\src\client\main.h" />
+    <ClInclude Include="..\..\src\client\mj_math.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

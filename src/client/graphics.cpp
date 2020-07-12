@@ -1,14 +1,7 @@
 #include "stdafx.h"
 #include "graphics.h"
-#include <glm/glm.hpp>
-#include <vector>
 #include "mj_common.h"
 #include "map.h"
-#include <SDL.h>
-#include <bimg/bimg.h>
-#include <bx/allocator.h>
-#include <bx/error.h>
-#include <d3d11.h>
 #include "camera.h"
 #include "meta.h"
 #include "main.h"
@@ -16,10 +9,36 @@
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
+static void CreateDefaultTexture(ID3D11Device* pDevice)
+{
+  D3D11_TEXTURE2D_DESC desc = {};
+  desc.Width                = 2;
+  desc.Height               = 2;
+  desc.MipLevels            = 1;
+  desc.ArraySize            = 1;
+  desc.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
+  desc.SampleDesc.Count     = 1;
+  desc.SampleDesc.Quality   = 0;
+  desc.Usage                = D3D11_USAGE_IMMUTABLE;
+  desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
+  desc.CPUAccessFlags       = 0;
+  desc.MiscFlags            = 0;
+
+  uint32_t data[] = {0xFF00FFFF, 0x000000FF, 0x000000FF, 0xFF00FFFF};
+
+  D3D11_SUBRESOURCE_DATA srd = {};
+  srd.pSysMem                = data;
+  srd.SysMemPitch            = 8;
+  srd.SysMemSlicePitch       = 0;
+
+  MJ_UNINITIALIZED ID3D11Texture2D* pTexture2D;
+  MJ_DISCARD(pDevice->CreateTexture2D(&desc, &srd, &pTexture2D));
+}
+
 struct Vertex
 {
-  glm::vec3 position;
-  glm::vec3 texCoord;
+  mjm::vec3 position;
+  mjm::vec3 texCoord;
 };
 
 static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
@@ -166,7 +185,7 @@ void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
             if (map.pBlocks[xz[1] * map.width + xz[0]] >= 0x006A) // Is it empty?
             {
               xz[primaryAxis] -= neighbor;
-              glm::vec3 v = { xz[0], 0.0f, xz[1] };
+              mjm::vec3 v = { (float)xz[0], 0.0f, (float)xz[1] };
               InsertRectangle(vertices, indices, (float)xz[0] + arr_xz[i], (float)xz[1] + arr_xz[cur_z],
                               (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], 2 * block - 1);
               xz[primaryAxis] += neighbor;
@@ -339,7 +358,7 @@ void Graphics::Init(ID3D11Device* pDevice)
 
   {
     D3D11_BUFFER_DESC desc   = {};
-    desc.ByteWidth           = sizeof(glm::mat4);
+    desc.ByteWidth           = sizeof(mjm::mat4);
     desc.Usage               = D3D11_USAGE_DEFAULT;
     desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
     desc.CPUAccessFlags      = 0;
@@ -348,6 +367,7 @@ void Graphics::Init(ID3D11Device* pDevice)
     MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, &this->pResource));
   }
 
+  CreateDefaultTexture(pDevice);
   InitTexture2DArray(pDevice);
 
   {
@@ -413,7 +433,7 @@ void Graphics::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
   }
 #endif
 
-  glm::mat4 vp = pCamera->projection * pCamera->view;
+  mjm::mat4 vp = pCamera->projection * pCamera->view;
   pContext->UpdateSubresource(this->pResource, 0, 0, &vp, 0, 0);
 
   // Input Assembler

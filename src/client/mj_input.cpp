@@ -1,5 +1,9 @@
-#include "stdafx.h"
+// Input library - Marco Jonkers 2020
+// Should not use pre-compiled headers (for portability)
+// Only supports SDL for now
+
 #include "mj_input.h"
+#include "assert.h"
 #include <queue>
 #include "../../tracy/Tracy.hpp"
 #ifdef MJ_INPUT_SDL
@@ -39,7 +43,8 @@ static bool mouseActive[INPUT_NUM_MOUSE_BUTTONS];
 static bool mouseMake[INPUT_NUM_MOUSE_BUTTONS];
 static bool mouseBreak[INPUT_NUM_MOUSE_BUTTONS];
 static bool s_MouseLock;
-static glm::vec3 s_MousePosition;
+static float s_MouseX;
+static float s_MouseY;
 
 /**
  * @brief      Imported from bgfx.
@@ -851,9 +856,10 @@ const char* mj::input::GetControlName(const Control& control)
  *
  * @param[in]  pos   The position
  */
-void mj::input::SetMousePosition(const glm::vec3& pos)
+void mj::input::SetMousePosition(float x, float y)
 {
-  s_MousePosition = pos;
+  s_MouseX = x;
+  s_MouseY = y;
 }
 
 /**
@@ -861,9 +867,10 @@ void mj::input::SetMousePosition(const glm::vec3& pos)
  *
  * @return     The mouse position.
  */
-const glm::vec3& mj::input::GetMousePosition()
+void mj::input::GetMousePosition(float* pX, float* pY)
 {
-  return s_MousePosition;
+  if (pX) *pX = s_MouseX;
+  if (pY) *pY = s_MouseY;
 }
 
 /**

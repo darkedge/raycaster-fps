@@ -88,7 +88,7 @@ static bool PumpEvents()
     case SDL_MOUSEMOTION:
     {
       const SDL_MouseMotionEvent& e = event.motion;
-      mj::input::SetMousePosition(glm::vec3(e.x, e.y, 0.0f));
+      mj::input::SetMousePosition((float)e.x, (float)e.y);
       mj::input::AddRelativeMouseMovement(event.motion.xrel, event.motion.yrel);
     }
     break;

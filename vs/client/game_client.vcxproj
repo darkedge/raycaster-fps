@@ -30,6 +30,7 @@
     <ClInclude Include="..\..\src\client\map.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
+    <ClInclude Include="..\..\src\client\mj_math.h" />
     <ClInclude Include="..\..\src\client\mj_platform.h" />
     <ClInclude Include="..\..\src\client\camera.h" />
     <ClInclude Include="..\..\src\client\graphics.h" />
@@ -74,6 +75,7 @@
     <ClCompile Include="..\..\src\client\map.cpp" />
     <ClCompile Include="..\..\src\client\main.cpp" />
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
+    <ClCompile Include="..\..\src\client\mj_math.cpp" />
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\graphics.cpp" />
     <ClCompile Include="..\..\src\client\state_machine.cpp" />
@@ -144,8 +146,8 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\$(ProjectName).intermediate\</IntDir>
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
-    <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <MultiProcFXC>true</MultiProcFXC>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -153,6 +155,7 @@
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <MultiProcFXC>true</MultiProcFXC>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
@@ -160,6 +163,7 @@
     <CodeAnalysisRuleSet>..\raycaster-fps.ruleset</CodeAnalysisRuleSet>
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>..\..\3rdparty\glm-0.9.9.7;..\..\3rdparty\imgui;..\..\3rdparty\bx\include\compat\msvc;..\..\3rdparty\bimg\include;..\..\3rdparty\bx\include;..\..\3rdparty\SDL2-2.0.12\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <MultiProcFXC>true</MultiProcFXC>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -183,7 +187,6 @@
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
       <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
@@ -250,8 +253,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;Advapi32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>

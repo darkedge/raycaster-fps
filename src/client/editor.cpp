@@ -5,10 +5,6 @@
 #include "camera.h"
 #include "main.h"
 #include "mj_common.h"
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
-#include <shobjidl.h>
 
 #if 0
 struct ETool
@@ -73,14 +69,14 @@ void EditorState::Entry()
   mj::GetWindowSize(&w, &h);
   mj::MoveMouse((int)w / 2, (int)h / 2);
 
-  this->camera.position = glm::vec3(32.0f, 10.5f, 0.0f);
+  this->camera.position = mjm::vec3(32.0f, 10.5f, 0.0f);
 
   this->camera.viewport[0] = 0.0f;
   this->camera.viewport[1] = 0.0f;
   this->camera.viewport[2] = w;
   this->camera.viewport[3] = h;
 
-  this->rotation = glm::quatLookAt(glm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
+  this->rotation = mjm::quatLookAtLH(mjm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 
   this->camera.floor.show            = true;
   this->camera.floor.backFaceCulling = true;
@@ -250,9 +246,9 @@ void EditorState::DoInput()
       // mouse x = yaw (left/right), mouse y = pitch (up/down)
       MJ_UNINITIALIZED int32_t dx, dy;
       mj::input::GetRelativeMouseMovement(&dx, &dy);
-      this->rotation = glm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * this->rotation;
+      this->rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * this->rotation;
       this->rotation =
-          glm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, this->rotation * axis::RIGHT) * this->rotation;
+          mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, this->rotation * axis::RIGHT) * this->rotation;
     }
   }
 
@@ -263,29 +259,31 @@ void EditorState::DoInput()
     mj::input::GetRelativeMouseMovement(&dx, &dy);
     if (dx != 0 || dy != 0)
     {
-      glm::vec3 center(this->camera.position.x, 0.0f, this->camera.position.z);
+      mjm::vec3 center(this->camera.position.x, 0.0f, this->camera.position.z);
 
       // Unit vector center->current
-      glm::vec3 currentPos = mj::input::GetMousePosition();
-      glm::vec3 to =
-          glm::unProject(currentPos, glm::identity<glm::mat4>(), this->camera.projection, this->camera.viewport) -
+      float x, y;
+      mj::input::GetMousePosition(&x, &y);
+      mjm::vec3 currentPos(x, y, 0.0f);
+      mjm::vec3 to =
+          mjm::unProjectZO(currentPos, mjm::identity<mjm::mat4>(), this->camera.projection, this->camera.viewport) -
           center;
 
       // Unit vector center->old
-      glm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
-      glm::vec3 from =
-          glm::unProject(oldPos, glm::identity<glm::mat4>(), this->camera.projection, this->camera.viewport) - center;
+      mjm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
+      mjm::vec3 from =
+          mjm::unProjectZO(oldPos, mjm::identity<mjm::mat4>(), this->camera.projection, this->camera.viewport) - center;
 
       ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
       ImGui::Begin("Arcball");
-      ImGui::InputFloat3("center", glm::value_ptr(center), 7);
+      ImGui::InputFloat3("center", mjm::value_ptr(center), 7);
       auto diff = currentPos - oldPos;
-      ImGui::InputFloat3("diff", glm::value_ptr(diff), 7);
-      ImGui::InputFloat3("from", glm::value_ptr(from), 7);
-      ImGui::InputFloat3("to", glm::value_ptr(to), 7);
+      ImGui::InputFloat3("diff", mjm::value_ptr(diff), 7);
+      ImGui::InputFloat3("from", mjm::value_ptr(from), 7);
+      ImGui::InputFloat3("to", mjm::value_ptr(to), 7);
       ImGui::End();
 
-      this->rotation *= glm::quat(from, to);
+      this->rotation *= mjm::quat(from, to);
     }
   }
 
@@ -293,7 +291,7 @@ void EditorState::DoInput()
   {
     MJ_UNINITIALIZED int32_t x, y;
     mj::input::GetRelativeMouseMovement(&x, &y);
-    // this->camera.position += glm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
+    // this->camera.position += mjm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
     // this->camera.position += this->rotation * axis::RIGHT
   }
 
@@ -309,23 +307,23 @@ void EditorState::Do(Camera** ppCamera)
   this->DoMenu();
   this->DoInput();
 
-  glm::mat4 rotate    = glm::transpose(glm::mat4_cast(this->rotation));
-  glm::mat4 translate = glm::identity<glm::mat4>();
-  translate           = glm::translate(translate, -glm::vec3(this->camera.position));
+  mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(this->rotation));
+  mjm::mat4 translate = mjm::identity<mjm::mat4>();
+  translate           = mjm::translate(translate, -mjm::vec3(this->camera.position));
 
   this->camera.view = rotate * translate;
   this->camera.yFov = 90.0f;
 #if 0
   float aspect      = this->camera.viewport[2] / this->camera.viewport[3];
-  this->camera.projection = glm::ortho(-10.0f * this->mouseScrollFactor * aspect, //
+  this->camera.projection = mjm::ortho(-10.0f * this->mouseScrollFactor * aspect, //
                                    10.0f * this->mouseScrollFactor * aspect,  //
                                    -10.0f * this->mouseScrollFactor,          //
                                    10.0f * this->mouseScrollFactor,           //
                                    0.1f,                                  //
                                    1000.0f);
 #else
-  this->camera.projection = glm::perspective(glm::radians(this->camera.yFov),
-                                             this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
+  this->camera.projection = mjm::perspectiveLH_ZO(mjm::radians(this->camera.yFov),
+                                                  this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
 #endif
 
   *ppCamera = &this->camera;

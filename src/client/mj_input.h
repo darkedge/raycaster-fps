@@ -1,6 +1,9 @@
+// Input library - Marco Jonkers 2020
+// Should not use pre-compiled headers (for portability)
+// Only supports SDL for now
+
 #pragma once
 #include <stdint.h>
-#include "glm/glm.hpp"
 
 #ifdef MJ_INPUT_SDL
 #include <SDL_keycode.h>
@@ -258,8 +261,8 @@ namespace mj
     int32_t GetMouseScroll();
     bool SetMouseLock(bool locked);
     bool IsMouseLocked();
-    const glm::vec3& GetMousePosition();
-    void SetMousePosition(const glm::vec3& pos);
+    void GetMousePosition(float* px, float* py);
+    void SetMousePosition(float x, float y);
 
     Control GetNewControl();
 
