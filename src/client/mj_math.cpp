@@ -37,6 +37,18 @@ mjm::quat::quat(const vec3& u, const vec3& v)
   *this = normalize(quat(real_part, t.x, t.y, t.z));
 }
 
+mjm::quat& mjm::quat::operator*=(quat const& r)
+{
+  quat const p(*this);
+  quat const q(r);
+
+  this->w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
+  this->x = p.w * q.x + p.x * q.w + p.y * q.z - p.z * q.y;
+  this->y = p.w * q.y + p.y * q.w + p.z * q.x - p.x * q.z;
+  this->z = p.w * q.z + p.z * q.w + p.x * q.y - p.y * q.x;
+  return *this;
+}
+
 mjm::vec3 mjm::operator-(const vec3& v)
 {
   return vec3(-v.x, -v.y, -v.z);
@@ -44,12 +56,12 @@ mjm::vec3 mjm::operator-(const vec3& v)
 
 mjm::vec3 mjm::operator+(const vec3& a, const vec3& b)
 {
-  return vec3{ a.x + b.x, a.y + b.y, a.z + b.z };
+  return vec3(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 mjm::vec3 mjm::operator-(const vec3& a, const vec3& b)
 {
-  return vec3{ a.x - b.x, a.y - b.y, a.z - b.z };
+  return vec3(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
 mjm::vec3 mjm::operator+=(vec3& a, const vec3& b)
@@ -62,47 +74,47 @@ mjm::vec3 mjm::operator+=(vec3& a, const vec3& b)
 
 mjm::vec4 mjm::operator+(const vec4& a, const vec4& b)
 {
-  return vec4{ a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+  return vec4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 }
 
 mjm::vec4 mjm::operator-(const vec4& a, const vec4& b)
 {
-  return vec4{ a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+  return vec4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 }
 
 mjm::vec3 mjm::operator*(const vec3& a, const vec3& b)
 {
-  return vec3{ a.x * b.x, a.y * b.y, a.z * b.z };
+  return vec3(a.x * b.x, a.y * b.y, a.z * b.z);
 }
 
 mjm::vec3 mjm::operator*(const vec3& v, float s)
 {
-  return vec3{ v.x * s, v.y * s, v.z * s };
+  return vec3(v.x * s, v.y * s, v.z * s);
 }
 
 mjm::vec3 mjm::operator*(float s, const vec3& v)
 {
-  return vec3{ v.x * s, v.y * s, v.z * s };
+  return vec3(v.x * s, v.y * s, v.z * s);
 }
 
 mjm::vec4 mjm::operator*(const vec4& v, float s)
 {
-  return vec4{ v.x * s, v.y * s, v.z * s, v.w * s };
+  return vec4(v.x * s, v.y * s, v.z * s, v.w * s);
 }
 
 mjm::vec4 mjm::operator/(const vec4& v, float s)
 {
-  return vec4{ v.x / s, v.y / s, v.z / s, v.w / s };
+  return vec4(v.x / s, v.y / s, v.z / s, v.w / s);
 }
 
 mjm::vec4 mjm::operator*(float s, const vec4& v)
 {
-  return vec4{ v.x * s, v.y * s, v.z * s, v.w * s };
+  return vec4(v.x * s, v.y * s, v.z * s, v.w * s);
 }
 
 mjm::vec4 mjm::operator*(const vec4& a, const vec4& b)
 {
-  return vec4{ a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
+  return vec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
 }
 
 mjm::mat4 mjm::operator*(const mat4 m1, const mat4& m2)
@@ -141,9 +153,9 @@ float mjm::dot(const vec3& a, const vec3& b)
 
 mjm::vec3 mjm::cross(const vec3& x, const vec3& y)
 {
-  return vec3{ x.y * y.z - y.y * x.z, //
-               x.z * y.x - y.z * x.x, //
-               x.x * y.y - y.x * x.y };
+  return vec3(x.y * y.z - y.y * x.z, //
+              x.z * y.x - y.z * x.x, //
+              x.x * y.y - y.x * x.y);
 }
 
 float mjm::inversesqrt(float x)
@@ -237,15 +249,15 @@ mjm::quat mjm::quat_cast(const mat3& m)
   switch (biggestIndex)
   {
   case 0:
-    return quat{ biggestVal, (m[1][2] - m[2][1]) * mult, (m[2][0] - m[0][2]) * mult, (m[0][1] - m[1][0]) * mult };
+    return quat(biggestVal, (m[1][2] - m[2][1]) * mult, (m[2][0] - m[0][2]) * mult, (m[0][1] - m[1][0]) * mult);
   case 1:
-    return quat{ (m[1][2] - m[2][1]) * mult, biggestVal, (m[0][1] + m[1][0]) * mult, (m[2][0] + m[0][2]) * mult };
+    return quat((m[1][2] - m[2][1]) * mult, biggestVal, (m[0][1] + m[1][0]) * mult, (m[2][0] + m[0][2]) * mult);
   case 2:
-    return quat{ (m[2][0] - m[0][2]) * mult, (m[0][1] + m[1][0]) * mult, biggestVal, (m[1][2] + m[2][1]) * mult };
+    return quat((m[2][0] - m[0][2]) * mult, (m[0][1] + m[1][0]) * mult, biggestVal, (m[1][2] + m[2][1]) * mult);
   case 3:
-    return quat{ (m[0][1] - m[1][0]) * mult, (m[2][0] + m[0][2]) * mult, (m[1][2] + m[2][1]) * mult, biggestVal };
+    return quat((m[0][1] - m[1][0]) * mult, (m[2][0] + m[0][2]) * mult, (m[1][2] + m[2][1]) * mult, biggestVal);
   default: // Silence a -Wswitch-default warning in GCC. Should never actually get here. Assert is just for sanity.
-    return quat{ 1, 0, 0, 0 };
+    return quat(1, 0, 0, 0);
   }
 }
 
@@ -262,10 +274,10 @@ mjm::quat mjm::quatLookAtLH(const vec3& direction, const vec3& up)
 
 mjm::quat mjm::angleAxis(float angle, vec3 v)
 {
-  const float s = std::sin(angle * 0.5f);
-  const vec3 vs = v * s;
+  float const a(angle);
+  float const s = std::sin(a * 0.5f);
 
-  return quat{ vs.x, vs.y, vs.z, std::cos(angle * 0.5f) };
+  return quat(std::cos(a * 0.5f), v * s);
 }
 
 mjm::mat4 mjm::eulerAngleY(float angleY)

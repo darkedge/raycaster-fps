@@ -24,7 +24,7 @@ static void CreateDefaultTexture(ID3D11Device* pDevice)
   desc.CPUAccessFlags       = 0;
   desc.MiscFlags            = 0;
 
-  uint32_t data[] = {0xFF00FFFF, 0x000000FF, 0x000000FF, 0xFF00FFFF};
+  uint32_t data[] = { 0xFF00FFFF, 0x000000FF, 0x000000FF, 0xFF00FFFF };
 
   D3D11_SUBRESOURCE_DATA srd = {};
   srd.pSysMem                = data;
@@ -185,7 +185,7 @@ void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
             if (map.pBlocks[xz[1] * map.width + xz[0]] >= 0x006A) // Is it empty?
             {
               xz[primaryAxis] -= neighbor;
-              mjm::vec3 v = { (float)xz[0], 0.0f, (float)xz[1] };
+              mjm::vec3 v((float)xz[0], 0.0f, (float)xz[1]);
               InsertRectangle(vertices, indices, (float)xz[0] + arr_xz[i], (float)xz[1] + arr_xz[cur_z],
                               (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], 2 * block - 1);
               xz[primaryAxis] += neighbor;

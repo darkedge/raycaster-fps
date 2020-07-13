@@ -8,6 +8,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/quaternion.hpp>
+#else
+#include <initializer_list>
 #endif
 
 #ifdef MJ_MATH_GLM
@@ -23,12 +25,17 @@ namespace mjm
     float x;
     float y;
     float z;
+
+    vec3(std::initializer_list<float> l) = delete;
+
     vec3() : x(0.0f), y(0.0f), z(0.0f)
     {
     }
+
     vec3(float x, float y, float z) : x(x), y(y), z(z)
     {
     }
+
     float& operator[](size_t i)
     {
       switch (i)
@@ -42,6 +49,7 @@ namespace mjm
         return z;
       }
     }
+
     const float& operator[](size_t i) const
     {
       switch (i)
@@ -66,15 +74,21 @@ namespace mjm
     float y = 0.0f;
     float z = 0.0f;
     float w = 0.0f;
+
+    vec4(std::initializer_list<float> l) = delete;
+
     vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f)
     {
     }
+
     vec4(float s) : x(s), y(s), z(s), w(s)
     {
     }
+
     vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w)
     {
     }
+
     vec4(const vec3& xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w)
     {
     }
@@ -135,6 +149,9 @@ namespace mjm
     float y = 0.0f;
     float z = 0.0f;
     float w = 0.0f;
+
+    quat(std::initializer_list<float> l) = delete;
+
     quat() : x(0.0f), y(0.0f), z(0.0f), w(1.0f)
     {
     }
@@ -145,19 +162,13 @@ namespace mjm
     {
     }
 
+    quat(float s, vec3 const& v) : x(v.x), y(v.y), z(v.z), w(s)
+    {
+    }
+
     quat(const vec3& u, const vec3& v);
 
-    quat& operator*=(quat const& r)
-    {
-      quat const p(*this);
-      quat const q(r);
-
-      this->w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
-      this->x = p.w * q.x + p.x * q.w + p.y * q.z - p.z * q.y;
-      this->y = p.w * q.y + p.y * q.w + p.z * q.x - p.x * q.z;
-      this->z = p.w * q.z + p.z * q.w + p.x * q.y - p.y * q.x;
-      return *this;
-    }
+    quat& operator*=(quat const& r);
   };
 
   /// <summary>

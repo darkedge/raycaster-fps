@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\src\client\game.cpp" />
     <ClCompile Include="..\..\src\client\graphics.cpp" />
     <ClCompile Include="..\..\src\client\mj_math.cpp" />
+    <ClCompile Include="..\..\src\client\test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\3rdparty\imgui\imconfig.h">
