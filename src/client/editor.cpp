@@ -82,6 +82,11 @@ void EditorState::Entry()
   this->camera.floor.backFaceCulling = true;
   this->camera.walls.show            = true;
   this->camera.walls.backFaceCulling = true;
+
+  this->inputComboOpen   = { InputCombo::KEYBOARD, Key::KeyO, Modifier::None, MouseButton::None };
+  this->inputComboSave   = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl, MouseButton::None };
+  this->inputComboSaveAs = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl | Modifier::LeftShift,
+                             MouseButton::None };
 }
 
 static void SaveFileDialog()
@@ -130,6 +135,10 @@ static void OpenFileDialog()
   if (SUCCEEDED(hr))
   {
     // Show the Open dialog box.
+    // Does not work... requires full name. TODO: Frame-alloc the current working directory.
+    // IShellItem* pSI;
+    // SHCreateItemFromParsingName(L"./", nullptr, IID_IShellItem, (void**)&pSI);
+    // pFileOpen->SetFolder(pSI);
     hr = pFileOpen->Show(nullptr);
 
     // Get the file name from the dialog box.
@@ -156,6 +165,9 @@ static void OpenFileDialog()
 
 void EditorState::DoMenu()
 {
+  bool open   = mj::input::GetControlDown(this->inputComboOpen);
+  bool save   = mj::input::GetControlDown(this->inputComboSave);
+  bool saveAs = mj::input::GetControlDown(this->inputComboSaveAs);
   if (ImGui::BeginMainMenuBar())
   {
     if (ImGui::BeginMenu("File"))
@@ -163,17 +175,9 @@ void EditorState::DoMenu()
       if (ImGui::MenuItem("New", "Ctrl+N"))
       {
       }
-      if (ImGui::MenuItem("Open...", "Ctrl+Z"))
-      {
-        OpenFileDialog();
-      }
-      if (ImGui::MenuItem("Save", "Ctrl+S"))
-      {
-      }
-      if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
-      {
-        SaveFileDialog();
-      }
+      open |= ImGui::MenuItem("Open...", "Ctrl+Z");
+      save |= ImGui::MenuItem("Save", "Ctrl+S");
+      saveAs |= ImGui::MenuItem("Save As...", "Ctrl+Shift+S");
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit"))
@@ -203,6 +207,19 @@ void EditorState::DoMenu()
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
+  }
+
+  if (open)
+  {
+    OpenFileDialog();
+  }
+  if (save)
+  {
+    // TODO
+  }
+  if (saveAs)
+  {
+    SaveFileDialog();
   }
 }
 

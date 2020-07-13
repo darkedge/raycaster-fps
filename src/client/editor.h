@@ -1,6 +1,7 @@
 #pragma once
 #include "state_machine.h"
 #include "camera.h"
+#include "mj_input.h"
 
 class EditorState : public StateBase
 {
@@ -17,6 +18,10 @@ public:
 private:
   void DoMenu();
   void DoInput();
+
+  InputCombo inputComboOpen;
+  InputCombo inputComboSave;
+  InputCombo inputComboSaveAs;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

@@ -49,6 +49,7 @@ struct GamepadAxis
 };
 
 // Only used for initialization of controls
+// Can be OR-ed together.
 struct Modifier
 {
   enum Enum
@@ -207,8 +208,7 @@ struct Key
   };
 };
 
-// This should probably be moved to Control.h
-struct Control
+struct InputCombo
 {
   enum Type
   {
@@ -227,10 +227,9 @@ namespace mj
 {
   namespace input
   {
-    // This should probably be moved to Control.h
-    bool GetControl(const Control& control);
-    bool GetControlDown(const Control& control);
-    bool GetControlUp(const Control& control);
+    bool GetControl(const InputCombo& control);
+    bool GetControlDown(const InputCombo& control);
+    bool GetControlUp(const InputCombo& control);
 
     bool GetKey(Key::Enum key);
     bool GetKeyDown(Key::Enum key);
@@ -245,10 +244,8 @@ namespace mj
     void SetKey(SDL_Scancode key, bool active);
 #endif // MJ_INPUT_SDL
     bool IsEscapePressed();
-    void SetKeyName(Key::Enum key, const char* keyName);
 
     const char* GetKeyName(Key::Enum key);
-    const char* GetControlName(const Control& control);
 
     void AddAsciiTyped(char ascii);
     char NextAsciiTyped();
@@ -264,7 +261,7 @@ namespace mj
     void GetMousePosition(float* px, float* py);
     void SetMousePosition(float x, float y);
 
-    Control GetNewControl();
+    InputCombo GetNewControl();
 
     void Init();
     void Reset();

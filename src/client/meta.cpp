@@ -7,6 +7,7 @@
 #include "editor.h"
 #include "state_machine.h"
 #include "game.h"
+#include "main.h"
 
 // Helper functions
 

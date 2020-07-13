@@ -2,10 +2,15 @@
 // Should not use pre-compiled headers (for portability)
 // Only supports SDL for now
 
+// TODO
+// - Support "any" left or right ctrl/shift/alt/meta key instead of only left or right or both
+// - Control: Use a single "activation" key or mouse button (can be merged), removes need for type
+// - BUG: Ctrl+Shift+S also triggers Ctrl+S (should check modifiers exclusively)
+
 #include "mj_input.h"
-#include "assert.h"
+#include <assert.h>
 #include <queue>
-#include "../../tracy/Tracy.hpp"
+
 #ifdef MJ_INPUT_SDL
 #include <SDL_keycode.h>
 #endif // MJ_INPUT_SDL
@@ -116,6 +121,25 @@ int32_t Gamepad::getAxis(GamepadAxis::Enum _axis)
   return m_axis[_axis];
 }
 
+static bool CheckKey(const uint32_t* pArray, Key::Enum key)
+{
+  if ((key >= 0) && (key < INPUT_NUM_KEYS))
+  {
+    return pArray[key / 32] & (1 << (key % 32));
+  }
+  return false;
+}
+
+static bool CheckModifiers(ModifierMask modifiers)
+{
+  return ((modifierMask.all & modifiers.all) == modifiers.all);
+}
+
+static bool CheckControl(const InputCombo& control, const uint32_t* pArray)
+{
+  return CheckKey(pArray, control.key) && CheckModifiers(control.modifiers);
+}
+
 /**
  * @brief      Gets the control.
  *
@@ -123,13 +147,9 @@ int32_t Gamepad::getAxis(GamepadAxis::Enum _axis)
  *
  * @return     The control.
  */
-bool mj::input::GetControl(const Control& control)
+bool mj::input::GetControl(const InputCombo& control)
 {
-  assert(control.key >= 0);
-  assert(control.key < INPUT_NUM_KEYS);
-  bool key           = ((keyActive[control.key / 32] & (1 << (control.key % 32))) != 0);
-  bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
-  return key && modifiersDown;
+  return CheckControl(control, keyActive);
 }
 
 /**
@@ -139,13 +159,9 @@ bool mj::input::GetControl(const Control& control)
  *
  * @return     The control down.
  */
-bool mj::input::GetControlDown(const Control& control)
+bool mj::input::GetControlDown(const InputCombo& control)
 {
-  assert(control.key >= 0);
-  assert(control.key < INPUT_NUM_KEYS);
-  bool keyDown       = ((keyMake[control.key / 32] & (1 << (control.key % 32))) != 0);
-  bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
-  return keyDown && modifiersDown;
+  return CheckControl(control, keyMake);
 }
 
 /**
@@ -155,13 +171,9 @@ bool mj::input::GetControlDown(const Control& control)
  *
  * @return     The control up.
  */
-bool mj::input::GetControlUp(const Control& control)
+bool mj::input::GetControlUp(const InputCombo& control)
 {
-  assert(control.key >= 0);
-  assert(control.key < INPUT_NUM_KEYS);
-  bool keyUp         = ((keyBreak[control.key / 32] & (1 << (control.key % 32))) != 0);
-  bool modifiersDown = ((modifierMask.all & control.modifiers.all) == control.modifiers.all);
-  return keyUp && modifiersDown;
+  return CheckControl(control, keyBreak);
 }
 
 /**
@@ -173,9 +185,11 @@ bool mj::input::GetControlUp(const Control& control)
  */
 bool mj::input::GetKey(Key::Enum key)
 {
-  assert(key >= 0);
-  assert(key < INPUT_NUM_KEYS);
-  return ((keyActive[key / 32] & (1 << (key % 32))) != 0);
+  if ((key >= 0) && (key < INPUT_NUM_KEYS))
+  {
+    return CheckKey(keyActive, key);
+  }
+  return false;
 }
 
 /**
@@ -187,9 +201,11 @@ bool mj::input::GetKey(Key::Enum key)
  */
 bool mj::input::GetKeyDown(Key::Enum key)
 {
-  assert(key >= 0);
-  assert(key < INPUT_NUM_KEYS);
-  return ((keyMake[key / 32] & (1 << (key % 32))) != 0);
+  if ((key >= 0) && (key < INPUT_NUM_KEYS))
+  {
+    return CheckKey(keyMake, key);
+  }
+  return false;
 }
 
 /**
@@ -201,76 +217,78 @@ bool mj::input::GetKeyDown(Key::Enum key)
  */
 bool mj::input::GetKeyUp(Key::Enum key)
 {
-  assert(key >= 0);
-  assert(key < INPUT_NUM_KEYS);
-  return ((keyBreak[key / 32] & (1 << (key % 32))) != 0);
+  if ((key >= 0) && (key < INPUT_NUM_KEYS))
+  {
+    return CheckKey(keyBreak, key);
+  }
+  return false;
 }
 
 /**
  * @brief      Game thread event pump calls this function to set key state.
  *
  * @param[in]  key     The key
- * @param[in]  active  True if this was a key press event, otherwise false
+ * @param[in]  isActive  True if this was a key press event, otherwise false
  */
-static void SetKey(Key::Enum key, bool active)
+static void SetKey(Key::Enum key, bool isActive)
 {
-  assert(key >= 0);
-  assert(key < INPUT_NUM_KEYS);
+  if ((key >= 0) && (key < INPUT_NUM_KEYS))
+  {
+    if (isActive)
+    {
+      keyActive[key / 32] |= (1 << (key % 32));
+    }
+    else
+    {
+      keyActive[key / 32] &= ~(1 << (key % 32));
+    }
 
-  if (active)
-  {
-    keyActive[key / 32] |= (1 << (key % 32));
-  }
-  else
-  {
-    keyActive[key / 32] &= ~(1 << (key % 32));
-  }
-
-  // Modifiers
-  switch (key)
-  {
-  case Key::LeftAlt:
-  {
-    modifierMask.LeftAlt = active;
-  }
-  break;
-  case Key::RightAlt:
-  {
-    modifierMask.RightAlt = active;
-  }
-  break;
-  case Key::LeftCtrl:
-  {
-    modifierMask.LeftCtrl = active;
-  }
-  break;
-  case Key::RightCtrl:
-  {
-    modifierMask.RightCtrl = active;
-  }
-  break;
-  case Key::LeftShift:
-  {
-    modifierMask.LeftShift = active;
-  }
-  break;
-  case Key::RightShift:
-  {
-    modifierMask.RightShift = active;
-  }
-  break;
-  case Key::LeftMeta:
-  {
-    modifierMask.LeftMeta = active;
-  }
-  break;
-  case Key::RightMeta:
-  {
-    modifierMask.RightMeta = active;
-  }
-  break;
-  default:
+    // Modifiers
+    switch (key)
+    {
+    case Key::LeftAlt:
+    {
+      modifierMask.LeftAlt = isActive;
+    }
     break;
+    case Key::RightAlt:
+    {
+      modifierMask.RightAlt = isActive;
+    }
+    break;
+    case Key::LeftCtrl:
+    {
+      modifierMask.LeftCtrl = isActive;
+    }
+    break;
+    case Key::RightCtrl:
+    {
+      modifierMask.RightCtrl = isActive;
+    }
+    break;
+    case Key::LeftShift:
+    {
+      modifierMask.LeftShift = isActive;
+    }
+    break;
+    case Key::RightShift:
+    {
+      modifierMask.RightShift = isActive;
+    }
+    break;
+    case Key::LeftMeta:
+    {
+      modifierMask.LeftMeta = isActive;
+    }
+    break;
+    case Key::RightMeta:
+    {
+      modifierMask.RightMeta = isActive;
+    }
+    break;
+    default:
+      break;
+    }
   }
 }
 
@@ -516,9 +534,11 @@ char mj::input::NextAsciiTyped()
  */
 bool mj::input::GetMouseButton(MouseButton::Enum button)
 {
-  assert(button >= 0);
-  assert(button < INPUT_NUM_MOUSE_BUTTONS);
-  return mouseActive[button];
+  if ((button >= 0) && (button < INPUT_NUM_MOUSE_BUTTONS))
+  {
+    return mouseActive[button];
+  }
+  return false;
 }
 
 /**
@@ -530,9 +550,11 @@ bool mj::input::GetMouseButton(MouseButton::Enum button)
  */
 bool mj::input::GetMouseButtonDown(MouseButton::Enum button)
 {
-  assert(button >= 0);
-  assert(button < INPUT_NUM_MOUSE_BUTTONS);
-  return mouseMake[button];
+  if ((button >= 0) && (button < INPUT_NUM_MOUSE_BUTTONS))
+  {
+    return mouseMake[button];
+  }
+  return false;
 }
 
 /**
@@ -544,9 +566,11 @@ bool mj::input::GetMouseButtonDown(MouseButton::Enum button)
  */
 bool mj::input::GetMouseButtonUp(MouseButton::Enum button)
 {
-  assert(button >= 0);
-  assert(button < INPUT_NUM_MOUSE_BUTTONS);
-  return mouseBreak[button];
+  if ((button >= 0) && (button < INPUT_NUM_MOUSE_BUTTONS))
+  {
+    return mouseBreak[button];
+  }
+  return false;
 }
 
 /**
@@ -557,9 +581,10 @@ bool mj::input::GetMouseButtonUp(MouseButton::Enum button)
  */
 void mj::input::SetMouseButton(MouseButton::Enum button, bool active)
 {
-  assert(button >= 0);
-  assert(button < INPUT_NUM_MOUSE_BUTTONS);
-  mouseActive[button] = active;
+  if ((button >= 0) && (button < INPUT_NUM_MOUSE_BUTTONS))
+  {
+    mouseActive[button] = active;
+  }
 }
 
 /**
@@ -573,7 +598,6 @@ bool mj::input::SetMouseLock(bool lock)
 {
   if (lock != s_MouseLock)
   {
-    // entry::setMouseLock({ 0 }, lock);
     s_MouseLock = lock;
     return true;
   }
@@ -603,12 +627,6 @@ void mj::input::Init()
  */
 void mj::input::Reset()
 {
-#if 0
-  for (uint32_t ii = 0; ii < BX_COUNTOF(m_gamepad); ++ii)
-  {
-    m_gamepad[ii].reset();
-  }
-#endif
 }
 
 /**
@@ -616,7 +634,6 @@ void mj::input::Reset()
  */
 void mj::input::Update()
 {
-  ZoneScoped;
   mouseDX         = mouseDXNext;
   mouseDY         = mouseDYNext;
   mouseDXNext     = 0;
@@ -726,21 +743,6 @@ bool mj::input::IsEscapePressed()
   return GetKeyDown(Key::Esc);
 }
 
-#if 0
-/**
- * @brief      Sets a key name.
- *
- * @param[in]  key      The key
- * @param[in]  keyName  The key name (pointer to static SDL memory)
- */
-void mj::input::SetKeyName(Key::Enum key, const char* keyName)
-{
-  s_keyNames[key] = s_keyNameNext;
-  strcpy(s_keyNameNext, keyName);
-  s_keyNameNext += strlen(s_keyNameNext) + 1; // Advance pointer (TODO: buffer overrun check)
-}
-#endif
-
 /**
  * @brief      Gets the key name.
  *
@@ -752,104 +754,6 @@ const char* mj::input::GetKeyName(Key::Enum key)
 {
   return s_keyNames[key];
 }
-
-#if 0
-/**
- * @brief      Allocates a string and copies it over. Does not copy the trailing zero.
- *
- * @param      alloc  The allocator
- * @param[in]  str    The C string to be copied
- *
- * @return     True if the allocation succeeded and the string was copied
- */
-static bool AllocateString(mjm::StackAllocator& alloc, const char* str)
-{
-  bool success = false;
-
-  size_t len = strlen(str);
-  void* ptr = alloc.Allocate(len);
-  if (ptr)
-  {
-    memcpy(ptr, str, len);
-    success = true;
-  }
-
-  return success;
-}
-#endif
-
-#if 0
-/**
- * @brief      Gets the control name. The string is allocated for a single frame: Do not store the pointer.
- *
- * @param[in]  control  The control
- *
- * @return     The control name.
- */
-const char* mj::input::GetControlName(const Control& control)
-{
-  auto& alloc = mjm::GetFrameAllocator();
-  void* string = alloc.GetTop();
-  bool first = true;
-
-  auto AllocateString = [&](const char* str)
-  {
-    size_t len = strlen(str);
-    void* ptr = alloc.Allocate(len);
-    if (ptr)
-    {
-      memcpy(ptr, str, len);
-    }
-  };
-
-  auto AddModifierStringIfUsed = [&](uint8_t modifier, Key::Enum key)
-  {
-    if (modifier)
-    {
-      if (!first)
-      {
-        AllocateString(" + ");
-      }
-      AllocateString(GetKeyName(key));
-      first = false;
-    }
-  };
-
-  AddModifierStringIfUsed(control.modifiers.LeftCtrl,   Key::LeftCtrl);
-  AddModifierStringIfUsed(control.modifiers.RightCtrl,  Key::RightCtrl);
-  AddModifierStringIfUsed(control.modifiers.LeftAlt,    Key::LeftAlt);
-  AddModifierStringIfUsed(control.modifiers.RightAlt,   Key::RightAlt);
-  AddModifierStringIfUsed(control.modifiers.LeftShift,  Key::LeftShift);
-  AddModifierStringIfUsed(control.modifiers.RightShift, Key::RightShift);
-  AddModifierStringIfUsed(control.modifiers.LeftMeta,   Key::LeftMeta);
-  AddModifierStringIfUsed(control.modifiers.RightMeta,  Key::RightMeta);
-
-  if (control.type == Control::KEYBOARD)
-  {
-    if (!first)
-    {
-      AllocateString(" + ");
-    }
-    AllocateString(GetKeyName(control.key));
-  }
-
-  // Close string
-  if (alloc.GetTop() != string)
-  {
-    char* last = (char*)alloc.Allocate(1);
-    if (last)
-    {
-      *last = '\0';
-    }
-    else
-    {
-      *(alloc.GetTop() - 1) = '\0';
-    }
-  }
-
-  return (const char*)string;
-}
-#endif
 
 /**
  * @brief      Sets the mouse position.
@@ -869,8 +773,10 @@ void mj::input::SetMousePosition(float x, float y)
  */
 void mj::input::GetMousePosition(float* pX, float* pY)
 {
-  if (pX) *pX = s_MouseX;
-  if (pY) *pY = s_MouseY;
+  if (pX)
+    *pX = s_MouseX;
+  if (pY)
+    *pY = s_MouseY;
 }
 
 /**
@@ -879,11 +785,11 @@ void mj::input::GetMousePosition(float* pX, float* pY)
  *             the currently held modifier keys. Otherwise, the release of the first modifier key is
  *             used.
  *
- * @return     The new control bind combination.
+ * @return     The new control bind combination. This should be polled until the result is not Control::NONE.
  */
-Control mj::input::GetNewControl()
+InputCombo mj::input::GetNewControl()
 {
-  Control control = { Control::NONE, Key::None, Modifier::None, MouseButton::None };
+  InputCombo control = { InputCombo::NONE, Key::None, Modifier::None, MouseButton::None };
 
   // Keyboard
   for (int32_t i = 0; i < Key::ModifierFirst; i++)
@@ -891,28 +797,28 @@ Control mj::input::GetNewControl()
     Key::Enum key = (Key::Enum)i;
     if (mj::input::GetKeyDown(key))
     {
-      control.type = Control::KEYBOARD;
+      control.type = InputCombo::KEYBOARD;
       control.key  = key;
       break;
     }
   }
 
   // Mouse
-  if (control.type == Control::NONE)
+  if (control.type == InputCombo::NONE)
   {
     for (int32_t i = MouseButton::Left; i < MouseButton::Count; i++)
     {
       MouseButton::Enum mouseButton = (MouseButton::Enum)i;
       if (mj::input::GetMouseButtonDown(mouseButton))
       {
-        control.type        = Control::MOUSE;
+        control.type        = InputCombo::MOUSE;
         control.mouseButton = mouseButton;
         break;
       }
     }
   }
 
-  if (control.type == Control::NONE)
+  if (control.type == InputCombo::NONE)
   {
     // Check for released modifier keys
     for (int32_t i = Key::ModifierFirst; i < Key::ModifierLast; i++)
@@ -920,14 +826,14 @@ Control mj::input::GetNewControl()
       Key::Enum key = (Key::Enum)i;
       if (mj::input::GetKeyUp(key))
       {
-        control.type = Control::KEYBOARD;
+        control.type = InputCombo::KEYBOARD;
         control.key  = key;
         break;
       }
     }
   }
 
-  if (control.type != Control::NONE)
+  if (control.type != InputCombo::NONE)
   {
     // Add all held modifier keys (unless it was the trigger key)
     if (control.key != Key::LeftAlt && mj::input::GetKey(Key::LeftAlt))

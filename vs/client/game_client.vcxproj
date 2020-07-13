@@ -221,7 +221,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;shell32.lib;</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <LinkTimeCodeGeneration>
@@ -256,7 +256,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\Debug;..\bx\$(Platform)\Debug;..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;shell32.lib;</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <LinkTimeCodeGeneration>
@@ -292,7 +292,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib</AdditionalDependencies>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;shell32.lib;</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>
@@ -326,7 +326,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\Release;..\bx\$(Platform)\Release;..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;Advapi32.lib</AdditionalDependencies>
+      <AdditionalDependencies>bimg.lib;bx.lib;SDL2.lib;d3d11.lib;Shlwapi.lib;ole32.lib;shell32.lib;Advapi32.lib</AdditionalDependencies>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <Profile>true</Profile>
       <SubSystem>Windows</SubSystem>

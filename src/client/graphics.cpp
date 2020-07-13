@@ -281,7 +281,7 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
       MJ_UNINITIALIZED bimg::ImageMip mip;
       for (uint16_t i = 0; i < pImageContainer->m_numLayers; i++)
       {
-        const uint8_t lod = 0;
+        constexpr uint8_t lod = 0;
         if (bimg::imageGetRawData(*pImageContainer, i, lod, nullptr, 0, MJ_REF mip))
         {
           srd[i].pSysMem          = mip.m_data;
