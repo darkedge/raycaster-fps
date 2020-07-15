@@ -156,19 +156,19 @@ namespace mjm
     {
     }
 
-    quat(vec3 const& eulerAngle);
+    quat(const vec3& eulerAngle);
 
     quat(float w, float x, float y, float z) : x(x), y(y), z(z), w(w)
     {
     }
 
-    quat(float s, vec3 const& v) : x(v.x), y(v.y), z(v.z), w(s)
+    quat(float s, const vec3& v) : x(v.x), y(v.y), z(v.z), w(s)
     {
     }
 
     quat(const vec3& u, const vec3& v);
 
-    quat& operator*=(quat const& r);
+    quat& operator*=(const quat& r);
   };
 
   /// <summary>
@@ -241,7 +241,7 @@ namespace mjm
     {
     }
 
-    mat4(mat3 const& m)
+    mat4(const mat3& m)
         : columns{ vec4(m[0], 0), //
                    vec4(m[1], 0), //
                    vec4(m[2], 0), //
@@ -261,13 +261,12 @@ namespace mjm
     {
       return columns[i];
     }
+
     const vec4& operator[](size_t i) const
     {
       return columns[i];
     }
   };
-
-  // Split here
 
   vec3 operator-(const vec3& v);
 
@@ -295,9 +294,9 @@ namespace mjm
 
   vec4 operator*(const vec4& a, const vec4& b);
 
-  mat4 operator*(const mat4 m1, const mat4& m2);
+  mat4 operator*(const mat4& m1, const mat4& m2);
 
-  mat4 operator*(const mat4 m, float s);
+  mat4 operator*(const mat4& m, float s);
 
   float dot(const vec3& a, const vec3& b);
 
@@ -323,7 +322,7 @@ namespace mjm
 
   quat quatLookAtLH(const vec3& direction, const vec3& up);
 
-  quat angleAxis(float angle, vec3 v);
+  quat angleAxis(float angle, const vec3& v);
 
   mat4 eulerAngleY(float angleY);
 
@@ -351,15 +350,15 @@ namespace mjm
   template <>
   float* value_ptr<mat4>(mat4& t);
 
-  mat4 inverse(mat4 const& m);
+  mat4 inverse(const mat4& m);
 
-  vec3 unProjectZO(vec3 const& win, mat4 const& model, mat4 const& proj, vec4 const& viewport);
+  vec3 unProjectZO(const vec3& win, const mat4& model, const mat4& proj, const vec4& viewport);
 
   mat4 translate(const mat4& m, const vec3& v);
 
   mat4 transpose(const mat4& m);
 
-  mat3 mat3_cast(quat const& q);
+  mat3 mat3_cast(const quat& q);
 
   mat4 mat4_cast(const quat& q);
 

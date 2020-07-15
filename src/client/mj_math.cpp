@@ -3,7 +3,7 @@
 
 #ifndef MJ_MATH_GLM
 
-mjm::quat::quat(vec3 const& eulerAngle)
+mjm::quat::quat(const vec3& eulerAngle)
 {
   vec3 c = mjm::cos(eulerAngle * 0.5f);
   vec3 s = mjm::sin(eulerAngle * 0.5f);
@@ -37,10 +37,10 @@ mjm::quat::quat(const vec3& u, const vec3& v)
   *this = normalize(quat(real_part, t.x, t.y, t.z));
 }
 
-mjm::quat& mjm::quat::operator*=(quat const& r)
+mjm::quat& mjm::quat::operator*=(const quat& r)
 {
-  quat const p(*this);
-  quat const q(r);
+  const quat p(*this);
+  const quat q(r);
 
   this->w = p.w * q.w - p.x * q.x - p.y * q.y - p.z * q.z;
   this->x = p.w * q.x + p.x * q.w + p.y * q.z - p.z * q.y;
@@ -117,17 +117,17 @@ mjm::vec4 mjm::operator*(const vec4& a, const vec4& b)
   return vec4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
 }
 
-mjm::mat4 mjm::operator*(const mat4 m1, const mat4& m2)
+mjm::mat4 mjm::operator*(const mat4& m1, const mat4& m2)
 {
-  vec4 const SrcA0 = m1[0];
-  vec4 const SrcA1 = m1[1];
-  vec4 const SrcA2 = m1[2];
-  vec4 const SrcA3 = m1[3];
+  const vec4 SrcA0 = m1[0];
+  const vec4 SrcA1 = m1[1];
+  const vec4 SrcA2 = m1[2];
+  const vec4 SrcA3 = m1[3];
 
-  vec4 const SrcB0 = m2[0];
-  vec4 const SrcB1 = m2[1];
-  vec4 const SrcB2 = m2[2];
-  vec4 const SrcB3 = m2[3];
+  const vec4 SrcB0 = m2[0];
+  const vec4 SrcB1 = m2[1];
+  const vec4 SrcB2 = m2[2];
+  const vec4 SrcB3 = m2[3];
 
   mat4 Result;
   Result[0] = SrcA0 * SrcB0[0] + SrcA1 * SrcB0[1] + SrcA2 * SrcB0[2] + SrcA3 * SrcB0[3];
@@ -137,7 +137,7 @@ mjm::mat4 mjm::operator*(const mat4 m1, const mat4& m2)
   return Result;
 }
 
-mjm::mat4 mjm::operator*(const mat4 m, float s)
+mjm::mat4 mjm::operator*(const mat4& m, float s)
 {
   return mat4(m[0] * s, //
               m[1] * s, //
@@ -190,9 +190,9 @@ mjm::quat mjm::normalize(const quat& q)
 
 mjm::vec3 mjm::operator*(const quat& q, const vec3& v)
 {
-  vec3 const QuatVector(q.x, q.y, q.z);
-  vec3 const uv(cross(QuatVector, v));
-  vec3 const uuv(cross(QuatVector, uv));
+  const vec3 QuatVector(q.x, q.y, q.z);
+  const vec3 uv(cross(QuatVector, v));
+  const vec3 uuv(cross(QuatVector, uv));
 
   return v + ((uv * q.w) + uuv) * 2.0f;
 }
@@ -204,17 +204,17 @@ mjm::quat mjm::operator*(const quat& q, const quat& p)
 
 mjm::vec4 mjm::operator*(const mat4& m, const vec4& v)
 {
-  vec4 const Mov0(v[0]);
-  vec4 const Mov1(v[1]);
-  vec4 const Mul0 = m[0] * Mov0;
-  vec4 const Mul1 = m[1] * Mov1;
-  vec4 const Add0 = Mul0 + Mul1;
-  vec4 const Mov2(v[2]);
-  vec4 const Mov3(v[3]);
-  vec4 const Mul2 = m[2] * Mov2;
-  vec4 const Mul3 = m[3] * Mov3;
-  vec4 const Add1 = Mul2 + Mul3;
-  vec4 const Add2 = Add0 + Add1;
+  const vec4 Mov0(v[0]);
+  const vec4 Mov1(v[1]);
+  const vec4 Mul0 = m[0] * Mov0;
+  const vec4 Mul1 = m[1] * Mov1;
+  const vec4 Add0 = Mul0 + Mul1;
+  const vec4 Mov2(v[2]);
+  const vec4 Mov3(v[3]);
+  const vec4 Mul2 = m[2] * Mov2;
+  const vec4 Mul3 = m[3] * Mov3;
+  const vec4 Add1 = Mul2 + Mul3;
+  const vec4 Add2 = Add0 + Add1;
   return Add2;
 }
 
@@ -272,10 +272,10 @@ mjm::quat mjm::quatLookAtLH(const vec3& direction, const vec3& up)
   return quat_cast(Result);
 }
 
-mjm::quat mjm::angleAxis(float angle, vec3 v)
+mjm::quat mjm::angleAxis(float angle, const vec3& v)
 {
-  float const a(angle);
-  float const s = std::sin(a * 0.5f);
+  const float a(angle);
+  const float s = std::sin(a * 0.5f);
 
   return quat(std::cos(a * 0.5f), v * s);
 }
@@ -334,7 +334,7 @@ float* mjm::value_ptr<mjm::mat4>(mat4& t)
   return &t[0].x;
 }
 
-mjm::mat4 mjm::inverse(mat4 const& m)
+mjm::mat4 mjm::inverse(const mat4& m)
 {
   float Coef00 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
   float Coef02 = m[1][2] * m[3][3] - m[3][2] * m[1][3];
@@ -391,7 +391,7 @@ mjm::mat4 mjm::inverse(mat4 const& m)
   return Inverse * OneOverDeterminant;
 }
 
-mjm::vec3 mjm::unProjectZO(vec3 const& win, mat4 const& model, mat4 const& proj, vec4 const& viewport)
+mjm::vec3 mjm::unProjectZO(const vec3& win, const mat4& model, const mat4& proj, const vec4& viewport)
 {
   mat4 Inverse = inverse(proj * model);
 
@@ -439,7 +439,7 @@ mjm::mat4 mjm::transpose(const mat4& m)
   return Result;
 }
 
-mjm::mat3 mjm::mat3_cast(quat const& q)
+mjm::mat3 mjm::mat3_cast(const quat& q)
 {
   mat3 Result(1.0f);
   float qxx(q.x * q.x);
@@ -473,7 +473,7 @@ mjm::mat4 mjm::mat4_cast(const quat& q)
 
 mjm::mat4 mjm::perspectiveLH_ZO(float fovy, float aspect, float zNear, float zFar)
 {
-  float const tanHalfFovy = tan(fovy / 2.0f);
+  const float tanHalfFovy = tan(fovy / 2.0f);
 
   mat4 Result(0.0f);
   Result[0][0] = 1.0f / (aspect * tanHalfFovy);

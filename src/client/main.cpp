@@ -274,7 +274,6 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 
   // Cleanup
-  s_Meta.Destroy();
   ImGui_ImplSDL2_Shutdown();
 
   SDL_DestroyWindow(s_pWindow);

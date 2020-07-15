@@ -9,8 +9,9 @@
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
-static void CreateDefaultTexture(ID3D11Device* pDevice)
+static void CreateDefaultTexture(ComPtr<ID3D11Device> pDevice)
 {
+#if 0
   D3D11_TEXTURE2D_DESC desc = {};
   desc.Width                = 2;
   desc.Height               = 2;
@@ -33,6 +34,16 @@ static void CreateDefaultTexture(ID3D11Device* pDevice)
 
   MJ_UNINITIALIZED ID3D11Texture2D* pTexture2D;
   MJ_DISCARD(pDevice->CreateTexture2D(&desc, &srd, &pTexture2D));
+
+  D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+  srvDesc.Format                          = desc.Format;
+  srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2D;
+  srvDesc.Texture2D.MostDetailedMip       = 0;
+  srvDesc.Texture2D.MipLevels             = 1;
+
+  ID3D11ShaderResourceView* pSrv;
+  MJ_DISCARD(pDevice->CreateShaderResourceView(pTexture2D, &srvDesc, &pSrv));
+#endif
 }
 
 struct Vertex
@@ -146,7 +157,7 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   indices.push_back(oldVertexCount + 3);
 }
 
-void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
+void Graphics::CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -228,7 +239,7 @@ void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
     InitData.SysMemSlicePitch = 0;
 
     // Create the vertex buffer.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &this->pVertexBuffer));
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->pVertexBuffer.ReleaseAndGetAddressOf()));
   }
   {
     this->Indices = (UINT)indices.size();
@@ -246,11 +257,11 @@ void Graphics::CreateMesh(map::map_t map, ID3D11Device* pDevice)
     InitData.SysMemSlicePitch = 0;
 
     // Create the buffer with the device.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, &this->pIndexBuffer));
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->pIndexBuffer.ReleaseAndGetAddressOf()));
   }
 }
 
-void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
+void Graphics::InitTexture2DArray(ComPtr<ID3D11Device> pDevice)
 {
   MJ_UNINITIALIZED size_t datasize;
   void* pFile = SDL_LoadFile("texture_array.dds", &datasize);
@@ -290,7 +301,7 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
         }
       }
 
-      MJ_DISCARD(pDevice->CreateTexture2D(&desc, srd, &this->pTextureArray));
+      MJ_DISCARD(pDevice->CreateTexture2D(&desc, srd, this->pTextureArray.ReleaseAndGetAddressOf()));
 
       D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
       srvDesc.Format                          = desc.Format;
@@ -300,7 +311,7 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
       srvDesc.Texture2DArray.FirstArraySlice  = 0;
       srvDesc.Texture2DArray.ArraySize        = pImageContainer->m_numLayers;
 
-      MJ_DISCARD(pDevice->CreateShaderResourceView(this->pTextureArray, &srvDesc, &this->pShaderResourceView));
+      MJ_DISCARD(pDevice->CreateShaderResourceView(this->pTextureArray.Get(), &srvDesc, this->pShaderResourceView.ReleaseAndGetAddressOf()));
 
       D3D11_SAMPLER_DESC samplerDesc = {};
       samplerDesc.Filter             = D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
@@ -316,7 +327,7 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
       samplerDesc.BorderColor[3]     = 0.0f;
       samplerDesc.MinLOD             = 0.0f;
       samplerDesc.MaxLOD             = D3D11_FLOAT32_MAX;
-      pDevice->CreateSamplerState(&samplerDesc, &this->pTextureSamplerState);
+      pDevice->CreateSamplerState(&samplerDesc, this->pTextureSamplerState.ReleaseAndGetAddressOf());
 
       bimg::imageFree(pImageContainer);
     }
@@ -325,11 +336,11 @@ void Graphics::InitTexture2DArray(ID3D11Device* pDevice)
   }
 }
 
-void Graphics::Init(ID3D11Device* pDevice)
+void Graphics::Init(ComPtr<ID3D11Device> pDevice)
 {
-  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, &this->pVertexShader));
+  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, this->pVertexShader.ReleaseAndGetAddressOf()));
   // SetDebugName(this->pVertexShader, "this->pVertexShader");
-  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, &this->pPixelShader));
+  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, this->pPixelShader.ReleaseAndGetAddressOf()));
   // SetDebugName(this->pPixelShader, "this->pPixelShader");
 
   {
@@ -353,7 +364,7 @@ void Graphics::Init(ID3D11Device* pDevice)
     desc[1].InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
     desc[1].InstanceDataStepRate = 0;
 
-    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), &this->pInputLayout));
+    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), this->pInputLayout.ReleaseAndGetAddressOf()));
   }
 
   {
@@ -364,7 +375,7 @@ void Graphics::Init(ID3D11Device* pDevice)
     desc.CPUAccessFlags      = 0;
     desc.MiscFlags           = 0;
     desc.StructureByteStride = 0;
-    MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, &this->pResource));
+    MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, this->pResource.ReleaseAndGetAddressOf()));
   }
 
   CreateDefaultTexture(pDevice);
@@ -384,7 +395,7 @@ void Graphics::Init(ID3D11Device* pDevice)
       bs.RenderTarget[i].DestBlendAlpha        = D3D11_BLEND_ONE;
     }
 
-    MJ_DISCARD(pDevice->CreateBlendState(&bs, &this->pBlendState));
+    MJ_DISCARD(pDevice->CreateBlendState(&bs, this->pBlendState.ReleaseAndGetAddressOf()));
   }
 
   {
@@ -401,10 +412,10 @@ void Graphics::Init(ID3D11Device* pDevice)
     rasterizerDesc.ScissorEnable         = FALSE;
     rasterizerDesc.MultisampleEnable     = FALSE;
     rasterizerDesc.AntialiasedLineEnable = FALSE;
-    pDevice->CreateRasterizerState(&rasterizerDesc, &this->pRasterizerState);
+    pDevice->CreateRasterizerState(&rasterizerDesc, this->pRasterizerState.ReleaseAndGetAddressOf());
 
     rasterizerDesc.CullMode = D3D11_CULL_NONE;
-    pDevice->CreateRasterizerState(&rasterizerDesc, &this->pRasterizerStateCullNone);
+    pDevice->CreateRasterizerState(&rasterizerDesc, this->pRasterizerStateCullNone.ReleaseAndGetAddressOf());
   }
 }
 
@@ -422,31 +433,22 @@ void Graphics::Resize(int width, int height)
 /// <param name="width"></param>
 /// <param name="height"></param>
 /// <param name="pCamera"></param>
-void Graphics::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
+void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const Camera* pCamera)
 {
-#if 0
-  {
-    ImGui::Begin("Game");
-    ImGui::SliderFloat("Field of view", &pCamera->yFov, 5.0f, 170.0f);
-    ImGui::Text("Player position: x=%.3f, z=%.3f", pCamera->position.x, pCamera->position.z);
-    ImGui::End();
-  }
-#endif
-
   mjm::mat4 vp = pCamera->projection * pCamera->view;
-  pContext->UpdateSubresource(this->pResource, 0, 0, &vp, 0, 0);
+  pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &vp, 0, 0);
 
   // Input Assembler
   pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  pContext->IASetInputLayout(this->pInputLayout);
-  pContext->IASetIndexBuffer(this->pIndexBuffer, DXGI_FORMAT_R16_UINT, 0); // Index type
+  pContext->IASetInputLayout(this->pInputLayout.Get());
+  pContext->IASetIndexBuffer(this->pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
   UINT strides[] = { sizeof(Vertex) };
   UINT offsets[] = { 0 };
-  pContext->IASetVertexBuffers(0, 1, &this->pVertexBuffer, strides, offsets);
+  pContext->IASetVertexBuffers(0, 1, this->pVertexBuffer.GetAddressOf(), strides, offsets);
 
   // Vertex Shader
-  pContext->VSSetShader(this->pVertexShader, nullptr, 0);
-  pContext->VSSetConstantBuffers(0, 1, &this->pResource);
+  pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
+  pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
 
   // Rasterizer
   D3D11_VIEWPORT viewport = {};
@@ -457,38 +459,22 @@ void Graphics::Update(ID3D11DeviceContext* pContext, const Camera* pCamera)
   mj::GetWindowSize(&viewport.Width, &viewport.Height);
 
   pContext->RSSetViewports(1, &viewport);
-  pContext->RSSetState(this->pRasterizerState);
+  pContext->RSSetState(this->pRasterizerState.Get());
 
   // Pixel Shader
-  pContext->PSSetShaderResources(0, 1, &this->pShaderResourceView);
-  pContext->PSSetShader(this->pPixelShader, nullptr, 0);
-  pContext->PSSetSamplers(0, 1, &this->pTextureSamplerState);
+  pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
+  pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
+  pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
 
   // Output Merger
-  pContext->OMSetBlendState(this->pBlendState, nullptr, 0xFFFFFFFF);
+  pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
 
   pContext->DrawIndexed(this->Indices, 0, 0);
-}
-
-void Graphics::Destroy()
-{
-  SAFE_RELEASE(this->pTextureArray);
-  SAFE_RELEASE(this->pTextureSamplerState);
-  SAFE_RELEASE(this->pShaderResourceView);
-  SAFE_RELEASE(this->pVertexBuffer);
-  SAFE_RELEASE(this->pIndexBuffer);
-  SAFE_RELEASE(this->pVertexShader);
-  SAFE_RELEASE(this->pPixelShader);
-  SAFE_RELEASE(this->pInputLayout);
-  SAFE_RELEASE(this->pResource);
-  SAFE_RELEASE(this->pRasterizerState);
-  SAFE_RELEASE(this->pRasterizerStateCullNone);
-  SAFE_RELEASE(this->pBlendState);
 }
 
 void* Graphics::GetTileTexture(int x, int y)
 {
   (void)x;
   (void)y;
-  return this->pShaderResourceView;
+  return this->pShaderResourceView.Get();
 }

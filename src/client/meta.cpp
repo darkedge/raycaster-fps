@@ -39,34 +39,23 @@ bool Meta::CreateDeviceD3D(HWND hWnd)
     D3D_FEATURE_LEVEL_11_0,
     D3D_FEATURE_LEVEL_10_0,
   };
-  if (D3D11CreateDeviceAndSwapChain(nullptr,                  //
-                                    D3D_DRIVER_TYPE_HARDWARE, //
-                                    nullptr,                  //
-                                    createDeviceFlags,        //
-                                    featureLevelArray,        //
-                                    2,                        //
-                                    D3D11_SDK_VERSION,        //
-                                    &sd,                      //
-                                    &this->pSwapChain,        //
-                                    &this->pDevice,           //
-                                    &featureLevel,            //
-                                    &this->pContext) != S_OK)
+  if (D3D11CreateDeviceAndSwapChain(nullptr,                                   //
+                                    D3D_DRIVER_TYPE_HARDWARE,                  //
+                                    nullptr,                                   //
+                                    createDeviceFlags,                         //
+                                    featureLevelArray,                         //
+                                    2,                                         //
+                                    D3D11_SDK_VERSION,                         //
+                                    &sd,                                       //
+                                    this->pSwapChain.ReleaseAndGetAddressOf(), //
+                                    this->pDevice.ReleaseAndGetAddressOf(),    //
+                                    &featureLevel,                             //
+                                    this->pContext.ReleaseAndGetAddressOf()) != S_OK)
   {
     return false;
   }
 
   return true;
-}
-
-void Meta::CleanupDeviceD3D()
-{
-  SAFE_RELEASE(this->pSwapChain);
-  SAFE_RELEASE(this->pContext);
-  SAFE_RELEASE(this->pRenderTargetView);
-  SAFE_RELEASE(this->pDevice);
-  SAFE_RELEASE(this->pDepthStencilState);
-  SAFE_RELEASE(this->pDepthStencilView);
-  SAFE_RELEASE(this->pDepthStencilBuffer);
 }
 
 #if 0
@@ -103,8 +92,33 @@ void Meta::CreateRenderTargetView()
 {
   MJ_UNINITIALIZED ID3D11Texture2D* pBackBuffer;
   this->pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  this->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, &this->pRenderTargetView);
+  this->pDevice->CreateRenderTargetView(pBackBuffer, nullptr, this->pRenderTargetView.ReleaseAndGetAddressOf());
   pBackBuffer->Release();
+
+  MJ_UNINITIALIZED float w, h;
+  mj::GetWindowSize(&w, &h);
+
+  // Depth Stencil
+  D3D11_TEXTURE2D_DESC desc = {};
+
+  desc.ArraySize        = 1;
+  desc.BindFlags        = D3D11_BIND_DEPTH_STENCIL;
+  desc.Format           = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  desc.Width            = (UINT)w;
+  desc.Height           = (UINT)h;
+  desc.MipLevels        = 1;
+  desc.SampleDesc.Count = 1;
+  desc.Usage            = D3D11_USAGE_DEFAULT;
+
+  D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+  descDSV.Format                        = desc.Format;
+  descDSV.ViewDimension                 = D3D11_DSV_DIMENSION_TEXTURE2D;
+  descDSV.Flags                         = 0;
+  descDSV.Texture2D.MipSlice            = 0;
+
+  this->pDevice->CreateTexture2D(&desc, nullptr, this->pDepthStencilBuffer.ReleaseAndGetAddressOf());
+  this->pDevice->CreateDepthStencilView(this->pDepthStencilBuffer.Get(), &descDSV,
+                                        this->pDepthStencilView.ReleaseAndGetAddressOf());
 }
 
 void Meta::LoadLevel()
@@ -122,36 +136,13 @@ void Meta::Init(HWND hwnd)
   // Setup Platform/Renderer bindings
   MJ_DISCARD(CreateDeviceD3D(hwnd));
 
-  MJ_DISCARD(ImGui_ImplDX11_Init(this->pDevice, this->pContext));
+  MJ_DISCARD(ImGui_ImplDX11_Init(this->pDevice.Get(), this->pContext.Get()));
 
   this->CreateRenderTargetView();
 
   graphics.Init(this->pDevice);
 
   LoadLevel();
-
-  {
-    // Depth Stencil
-    D3D11_TEXTURE2D_DESC desc = {};
-
-    desc.ArraySize        = 1;
-    desc.BindFlags        = D3D11_BIND_DEPTH_STENCIL;
-    desc.Format           = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    desc.Width            = 1600;
-    desc.Height           = 1000;
-    desc.MipLevels        = 1;
-    desc.SampleDesc.Count = 1;
-    desc.Usage            = D3D11_USAGE_DEFAULT;
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-    descDSV.Format                        = desc.Format; // DXGI_FORMAT_D32_FLOAT; // DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
-    descDSV.ViewDimension                 = D3D11_DSV_DIMENSION_TEXTURE2D;
-    descDSV.Flags                         = 0;
-    descDSV.Texture2D.MipSlice            = 0;
-
-    this->pDevice->CreateTexture2D(&desc, nullptr, &this->pDepthStencilBuffer);
-    this->pDevice->CreateDepthStencilView(this->pDepthStencilBuffer, &descDSV, &this->pDepthStencilView);
-  }
 
   {
     D3D11_DEPTH_STENCIL_DESC dsDesc     = {};
@@ -170,7 +161,7 @@ void Meta::Init(HWND hwnd)
     dsDesc.BackFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
     dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
 
-    MJ_DISCARD(this->pDevice->CreateDepthStencilState(&dsDesc, &this->pDepthStencilState));
+    MJ_DISCARD(this->pDevice->CreateDepthStencilState(&dsDesc, this->pDepthStencilState.ReleaseAndGetAddressOf()));
   }
 
   // Mouse capture behavior
@@ -192,14 +183,9 @@ void Meta::Init(HWND hwnd)
   StateMachineUpdate(&this->stateMachine, nullptr);
 }
 
-void Meta::CleanupRenderTarget()
-{
-  SAFE_RELEASE(this->pRenderTargetView);
-}
-
 void Meta::Resize(int width, int height)
 {
-  this->CleanupRenderTarget();
+  this->pRenderTargetView.Reset();
   this->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
   this->CreateRenderTargetView();
   graphics.Resize(width, height);
@@ -226,11 +212,11 @@ void Meta::Update()
 
   StateMachineUpdate(&this->stateMachine, &this->pCamera);
 
-  this->pContext->OMSetRenderTargets(1, &this->pRenderTargetView, this->pDepthStencilView);
-  this->pContext->ClearDepthStencilView(this->pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+  this->pContext->OMSetRenderTargets(1, this->pRenderTargetView.GetAddressOf(), this->pDepthStencilView.Get());
+  this->pContext->ClearDepthStencilView(this->pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
   FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-  this->pContext->ClearRenderTargetView(this->pRenderTargetView, clearColor);
-  this->pContext->OMSetDepthStencilState(this->pDepthStencilState, 1);
+  this->pContext->ClearRenderTargetView(this->pRenderTargetView.Get(), clearColor);
+  this->pContext->OMSetDepthStencilState(this->pDepthStencilState.Get(), 1);
 
   graphics.Update(this->pContext, this->pCamera);
 
@@ -263,10 +249,8 @@ void Meta::Update()
   }
 }
 
-void Meta::Destroy()
+Meta::~Meta()
 {
-  graphics.Destroy();
-  this->CleanupDeviceD3D();
   ImGui_ImplDX11_Shutdown();
   ImGui::DestroyContext();
 }
