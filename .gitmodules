@@ -7,12 +7,6 @@
 [submodule "3rdparty/bx"]
 	path = 3rdparty/bx
 	url = https://github.com/bkaradzic/bx
-[submodule "3rdparty/yojimbo"]
-	path = 3rdparty/yojimbo
-	url = https://github.com/networkprotocol/yojimbo
-[submodule "3rdparty/enkiTS"]
-	path = 3rdparty/enkiTS
-	url = https://github.com/dougbinks/enkiTS
 [submodule "3rdparty/imgui"]
 	path = 3rdparty/imgui
 	url = https://github.com/ocornut/imgui.git
