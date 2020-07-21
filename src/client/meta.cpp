@@ -58,36 +58,6 @@ bool Meta::CreateDeviceD3D(HWND hWnd)
   return true;
 }
 
-#if 0
-static void ShowBuildInfo()
-{
-  // FIXME-VIEWPORT: Select a default viewport
-  const float DISTANCE = 10.0f;
-  static int corner    = 0;
-  if (corner != -1)
-  {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 window_pos =
-        ImVec2((corner & 1) ? (viewport->Pos.x + viewport->Size.x - DISTANCE) : (viewport->Pos.x + DISTANCE),
-               (corner & 2) ? (viewport->Pos.y + viewport->Size.y - DISTANCE) : (viewport->Pos.y + DISTANCE));
-    ImVec2 window_popivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_popivot);
-    ImGui::SetNextWindowViewport(viewport->ID);
-  }
-  ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-  if (ImGui::Begin("Overlay", nullptr,
-                   (corner != -1 ? ImGuiWindowFlagNoMove : 0) | ImGuiWindowFlagNoDocking |
-                       ImGuiWindowFlagNoTitleBar | ImGuiWindowFlagNoResize | ImGuiWindowFlagAlwaysAutoResize |
-                       ImGuiWindowFlagNoSavedSettings | ImGuiWindowFlagNoFocusOnAppearing | ImGuiWindowFlagNoNav))
-  {
-    ImGui::Text("%s, %s (%s #%s), %s\nStaged:%s\nUnstaged:%s", mj::txt::pBuildConfiguration, mj::txt::pGitCommitId,
-                mj::txt::pGitBranch, mj::txt::pGitRevision, mj::txt::pDateTime, mj::txt::pGitDiffStaged,
-                mj::txt::pGitDiff);
-  }
-  ImGui::End();
-}
-#endif
-
 void Meta::CreateRenderTargetView()
 {
   MJ_UNINITIALIZED ID3D11Texture2D* pBackBuffer;
@@ -180,7 +150,7 @@ void Meta::Init(HWND hwnd)
   }
 
   // Fire Entry action for next state
-  StateMachineUpdate(&this->stateMachine, nullptr);
+  this->stateMachine.Update(nullptr);
 }
 
 void Meta::Resize(int width, int height)
@@ -189,7 +159,7 @@ void Meta::Resize(int width, int height)
   this->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
   this->CreateRenderTargetView();
   graphics.Resize(width, height);
-  StateMachineResize(&this->stateMachine, (float)width, (float)height);
+  this->stateMachine.Resize((float)width, (float)height);
 }
 
 void Meta::NewFrame()
@@ -210,7 +180,7 @@ void Meta::Update()
                                         : (StateBase*)&this->stateGame;
   }
 
-  StateMachineUpdate(&this->stateMachine, &this->pCamera);
+  this->stateMachine.Update(&this->pCamera);
 
   this->pContext->OMSetRenderTargets(1, this->pRenderTargetView.GetAddressOf(), this->pDepthStencilView.Get());
   this->pContext->ClearDepthStencilView(this->pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);

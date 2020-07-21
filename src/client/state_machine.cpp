@@ -2,43 +2,37 @@
 #include "state_machine.h"
 #include "camera.h"
 
-void StateMachineResize(StateMachine* pStateMachine, float width, float height)
+void StateMachine::Resize(float width, float height)
 {
-  if (pStateMachine)
+  if (this->pStateCurrent)
   {
-    if (pStateMachine->pStateCurrent)
-    {
-      pStateMachine->pStateCurrent->Resize(width, height);
-    }
+    this->pStateCurrent->Resize(width, height);
   }
 }
 
-void StateMachineUpdate(StateMachine* pStateMachine, Camera** ppCamera)
+void StateMachine::Update(Camera** ppCamera)
 {
-  if (pStateMachine)
-  {
-    auto*& pCurrent = pStateMachine->pStateCurrent;
-    auto*& pNext    = pStateMachine->pStateNext;
+  auto*& pCurrent = this->pStateCurrent;
+  auto*& pNext    = this->pStateNext;
 
+  if (pCurrent)
+  {
+    pCurrent->Do(ppCamera);
+  }
+
+  if (pNext)
+  {
+    // Leave current
     if (pCurrent)
     {
-      pCurrent->Do(ppCamera);
+      pCurrent->Exit();
     }
 
-    if (pNext)
-    {
-      // Leave current
-      if (pCurrent)
-      {
-        pCurrent->Exit();
-      }
+    // Enter next
+    pNext->Entry();
 
-      // Enter next
-      pNext->Entry();
-
-      // Set next as current
-      pCurrent = pNext;
-      pNext    = nullptr;
-    }
+    // Set next as current
+    pCurrent = pNext;
+    pNext    = nullptr;
   }
 }

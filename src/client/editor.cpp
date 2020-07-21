@@ -5,53 +5,6 @@
 #include "mj_common.h"
 #include "meta.h"
 
-#if 0
-struct ETool
-{
-  enum Enum
-  {
-    Select,
-    Paint,
-    Erase,
-    Dropper,
-    COUNT
-  };
-};
-
-void editor::Show()
-{
-  ImGui::Begin("Editor");
-  static int selectedTool = ETool::Select;
-
-  if (ImGui::IsWindowFocused())
-  {
-    if (mj::input::GetKeyDown(Key::KeyQ))
-    {
-      selectedTool = ETool::Select;
-    }
-    else if (mj::input::GetKeyDown(Key::KeyW))
-    {
-      selectedTool = ETool::Paint;
-    }
-    else if (mj::input::GetKeyDown(Key::KeyE))
-    {
-      selectedTool = ETool::Erase;
-    }
-    else if (mj::input::GetKeyDown(Key::KeyR))
-    {
-      selectedTool = ETool::Dropper;
-    }
-  }
-
-  ImGui::RadioButton("[Q] Select", &selectedTool, ETool::Select);
-  ImGui::RadioButton("[W] Paint", &selectedTool, ETool::Paint);
-  ImGui::RadioButton("[E] Erase", &selectedTool, ETool::Erase);
-  ImGui::RadioButton("[R] Dropper", &selectedTool, ETool::Dropper);
-
-  ImGui::End();
-}
-#endif
-
 void EditorState::Resize(float w, float h)
 {
   this->camera.viewport[2] = w;

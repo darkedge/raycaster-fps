@@ -35,12 +35,11 @@ protected:
   Meta* pMeta = nullptr;
 };
 
-class StateMachine
+struct StateMachine
 {
-public:
   StateBase* pStateCurrent = nullptr;
   StateBase* pStateNext = nullptr;
-};
 
-void StateMachineResize(StateMachine* pStateMachine, float width, float height);
-void StateMachineUpdate(StateMachine* pStateMachine, Camera** ppCamera);
+  void Resize(float width, float height);
+  void Update(Camera** ppCamera);
+};
