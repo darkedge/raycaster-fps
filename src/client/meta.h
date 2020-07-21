@@ -8,6 +8,11 @@
 class Meta
 {
 public:
+  Meta()
+  {
+    stateGame.SetMeta(this);
+    stateEditor.SetMeta(this);
+  }
   ~Meta();
   static constexpr uint32_t LEVEL_DIM = 64;
 
@@ -35,7 +40,7 @@ private:
   Graphics graphics;
   map::map_t map;
 
-  Camera* pCamera;
+  Camera* pCamera = nullptr;
 
   StateMachine stateMachine;
 };

@@ -9,7 +9,6 @@
 // WARNING: global variable
 static float mj_DeltaTime;
 static SDL_Window* s_pWindow;
-static Meta s_Meta;
 
 float mj::GetDeltaTime()
 {
@@ -35,7 +34,7 @@ bool mj::IsWindowMouseFocused()
   return (flags & SDL_WINDOW_MOUSE_FOCUS);
 }
 
-static bool PumpEvents()
+static bool PumpEvents(Meta* pMeta)
 {
   ZoneScopedNC("Window message pump", tracy::Color::Aqua);
   SDL_Event event;
@@ -109,7 +108,7 @@ static bool PumpEvents()
       {
         if (event.window.windowID == SDL_GetWindowID(s_pWindow)) // Skip ImGui window IDs
         {
-          s_Meta.Resize(wev.data1, wev.data2);
+          pMeta->Resize(wev.data1, wev.data2);
         }
       }
       break;
@@ -250,7 +249,8 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   }
 
   MJ_DISCARD(ImGui_ImplSDL2_InitForD3D(s_pWindow));
-  s_Meta.Init(wmInfo.info.win.window);
+  Meta meta;
+  meta.Init(wmInfo.info.win.window);
 
   mj::input::Init();
 
@@ -261,15 +261,15 @@ int32_t CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInst
   while (true)
   {
     ZoneScopedNC("Game loop", tracy::Color::CornflowerBlue);
-    if (!PumpEvents())
+    if (!PumpEvents(&meta))
     {
       break;
     }
-    s_Meta.NewFrame();
+    meta.NewFrame();
     ImGui_ImplSDL2_NewFrame(s_pWindow);
     mj::input::Update();
     UpdateDeltaTime(&time);
-    s_Meta.Update();
+    meta.Update();
     FrameMark;
   }
 
