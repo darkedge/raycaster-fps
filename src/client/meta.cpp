@@ -123,11 +123,11 @@ void Meta::CreateRenderTargetView()
 
 void Meta::LoadLevel()
 {
-  map = map::Load("e1m1.mjm");
-  if (map::Valid(map))
+  Level level = Level::Load("e1m1.mjm");
+  if (Level::Valid(level))
   {
-    graphics.CreateMesh(map, pDevice);
-    map::Free(map);
+    graphics.CreateMesh(level, pDevice);
+    Level::Free(level);
   }
 }
 

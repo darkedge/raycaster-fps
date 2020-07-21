@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "map.h"
+#include "level.h"
 #include "mj_common.h"
 
 // Level file format (*.mjl)
@@ -9,16 +9,16 @@
 // 1 byte height
 // array of 2 byte values
 
-// TODO: Add map name, author, date, layers (floor, ceiling, objects)
+// TODO: Add Level name, author, date, layers (floor, ceiling, objects)
 
 static constexpr uint32_t s_MagicWord = 0x464D4A4D;
 static constexpr uint8_t s_Version    = 0;
 static bx::DefaultAllocator s_defaultAllocator;
 
-map::map_t map::Load(const char* path)
+Level Level::Load(const char* path)
 {
   MJ_UNINITIALIZED size_t dataSize;
-  map_t map   = {};
+  Level level = {};
   void* pFile = SDL_LoadFile(path, &dataSize);
   if (pFile)
   {
@@ -29,26 +29,26 @@ map::map_t map::Load(const char* path)
     if (reader
             .Read(magicWord)            //
             .Read(versionNumber)        //
-            .Read(map.width)            //
-            .Read(map.height)           //
+            .Read(level.width)          //
+            .Read(level.height)         //
             .Good()                     //
         && (magicWord == s_MagicWord)   //
         && (versionNumber == s_Version) //
-        && (reader.SizeLeft() >= (size = sizeof(uint16_t) * map.width * map.height)))
+        && (reader.SizeLeft() >= (size = sizeof(uint16_t) * level.width * level.height)))
     {
-      map.pBlocks = (uint16_t*)bx::alloc(&s_defaultAllocator, size, 0, __FILE__, __LINE__);
-      bx::memCopy(map.pBlocks, reader.Position(), size);
+      level.pBlocks = (uint16_t*)bx::alloc(&s_defaultAllocator, size, 0, __FILE__, __LINE__);
+      bx::memCopy(level.pBlocks, reader.Position(), size);
     }
 
     SDL_free(pFile);
   }
 
-  return map;
+  return level;
 }
 
-void map::Save(map_t map, const char* path)
+void Level::Save(Level level, const char* path)
 {
-  size_t size     = sizeof(uint16_t) * map.width * map.height;
+  size_t size     = sizeof(uint16_t) * level.width * level.height;
   size_t dataSize = 4 + // 4 byte magic word (MJMF)
                     1 + // 1 byte version number
                     1 + // 1 byte width
@@ -60,11 +60,11 @@ void map::Save(map_t map, const char* path)
     // Write to pData
     mj::MemoryBuffer writer(pData, dataSize);
     if (writer
-            .Write(s_MagicWord) // 4 byte magic word (MJMF)
-            .Write(s_Version)   // 1 byte version number
-            .Write(map.width)   // 1 byte width
-            .Write(map.height)  // 1 byte height
-            .Write(map.pBlocks, size)
+            .Write(s_MagicWord)  // 4 byte magic word (MJMF)
+            .Write(s_Version)    // 1 byte version number
+            .Write(level.width)  // 1 byte width
+            .Write(level.height) // 1 byte height
+            .Write(level.pBlocks, size)
             .Good())
     {
       // Write pData to file
@@ -78,16 +78,16 @@ void map::Save(map_t map, const char* path)
   }
 }
 
-void map::Free(map_t map)
+void Level::Free(Level level)
 {
-  if (map.pBlocks)
+  if (level.pBlocks)
   {
-    bx::free(&s_defaultAllocator, map.pBlocks, 0, __FILE__, __LINE__);
-    map.pBlocks = nullptr;
+    bx::free(&s_defaultAllocator, level.pBlocks, 0, __FILE__, __LINE__);
+    level.pBlocks = nullptr;
   }
 }
 
-bool map::Valid(map_t map)
+bool Level::Valid(Level level)
 {
-  return ((map.pBlocks) && (map.width > 0) && (map.height > 0));
+  return ((level.pBlocks) && (level.width > 0) && (level.height > 0));
 }

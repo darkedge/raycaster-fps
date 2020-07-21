@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "graphics.h"
 #include "mj_common.h"
-#include "map.h"
+#include "level.h"
 #include "camera.h"
 #include "meta.h"
 #include "main.h"
@@ -157,7 +157,7 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   indices.push_back(oldVertexCount + 3);
 }
 
-void Graphics::CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice)
+void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -169,7 +169,7 @@ void Graphics::CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice)
   // -X, -Z, +X, +Z
   for (int32_t i = 0; i < 4; i++)
   {
-    int32_t mapDim[]      = { map.width, map.height };
+    int32_t levelDim[]      = { level.width, level.height };
     int32_t primaryAxis   = i & 1;           //  x  z  x  z
     int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
@@ -179,21 +179,21 @@ void Graphics::CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice)
     int32_t next_x  = (i + 1) & 3;       // 0, 1, 1, 0
 
     // Traverse the level slice by slice from a single direction
-    for (xz[primaryAxis] = 0; xz[primaryAxis] < mapDim[primaryAxis]; xz[primaryAxis]++)
+    for (xz[primaryAxis] = 0; xz[primaryAxis] < levelDim[primaryAxis]; xz[primaryAxis]++)
     {
       // Check for blocks in this slice
-      for (xz[secondaryAxis] = 0; xz[secondaryAxis] < mapDim[secondaryAxis]; xz[secondaryAxis]++)
+      for (xz[secondaryAxis] = 0; xz[secondaryAxis] < levelDim[secondaryAxis]; xz[secondaryAxis]++)
       {
-        uint16_t block = map.pBlocks[xz[1] * map.width + xz[0]];
+        uint16_t block = level.pBlocks[xz[1] * level.width + xz[0]];
 
         if (block < 0x006A) // This block is solid
         {
           // Check the opposite block that is connected to this face
           xz[primaryAxis] += neighbor;
 
-          if ((xz[1] < map.height) && (xz[0] < map.width)) // Bounds check
+          if ((xz[1] < level.height) && (xz[0] < level.width)) // Bounds check
           {
-            if (map.pBlocks[xz[1] * map.width + xz[0]] >= 0x006A) // Is it empty?
+            if (level.pBlocks[xz[1] * level.width + xz[0]] >= 0x006A) // Is it empty?
             {
               xz[primaryAxis] -= neighbor;
               mjm::vec3 v((float)xz[0], 0.0f, (float)xz[1]);
@@ -215,7 +215,7 @@ void Graphics::CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice)
     // Check for blocks in this slice
     for (size_t x = 0; x < Meta::LEVEL_DIM; x++)
     {
-      if (map.pBlocks[z * map.width + x] >= 0x006A)
+      if (level.pBlocks[z * level.width + x] >= 0x006A)
       {
         InsertFloor(vertices, indices, (float)x, (float)z);
         InsertCeiling(vertices, indices, (float)x, (float)z);

@@ -1,6 +1,6 @@
 #pragma once
 #include "camera.h"
-#include "map.h"
+#include "level.h"
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -230,7 +230,7 @@ public:
   void Resize(int width, int height);
   void Update(ComPtr<ID3D11DeviceContext> pDeviceContext, const Camera* pCamera);
   void* GetTileTexture(int x, int y);
-  void CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice);
+  void CreateMesh(Level level, ComPtr<ID3D11Device> pDevice);
   void DiscardLevel();
 
 private:

@@ -31,7 +31,7 @@
     <ClInclude Include="..\..\src\client\meta.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_dx11.h" />
     <ClInclude Include="..\..\src\client\imgui_impl_sdl.h" />
-    <ClInclude Include="..\..\src\client\map.h" />
+    <ClInclude Include="..\..\src\client\level.h" />
     <ClInclude Include="..\..\src\client\mj_common.h" />
     <ClInclude Include="..\..\src\client\mj_input.h" />
     <ClInclude Include="..\..\src\client\mj_math.h" />
@@ -82,7 +82,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\..\src\client\map.cpp" />
+    <ClCompile Include="..\..\src\client\level.cpp" />
     <ClCompile Include="..\..\src\client\main.cpp" />
     <ClCompile Include="..\..\src\client\mj_input.cpp" />
     <ClCompile Include="..\..\src\client\mj_math.cpp" />
