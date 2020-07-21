@@ -58,6 +58,24 @@ void EditorState::Resize(float w, float h)
   this->camera.viewport[3] = h;
 }
 
+static void ResetCamera(Camera& camera)
+{
+  MJ_UNINITIALIZED float w, h;
+  mj::GetWindowSize(&w, &h);
+
+  camera.position = mjm::vec3(32.0f, 10.5f, 0.0f);
+
+  camera.viewport[0] = 0.0f;
+  camera.viewport[1] = 0.0f;
+  camera.viewport[2] = w;
+  camera.viewport[3] = h;
+
+  camera.floor.show            = true;
+  camera.floor.backFaceCulling = true;
+  camera.walls.show            = true;
+  camera.walls.backFaceCulling = true;
+}
+
 void EditorState::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
@@ -68,20 +86,11 @@ void EditorState::Entry()
   mj::GetWindowSize(&w, &h);
   mj::MoveMouse((int)w / 2, (int)h / 2);
 
-  this->camera.position = mjm::vec3(32.0f, 10.5f, 0.0f);
-
-  this->camera.viewport[0] = 0.0f;
-  this->camera.viewport[1] = 0.0f;
-  this->camera.viewport[2] = w;
-  this->camera.viewport[3] = h;
-
   this->rotation = mjm::quatLookAtLH(mjm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 
-  this->camera.floor.show            = true;
-  this->camera.floor.backFaceCulling = true;
-  this->camera.walls.show            = true;
-  this->camera.walls.backFaceCulling = true;
+  ResetCamera(this->camera);
 
+  this->inputComboNew    = { InputCombo::KEYBOARD, Key::KeyN, Modifier::LeftCtrl, MouseButton::None };
   this->inputComboOpen   = { InputCombo::KEYBOARD, Key::KeyO, Modifier::None, MouseButton::None };
   this->inputComboSave   = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl, MouseButton::None };
   this->inputComboSaveAs = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl | Modifier::LeftShift,
@@ -164,17 +173,15 @@ static void OpenFileDialog()
 
 void EditorState::DoMenu()
 {
-  bool open   = mj::input::GetControlDown(this->inputComboOpen);
-  bool save   = mj::input::GetControlDown(this->inputComboSave);
-  bool saveAs = mj::input::GetControlDown(this->inputComboSaveAs);
+  bool newLevel = mj::input::GetControlDown(this->inputComboNew);
+  bool open     = mj::input::GetControlDown(this->inputComboOpen);
+  bool save     = mj::input::GetControlDown(this->inputComboSave);
+  bool saveAs   = mj::input::GetControlDown(this->inputComboSaveAs);
   if (ImGui::BeginMainMenuBar())
   {
     if (ImGui::BeginMenu("File"))
     {
-      if (ImGui::MenuItem("New", "Ctrl+N"))
-      {
-        pMeta->NewLevel();
-      }
+      newLevel |= ImGui::MenuItem("New", "Ctrl+N");
       open |= ImGui::MenuItem("Open...", "Ctrl+Z");
       save |= ImGui::MenuItem("Save", "Ctrl+S");
       saveAs |= ImGui::MenuItem("Save As...", "Ctrl+Shift+S");
@@ -209,6 +216,11 @@ void EditorState::DoMenu()
     ImGui::EndMainMenuBar();
   }
 
+  if (newLevel)
+  {
+    pMeta->NewLevel();
+    ResetCamera(this->camera);
+  }
   if (open)
   {
     OpenFileDialog();

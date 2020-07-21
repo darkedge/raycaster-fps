@@ -19,6 +19,7 @@ private:
   void DoMenu();
   void DoInput();
 
+  InputCombo inputComboNew;
   InputCombo inputComboOpen;
   InputCombo inputComboSave;
   InputCombo inputComboSaveAs;
