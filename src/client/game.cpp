@@ -16,7 +16,7 @@ void GameState::Entry()
   this->lastMousePos    = 0.0f;
   this->currentMousePos = 0.0f;
   this->camera.position = mjm::vec3(54.5f, 0.5f, 34.5f);
-  this->rotation        = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
+  this->camera.rotation = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
   this->yaw             = -this->currentMousePos;
 }
 
@@ -40,29 +40,30 @@ void GameState::Do(Camera** ppCamera)
 
   const float dt = mj::GetDeltaTime();
 
+  auto& c = this->camera;
   if (mj::input::GetKey(Key::KeyW))
   {
-    mjm::vec3 vec = this->rotation * axis::FORWARD;
+    mjm::vec3 vec = c.rotation * axis::FORWARD;
     vec.y         = 0.0f;
-    this->camera.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    mjm::vec3 vec = this->rotation * axis::LEFT;
+    mjm::vec3 vec = c.rotation * axis::LEFT;
     vec.y         = 0.0f;
-    this->camera.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    mjm::vec3 vec = this->rotation * axis::BACKWARD;
+    mjm::vec3 vec = c.rotation * axis::BACKWARD;
     vec.y         = 0.0f;
-    this->camera.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    mjm::vec3 vec = this->rotation * axis::RIGHT;
+    mjm::vec3 vec = c.rotation * axis::RIGHT;
     vec.y         = 0.0f;
-    this->camera.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
 
   MJ_UNINITIALIZED int32_t dx, dy;
@@ -70,7 +71,7 @@ void GameState::Do(Camera** ppCamera)
   this->currentMousePos -= GameState::ROT_SPEED * dx;
   if (this->currentMousePos != this->lastMousePos)
   {
-    this->rotation     = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
+    this->camera.rotation     = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
     this->yaw          = -this->currentMousePos;
     this->lastMousePos = this->currentMousePos;
   }

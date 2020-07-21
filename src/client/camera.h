@@ -23,6 +23,7 @@ struct Camera
   mjm::mat4 projection;
   mjm::mat4 view;
   mjm::vec4 viewport; // x, y, w, h
+  mjm::quat rotation;
   float yFov;         // Degrees
   DrawCallOptions floor;
   DrawCallOptions walls;

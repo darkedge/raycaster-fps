@@ -15,7 +15,6 @@ private:
   float lastMousePos;
   float currentMousePos;
   float yaw;
-  mjm::quat rotation;
 
   Camera camera;
 };

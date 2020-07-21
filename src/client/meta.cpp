@@ -258,4 +258,5 @@ Meta::~Meta()
 void Meta::NewLevel()
 {
   graphics.DiscardLevel();
+  LoadLevel();
 }

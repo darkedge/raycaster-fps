@@ -64,6 +64,7 @@ static void ResetCamera(Camera& camera)
   mj::GetWindowSize(&w, &h);
 
   camera.position = mjm::vec3(32.0f, 10.5f, 0.0f);
+  camera.rotation = mjm::quatLookAtLH(mjm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 
   camera.viewport[0] = 0.0f;
   camera.viewport[1] = 0.0f;
@@ -85,8 +86,6 @@ void EditorState::Entry()
   MJ_UNINITIALIZED float w, h;
   mj::GetWindowSize(&w, &h);
   mj::MoveMouse((int)w / 2, (int)h / 2);
-
-  this->rotation = mjm::quatLookAtLH(mjm::normalize(axis::FORWARD + 2.0f * axis::DOWN), axis::UP);
 
   ResetCamera(this->camera);
 
@@ -238,6 +237,7 @@ void EditorState::DoMenu()
 void EditorState::DoInput()
 {
   const float dt = mj::GetDeltaTime();
+  auto& c        = this->camera;
 
   if (mj::input::GetMouseButton(MouseButton::Right))
   {
@@ -248,36 +248,35 @@ void EditorState::DoInput()
     }
     if (mj::input::GetKey(Key::KeyW))
     {
-      this->camera.position += this->rotation * axis::FORWARD * dt * speed;
+      c.position += c.rotation * axis::FORWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyA))
     {
-      this->camera.position += this->rotation * axis::LEFT * dt * speed;
+      c.position += c.rotation * axis::LEFT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyS))
     {
-      this->camera.position += this->rotation * axis::BACKWARD * dt * speed;
+      c.position += c.rotation * axis::BACKWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyD))
     {
-      this->camera.position += this->rotation * axis::RIGHT * dt * speed;
+      c.position += c.rotation * axis::RIGHT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyQ))
     {
-      this->camera.position += this->rotation * axis::DOWN * dt * speed;
+      c.position += c.rotation * axis::DOWN * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyE))
     {
-      this->camera.position += this->rotation * axis::UP * dt * speed;
+      c.position += c.rotation * axis::UP * dt * speed;
     }
 
     {
       // mouse x = yaw (left/right), mouse y = pitch (up/down)
       MJ_UNINITIALIZED int32_t dx, dy;
       mj::input::GetRelativeMouseMovement(&dx, &dy);
-      this->rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * this->rotation;
-      this->rotation =
-          mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, this->rotation * axis::RIGHT) * this->rotation;
+      c.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * c.rotation;
+      c.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, c.rotation * axis::RIGHT) * c.rotation;
     }
   }
 
@@ -312,7 +311,7 @@ void EditorState::DoInput()
       ImGui::InputFloat3("to", mjm::value_ptr(to), 7);
       ImGui::End();
 
-      this->rotation *= mjm::quat(from, to);
+      c.rotation *= mjm::quat(from, to);
     }
   }
 
@@ -336,7 +335,7 @@ void EditorState::Do(Camera** ppCamera)
   this->DoMenu();
   this->DoInput();
 
-  mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(this->rotation));
+  mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(this->camera.rotation));
   mjm::mat4 translate = mjm::identity<mjm::mat4>();
   translate           = mjm::translate(translate, -mjm::vec3(this->camera.position));
 

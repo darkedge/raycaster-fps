@@ -26,5 +26,4 @@ private:
 
   Camera camera;
   int32_t mouseScrollFactor = 1;
-  mjm::quat rotation;
 };
