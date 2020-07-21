@@ -1,10 +1,9 @@
 #include "stdafx.h"
-#include "editor.h"
 #include "mj_input.h"
-#include "graphics.h"
 #include "camera.h"
 #include "main.h"
 #include "mj_common.h"
+#include "meta.h"
 
 #if 0
 struct ETool
@@ -174,6 +173,7 @@ void EditorState::DoMenu()
     {
       if (ImGui::MenuItem("New", "Ctrl+N"))
       {
+        pMeta->NewLevel();
       }
       open |= ImGui::MenuItem("Open...", "Ctrl+Z");
       save |= ImGui::MenuItem("Save", "Ctrl+S");

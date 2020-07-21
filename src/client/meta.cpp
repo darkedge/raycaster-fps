@@ -254,3 +254,8 @@ Meta::~Meta()
   ImGui_ImplDX11_Shutdown();
   ImGui::DestroyContext();
 }
+
+void Meta::NewLevel()
+{
+  graphics.DiscardLevel();
+}

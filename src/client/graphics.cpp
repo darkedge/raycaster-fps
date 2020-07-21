@@ -311,7 +311,8 @@ void Graphics::InitTexture2DArray(ComPtr<ID3D11Device> pDevice)
       srvDesc.Texture2DArray.FirstArraySlice  = 0;
       srvDesc.Texture2DArray.ArraySize        = pImageContainer->m_numLayers;
 
-      MJ_DISCARD(pDevice->CreateShaderResourceView(this->pTextureArray.Get(), &srvDesc, this->pShaderResourceView.ReleaseAndGetAddressOf()));
+      MJ_DISCARD(pDevice->CreateShaderResourceView(this->pTextureArray.Get(), &srvDesc,
+                                                   this->pShaderResourceView.ReleaseAndGetAddressOf()));
 
       D3D11_SAMPLER_DESC samplerDesc = {};
       samplerDesc.Filter             = D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
@@ -338,9 +339,11 @@ void Graphics::InitTexture2DArray(ComPtr<ID3D11Device> pDevice)
 
 void Graphics::Init(ComPtr<ID3D11Device> pDevice)
 {
-  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr, this->pVertexShader.ReleaseAndGetAddressOf()));
+  MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr,
+                                         this->pVertexShader.ReleaseAndGetAddressOf()));
   // SetDebugName(this->pVertexShader, "this->pVertexShader");
-  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr, this->pPixelShader.ReleaseAndGetAddressOf()));
+  MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr,
+                                        this->pPixelShader.ReleaseAndGetAddressOf()));
   // SetDebugName(this->pPixelShader, "this->pPixelShader");
 
   {
@@ -364,7 +367,8 @@ void Graphics::Init(ComPtr<ID3D11Device> pDevice)
     desc[1].InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
     desc[1].InstanceDataStepRate = 0;
 
-    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs), this->pInputLayout.ReleaseAndGetAddressOf()));
+    MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs),
+                                          this->pInputLayout.ReleaseAndGetAddressOf()));
   }
 
   {
@@ -435,41 +439,44 @@ void Graphics::Resize(int width, int height)
 /// <param name="pCamera"></param>
 void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const Camera* pCamera)
 {
-  mjm::mat4 vp = pCamera->projection * pCamera->view;
-  pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &vp, 0, 0);
+  if (this->pIndexBuffer && this->pVertexBuffer)
+  {
+    mjm::mat4 vp = pCamera->projection * pCamera->view;
+    pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &vp, 0, 0);
 
-  // Input Assembler
-  pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  pContext->IASetInputLayout(this->pInputLayout.Get());
-  pContext->IASetIndexBuffer(this->pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
-  UINT strides[] = { sizeof(Vertex) };
-  UINT offsets[] = { 0 };
-  pContext->IASetVertexBuffers(0, 1, this->pVertexBuffer.GetAddressOf(), strides, offsets);
+    // Input Assembler
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    pContext->IASetInputLayout(this->pInputLayout.Get());
+    pContext->IASetIndexBuffer(this->pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
+    UINT strides[] = { sizeof(Vertex) };
+    UINT offsets[] = { 0 };
+    pContext->IASetVertexBuffers(0, 1, this->pVertexBuffer.GetAddressOf(), strides, offsets);
 
-  // Vertex Shader
-  pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
-  pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
+    // Vertex Shader
+    pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
+    pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
 
-  // Rasterizer
-  D3D11_VIEWPORT viewport = {};
-  viewport.TopLeftX       = 0;
-  viewport.TopLeftY       = 0;
-  viewport.MinDepth       = 0.0f;
-  viewport.MaxDepth       = 1.0f;
-  mj::GetWindowSize(&viewport.Width, &viewport.Height);
+    // Rasterizer
+    D3D11_VIEWPORT viewport = {};
+    viewport.TopLeftX       = 0;
+    viewport.TopLeftY       = 0;
+    viewport.MinDepth       = 0.0f;
+    viewport.MaxDepth       = 1.0f;
+    mj::GetWindowSize(&viewport.Width, &viewport.Height);
 
-  pContext->RSSetViewports(1, &viewport);
-  pContext->RSSetState(this->pRasterizerState.Get());
+    pContext->RSSetViewports(1, &viewport);
+    pContext->RSSetState(this->pRasterizerState.Get());
 
-  // Pixel Shader
-  pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
-  pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
-  pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
+    // Pixel Shader
+    pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
+    pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
+    pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
 
-  // Output Merger
-  pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
+    // Output Merger
+    pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
 
-  pContext->DrawIndexed(this->Indices, 0, 0);
+    pContext->DrawIndexed(this->Indices, 0, 0);
+  }
 }
 
 void* Graphics::GetTileTexture(int x, int y)
@@ -477,4 +484,10 @@ void* Graphics::GetTileTexture(int x, int y)
   (void)x;
   (void)y;
   return this->pShaderResourceView.Get();
+}
+
+void Graphics::DiscardLevel()
+{
+  this->pIndexBuffer.Reset();
+  this->pVertexBuffer.Reset();
 }

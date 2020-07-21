@@ -231,6 +231,7 @@ public:
   void Update(ComPtr<ID3D11DeviceContext> pDeviceContext, const Camera* pCamera);
   void* GetTileTexture(int x, int y);
   void CreateMesh(map::map_t map, ComPtr<ID3D11Device> pDevice);
+  void DiscardLevel();
 
 private:
   void InitTexture2DArray(ComPtr<ID3D11Device> pDevice);

@@ -20,6 +20,7 @@ public:
   void Resize(int width, int height);
   void NewFrame();
   void Update();
+  void NewLevel();
 
 private:
   bool CreateDeviceD3D(HWND hWnd);
