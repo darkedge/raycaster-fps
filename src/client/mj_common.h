@@ -15,10 +15,10 @@
 #define MJ_COUNTOF(arr) sizeof(arr) / sizeof(arr[0])
 
 #define SAFE_RELEASE(_ptr) \
-  if ((_ptr) != nullptr)   \
-  {                        \
-    (_ptr)->Release();     \
-    (_ptr) = nullptr;      \
+  if ((_ptr) != nullptr) \
+  { \
+    (_ptr)->Release(); \
+    (_ptr) = nullptr; \
   }
 
 // Raytracer resolution
@@ -42,7 +42,109 @@ namespace mj
     b   = c;
   }
 
-  // stream for reading
+  /// <summary>
+  /// Reduced functionality std::vector replacement
+  /// </summary>
+  template <typename T>
+  class ArrayList
+  {
+  public:
+    ArrayList()
+    {
+      pData = (T*)malloc(capacity * sizeof(T));
+    }
+    ArrayList(uint32_t capacity) : capacity(capacity)
+    {
+      pData = (T*)malloc(capacity * sizeof(T));
+    }
+    ~ArrayList()
+    {
+      free(pData);
+    }
+
+    bool Add(const T& t)
+    {
+      if (numElements < capacity)
+      {
+        *(pData + numElements) = t;
+        numElements++;
+        return true;
+      }
+      else
+      {
+        if (Double())
+        {
+          return Add(t);
+        }
+        else
+        {
+          return false;
+        }
+      }
+    }
+
+    uint32_t Size() const
+    {
+      return numElements;
+    }
+
+    uint32_t ElemSize() const
+    {
+      return sizeof(T);
+    }
+
+    uint32_t ByteWidth() const 
+    {
+      return Size() * ElemSize();
+    }
+
+    T* Get() const
+    {
+      return pData;
+    }
+
+    T* begin()
+    {
+      return pData;
+    }
+
+    T* end()
+    {
+      return pData + Size();
+    }
+
+    T& operator[](uint32_t index)
+    {
+      assert(index < numElements);
+      return pData[index];
+    }
+
+  private:
+    bool Double()
+    {
+      uint32_t newCapacity = 2 * capacity;
+      T* ptr               = (T*)realloc(pData, newCapacity * ElemSize());
+      if (ptr)
+      {
+        capacity = newCapacity;
+        pData    = ptr;
+        return true;
+      }
+      else
+      {
+        // pData stays valid
+        return false;
+      }
+    }
+
+    T* pData             = nullptr;
+    uint32_t numElements = 0;
+    uint32_t capacity    = 4;
+  };
+
+  /// <summary>
+  /// Read/write stream wrapped around a memory buffer
+  /// </summary>
   class MemoryBuffer
   {
   public:

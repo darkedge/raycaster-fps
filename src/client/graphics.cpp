@@ -52,9 +52,9 @@ struct Vertex
   mjm::vec3 texCoord;
 };
 
-static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
+static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z)
 {
-  int16_t oldVertexCount = (int16_t)vertices.size();
+  int16_t oldVertexCount = (int16_t)vertices.Size();
   MJ_UNINITIALIZED Vertex vertex;
 
   vertex.position.x = x;
@@ -63,32 +63,32 @@ static void InsertCeiling(std::vector<Vertex>& vertices, std::vector<int16_t>& i
   vertex.texCoord.x = 0.0f;
   vertex.texCoord.y = 0.0f;
   vertex.texCoord.z = 138.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x;
   vertex.position.z = z + 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x + 1.0f;
   vertex.position.z = z;
   vertex.texCoord.x = 1.0f;
   vertex.texCoord.y = 0.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x + 1.0f;
   vertex.position.z = z + 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
 
-  indices.push_back(oldVertexCount + 0);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 3);
-  indices.push_back(oldVertexCount + 3);
-  indices.push_back(oldVertexCount + 2);
-  indices.push_back(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 0);
 }
 
-static void InsertFloor(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x, float z)
+static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z)
 {
-  int16_t oldVertexCount = (int16_t)vertices.size();
+  int16_t oldVertexCount = (int16_t)vertices.Size();
   MJ_UNINITIALIZED Vertex vertex;
 
   vertex.position.x = x;
@@ -97,34 +97,34 @@ static void InsertFloor(std::vector<Vertex>& vertices, std::vector<int16_t>& ind
   vertex.texCoord.x = 0.0f;
   vertex.texCoord.y = 0.0f;
   vertex.texCoord.z = 136.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x;
   vertex.position.z = z + 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x + 1.0f;
   vertex.position.z = z;
   vertex.texCoord.x = 1.0f;
   vertex.texCoord.y = 0.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x + 1.0f;
   vertex.position.z = z + 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
 
-  indices.push_back(oldVertexCount + 0);
-  indices.push_back(oldVertexCount + 2);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 2);
-  indices.push_back(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 3);
 }
 
-static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>& indices, float x0, float z0, float x1,
+static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x0, float z0, float x1,
                             float z1, uint16_t block)
 {
   // Get vertex count before adding new ones
-  int16_t oldVertexCount = (int16_t)vertices.size();
+  int16_t oldVertexCount = (int16_t)vertices.Size();
   // 1  3
   //  \ |
   // 0->2
@@ -135,34 +135,34 @@ static void InsertRectangle(std::vector<Vertex>& vertices, std::vector<int16_t>&
   vertex.texCoord.x = 0.0f;
   vertex.texCoord.y = 0.0f;
   vertex.texCoord.z = block;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.y = 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.x = x1;
   vertex.position.y = 0.0f;
   vertex.position.z = z1;
   vertex.texCoord.x = 1.0f;
   vertex.texCoord.y = 0.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
   vertex.position.y = 1.0f;
   vertex.texCoord.y = 1.0f;
-  vertices.push_back(vertex);
+  vertices.Add(vertex);
 
-  indices.push_back(oldVertexCount + 0);
-  indices.push_back(oldVertexCount + 2);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 1);
-  indices.push_back(oldVertexCount + 2);
-  indices.push_back(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 3);
 }
 
 void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
-  std::vector<Vertex> vertices;
-  std::vector<int16_t> indices;
+  mj::ArrayList<Vertex> vertices;
+  mj::ArrayList<int16_t> indices;
 
   // Traversal direction
   // This is also the normal of the triangles
@@ -231,33 +231,33 @@ void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
     // Fill in a buffer description.
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = uint32_t(vertices.size() * sizeof(vertices[0]));
+    bufferDesc.ByteWidth      = vertices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags      = 0;
 
     // Fill in the subresource data.
     D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = vertices.data();
-    InitData.SysMemPitch      = sizeof(vertices[0]);
+    InitData.pSysMem          = vertices.Get();
+    InitData.SysMemPitch      = vertices.ElemSize();
     InitData.SysMemSlicePitch = 0;
 
     // Create the vertex buffer.
     MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->pVertexBuffer.ReleaseAndGetAddressOf()));
   }
   {
-    this->Indices = (UINT)indices.size();
+    this->Indices = indices.Size();
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = uint32_t(indices.size() * sizeof(indices[0]));
+    bufferDesc.ByteWidth      = indices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags      = 0;
 
     // Define the resource data.
     D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = indices.data();
-    InitData.SysMemPitch      = sizeof(indices[0]);
+    InitData.pSysMem          = indices.Get();
+    InitData.SysMemPitch      = indices.ElemSize();
     InitData.SysMemSlicePitch = 0;
 
     // Create the buffer with the device.

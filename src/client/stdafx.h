@@ -22,5 +22,4 @@
 #include "..\..\3rdparty\tracy\Tracy.hpp"
 
 #include <stdio.h>
-#include <vector>
 #include <stdint.h>
