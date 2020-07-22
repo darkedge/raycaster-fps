@@ -111,6 +111,8 @@ void Meta::Init(HWND hwnd)
   this->CreateRenderTargetView();
 
   graphics.Init(this->pDevice);
+  this->stateEditor.Init();
+  this->stateGame.Init();
 
   LoadLevel();
 

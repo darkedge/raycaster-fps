@@ -30,6 +30,16 @@ static void ResetCamera(Camera& camera)
   camera.walls.backFaceCulling = true;
 }
 
+void EditorState::Init()
+{
+  this->inputComboNew    = { InputCombo::KEYBOARD, Key::KeyN, Modifier::LeftCtrl, MouseButton::None };
+  this->inputComboOpen   = { InputCombo::KEYBOARD, Key::KeyO, Modifier::None, MouseButton::None };
+  this->inputComboSave   = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl, MouseButton::None };
+  this->inputComboSaveAs = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl | Modifier::LeftShift,
+                             MouseButton::None };
+  ResetCamera(this->camera);
+}
+
 void EditorState::Entry()
 {
   MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
@@ -39,14 +49,6 @@ void EditorState::Entry()
   MJ_UNINITIALIZED float w, h;
   mj::GetWindowSize(&w, &h);
   mj::MoveMouse((int)w / 2, (int)h / 2);
-
-  ResetCamera(this->camera);
-
-  this->inputComboNew    = { InputCombo::KEYBOARD, Key::KeyN, Modifier::LeftCtrl, MouseButton::None };
-  this->inputComboOpen   = { InputCombo::KEYBOARD, Key::KeyO, Modifier::None, MouseButton::None };
-  this->inputComboSave   = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl, MouseButton::None };
-  this->inputComboSaveAs = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl | Modifier::LeftShift,
-                             MouseButton::None };
 }
 
 static void SaveFileDialog()
@@ -190,7 +192,7 @@ void EditorState::DoMenu()
 void EditorState::DoInput()
 {
   const float dt = mj::GetDeltaTime();
-  auto& c        = this->camera;
+  auto& cam      = this->camera;
 
   if (mj::input::GetMouseButton(MouseButton::Right))
   {
@@ -201,38 +203,39 @@ void EditorState::DoInput()
     }
     if (mj::input::GetKey(Key::KeyW))
     {
-      c.position += c.rotation * axis::FORWARD * dt * speed;
+      cam.position += cam.rotation * axis::FORWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyA))
     {
-      c.position += c.rotation * axis::LEFT * dt * speed;
+      cam.position += cam.rotation * axis::LEFT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyS))
     {
-      c.position += c.rotation * axis::BACKWARD * dt * speed;
+      cam.position += cam.rotation * axis::BACKWARD * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyD))
     {
-      c.position += c.rotation * axis::RIGHT * dt * speed;
+      cam.position += cam.rotation * axis::RIGHT * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyQ))
     {
-      c.position += c.rotation * axis::DOWN * dt * speed;
+      cam.position += cam.rotation * axis::DOWN * dt * speed;
     }
     if (mj::input::GetKey(Key::KeyE))
     {
-      c.position += c.rotation * axis::UP * dt * speed;
+      cam.position += cam.rotation * axis::UP * dt * speed;
     }
 
     {
       // mouse x = yaw (left/right), mouse y = pitch (up/down)
       MJ_UNINITIALIZED int32_t dx, dy;
       mj::input::GetRelativeMouseMovement(&dx, &dy);
-      c.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * c.rotation;
-      c.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, c.rotation * axis::RIGHT) * c.rotation;
+      cam.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dx, axis::UP) * cam.rotation;
+      cam.rotation = mjm::angleAxis(EditorState::MOUSE_LOOK_FACTOR * dy, cam.rotation * axis::RIGHT) * cam.rotation;
     }
   }
 
+#if 0
   if (mj::input::GetKey(Key::LeftAlt) && mj::input::GetMouseButton(MouseButton::Left))
   {
     // Arcball rotation
@@ -240,20 +243,20 @@ void EditorState::DoInput()
     mj::input::GetRelativeMouseMovement(&dx, &dy);
     if (dx != 0 || dy != 0)
     {
-      mjm::vec3 center(this->camera.position.x, 0.0f, this->camera.position.z);
+      mjm::vec3 center(cam.position.x, 0.0f, cam.position.z);
 
       // Unit vector center->current
       float x, y;
       mj::input::GetMousePosition(&x, &y);
       mjm::vec3 currentPos(x, y, 0.0f);
       mjm::vec3 to =
-          mjm::unProjectZO(currentPos, mjm::identity<mjm::mat4>(), this->camera.projection, this->camera.viewport) -
+          mjm::unProjectZO(currentPos, mjm::identity<mjm::mat4>(), cam.projection, cam.viewport) -
           center;
 
       // Unit vector center->old
       mjm::vec3 oldPos(currentPos.x - dx, currentPos.y - dy, 0.0f);
       mjm::vec3 from =
-          mjm::unProjectZO(oldPos, mjm::identity<mjm::mat4>(), this->camera.projection, this->camera.viewport) - center;
+          mjm::unProjectZO(oldPos, mjm::identity<mjm::mat4>(), cam.projection, cam.viewport) - center;
 
       ImGui::SetNextWindowSize(ImVec2(400.0f, 400.0f));
       ImGui::Begin("Arcball");
@@ -264,16 +267,17 @@ void EditorState::DoInput()
       ImGui::InputFloat3("to", mjm::value_ptr(to), 7);
       ImGui::End();
 
-      c.rotation *= mjm::quat(from, to);
+      cam.rotation *= mjm::quat(from, to);
     }
   }
+#endif
 
   if (mj::input::GetMouseButton(MouseButton::Middle))
   {
     MJ_UNINITIALIZED int32_t x, y;
     mj::input::GetRelativeMouseMovement(&x, &y);
-    // this->camera.position += mjm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
-    // this->camera.position += this->rotation * axis::RIGHT
+    // cam.position += mjm::vec3((float)-x * MOUSE_DRAG_FACTOR, 0.0f, (float)y * MOUSE_DRAG_FACTOR);
+    // cam.position += this->rotation * axis::RIGHT
   }
 
   this->mouseScrollFactor -= mj::input::GetMouseScroll();
@@ -288,23 +292,25 @@ void EditorState::Do(Camera** ppCamera)
   this->DoMenu();
   this->DoInput();
 
-  mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(this->camera.rotation));
-  mjm::mat4 translate = mjm::identity<mjm::mat4>();
-  translate           = mjm::translate(translate, -mjm::vec3(this->camera.position));
+  auto& cam = this->camera;
 
-  this->camera.view = rotate * translate;
-  this->camera.yFov = 90.0f;
+  mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(cam.rotation));
+  mjm::mat4 translate = mjm::identity<mjm::mat4>();
+  translate           = mjm::translate(translate, -mjm::vec3(cam.position));
+
+  auto view = rotate * translate;
+  cam.yFov  = 90.0f;
 #if 0
-  float aspect      = this->camera.viewport[2] / this->camera.viewport[3];
-  this->camera.projection = mjm::ortho(-10.0f * this->mouseScrollFactor * aspect, //
+  float aspect      = cam.viewport[2] / cam.viewport[3];
+  cam.projection = mjm::ortho(-10.0f * this->mouseScrollFactor * aspect, //
                                    10.0f * this->mouseScrollFactor * aspect,  //
                                    -10.0f * this->mouseScrollFactor,          //
                                    10.0f * this->mouseScrollFactor,           //
                                    0.1f,                                  //
                                    1000.0f);
 #else
-  this->camera.projection = mjm::perspectiveLH_ZO(mjm::radians(this->camera.yFov),
-                                                  this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
+  auto projection    = mjm::perspectiveLH_ZO(mjm::radians(cam.yFov), cam.viewport[2] / cam.viewport[3], 0.01f, 100.0f);
+  cam.viewProjection = projection * view;
 #endif
 
   *ppCamera = &this->camera;

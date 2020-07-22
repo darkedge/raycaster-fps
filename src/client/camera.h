@@ -20,8 +20,7 @@ struct DrawCallOptions
 struct Camera
 {
   mjm::vec3 position;
-  mjm::mat4 projection;
-  mjm::mat4 view;
+  mjm::mat4 viewProjection;
   mjm::vec4 viewport; // x, y, w, h
   mjm::quat rotation;
   float yFov;         // Degrees

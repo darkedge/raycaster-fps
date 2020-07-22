@@ -169,14 +169,14 @@ void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
   // -X, -Z, +X, +Z
   for (int32_t i = 0; i < 4; i++)
   {
-    int32_t levelDim[]      = { level.width, level.height };
+    int32_t levelDim[]    = { level.width, level.height };
     int32_t primaryAxis   = i & 1;           //  x  z  x  z
     int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
     int8_t arr_xz[] = { 0, 0, 1, 1 };
-    int8_t neighbor = arr_xz[i] * 2 - 1; // -1 -1 +1 +1
-    int32_t cur_z   = (i + 3) & 3;       // 1, 0, 0, 1
-    int32_t next_x  = (i + 1) & 3;       // 0, 1, 1, 0
+    int8_t neighbor = arr_xz[i] * 2 - 1; // -1, -1, +1, +1
+    int32_t cur_z   = (i + 3) & 3;       //  1,  0,  0,  1
+    int32_t next_x  = (i + 1) & 3;       //  0,  1,  1,  0
 
     // Traverse the level slice by slice from a single direction
     for (xz[primaryAxis] = 0; xz[primaryAxis] < levelDim[primaryAxis]; xz[primaryAxis]++)
@@ -197,8 +197,12 @@ void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
             {
               xz[primaryAxis] -= neighbor;
               mjm::vec3 v((float)xz[0], 0.0f, (float)xz[1]);
-              InsertRectangle(vertices, indices, (float)xz[0] + arr_xz[i], (float)xz[1] + arr_xz[cur_z],
-                              (float)xz[0] + arr_xz[next_x], (float)xz[1] + arr_xz[i], 2 * block - 1);
+              InsertRectangle(vertices, indices,             //
+                              (float)xz[0] + arr_xz[i],      //
+                              (float)xz[1] + arr_xz[cur_z],  //
+                              (float)xz[0] + arr_xz[next_x], //
+                              (float)xz[1] + arr_xz[i],      //
+                              2 * block - 1);
               xz[primaryAxis] += neighbor;
             }
           }
@@ -341,10 +345,8 @@ void Graphics::Init(ComPtr<ID3D11Device> pDevice)
 {
   MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr,
                                          this->pVertexShader.ReleaseAndGetAddressOf()));
-  // SetDebugName(this->pVertexShader, "this->pVertexShader");
   MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr,
                                         this->pPixelShader.ReleaseAndGetAddressOf()));
-  // SetDebugName(this->pPixelShader, "this->pPixelShader");
 
   {
     D3D11_INPUT_ELEMENT_DESC desc[2] = {};
@@ -441,8 +443,7 @@ void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const Camera* pCamer
 {
   if (this->pIndexBuffer && this->pVertexBuffer)
   {
-    mjm::mat4 vp = pCamera->projection * pCamera->view;
-    pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &vp, 0, 0);
+    pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &pCamera->viewProjection, 0, 0);
 
     // Input Assembler
     pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

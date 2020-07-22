@@ -2,6 +2,7 @@
 #include "state_machine.h"
 #include "camera.h"
 #include "mj_input.h"
+#include "graphics.h"
 
 class EditorState : public StateBase
 {
@@ -10,6 +11,7 @@ class EditorState : public StateBase
   static constexpr float MOUSE_LOOK_FACTOR = 0.0025f;
 
 public:
+  void Init() override;
   void Resize(float w, float h) override;
   void Entry() override;
   void Do(Camera** ppCamera) override;
@@ -23,6 +25,9 @@ private:
   InputCombo inputComboOpen;
   InputCombo inputComboSave;
   InputCombo inputComboSaveAs;
+  
+  ComPtr<ID3D11Buffer> pCeilingVertexBuffer;
+  ComPtr<ID3D11Buffer> pCeilingIndexBuffer;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

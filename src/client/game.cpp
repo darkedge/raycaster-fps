@@ -40,30 +40,30 @@ void GameState::Do(Camera** ppCamera)
 
   const float dt = mj::GetDeltaTime();
 
-  auto& c = this->camera;
+  auto& cam = this->camera;
   if (mj::input::GetKey(Key::KeyW))
   {
-    mjm::vec3 vec = c.rotation * axis::FORWARD;
+    mjm::vec3 vec = cam.rotation * axis::FORWARD;
     vec.y         = 0.0f;
-    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    cam.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyA))
   {
-    mjm::vec3 vec = c.rotation * axis::LEFT;
+    mjm::vec3 vec = cam.rotation * axis::LEFT;
     vec.y         = 0.0f;
-    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    cam.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyS))
   {
-    mjm::vec3 vec = c.rotation * axis::BACKWARD;
+    mjm::vec3 vec = cam.rotation * axis::BACKWARD;
     vec.y         = 0.0f;
-    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    cam.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
   if (mj::input::GetKey(Key::KeyD))
   {
-    mjm::vec3 vec = c.rotation * axis::RIGHT;
+    mjm::vec3 vec = cam.rotation * axis::RIGHT;
     vec.y         = 0.0f;
-    c.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
+    cam.position += mjm::vec3(mjm::normalize(vec) * dt * GameState::MOVEMENT_FACTOR);
   }
 
   MJ_UNINITIALIZED int32_t dx, dy;
@@ -71,21 +71,23 @@ void GameState::Do(Camera** ppCamera)
   this->currentMousePos -= GameState::ROT_SPEED * dx;
   if (this->currentMousePos != this->lastMousePos)
   {
-    this->camera.rotation     = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
-    this->yaw          = -this->currentMousePos;
-    this->lastMousePos = this->currentMousePos;
+    cam.rotation = mjm::quat(mjm::vec3(0.0f, -this->currentMousePos, 0));
+    this->yaw             = -this->currentMousePos;
+    this->lastMousePos    = this->currentMousePos;
   }
 
   mjm::mat4 rotate    = mjm::transpose(mjm::eulerAngleY(this->yaw));
   mjm::mat4 translate = mjm::identity<mjm::mat4>();
-  translate           = mjm::translate(translate, -mjm::vec3(this->camera.position));
+  translate           = mjm::translate(translate, -mjm::vec3(cam.position));
 
-  this->camera.view        = rotate * translate;
-  this->camera.viewport[0] = 0.0f;
-  this->camera.viewport[1] = 0.0f;
-  mj::GetWindowSize(&this->camera.viewport[2], &this->camera.viewport[3]);
-  this->camera.projection = mjm::perspectiveLH_ZO(mjm::radians(this->camera.yFov),
-                                                  this->camera.viewport[2] / this->camera.viewport[3], 0.01f, 100.0f);
+  auto view                = rotate * translate;
+  cam.viewport[0] = 0.0f;
+  cam.viewport[1] = 0.0f;
+  mj::GetWindowSize(&cam.viewport[2], &cam.viewport[3]);
+  auto projection = mjm::perspectiveLH_ZO(mjm::radians(cam.yFov),
+                                          cam.viewport[2] / cam.viewport[3], 0.01f, 100.0f);
+
+  cam.viewProjection = projection * view;
 
   *ppCamera = &this->camera;
 }

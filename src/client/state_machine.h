@@ -9,6 +9,9 @@ class Meta;
 class StateBase
 {
 public:
+  virtual void Init()
+  {
+  }
   virtual void Resize(float w, float h)
   {
     (void)w;
@@ -38,7 +41,7 @@ protected:
 struct StateMachine
 {
   StateBase* pStateCurrent = nullptr;
-  StateBase* pStateNext = nullptr;
+  StateBase* pStateNext    = nullptr;
 
   void Resize(float width, float height);
   void Update(Camera** ppCamera);
