@@ -10,8 +10,8 @@ class Meta
 public:
   Meta()
   {
-    stateGame.SetMeta(this);
-    stateEditor.SetMeta(this);
+    game.SetMeta(this);
+    editor.SetMeta(this);
   }
   ~Meta();
   static constexpr uint32_t LEVEL_DIM = 64;
@@ -35,8 +35,8 @@ private:
   ComPtr<ID3D11DepthStencilView> pDepthStencilView;
   ComPtr<ID3D11Texture2D> pDepthStencilBuffer;
 
-  GameState stateGame;
-  EditorState stateEditor;
+  GameState game;
+  EditorState editor;
   Graphics graphics;
 
   Camera* pCamera = nullptr;

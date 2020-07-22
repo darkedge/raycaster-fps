@@ -11,11 +11,13 @@ class EditorState : public StateBase
   static constexpr float MOUSE_LOOK_FACTOR = 0.0025f;
 
 public:
+  // StateBase
   void Init() override;
   void Resize(float w, float h) override;
   void Entry() override;
   void Do(Camera** ppCamera) override;
-  void Exit() override;
+
+  void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
 
 private:
   void DoMenu();

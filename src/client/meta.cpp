@@ -97,6 +97,7 @@ void Meta::LoadLevel()
   if (Level::Valid(level))
   {
     graphics.CreateMesh(level, pDevice);
+    editor.SetLevel(level, pDevice);
     Level::Free(level);
   }
 }
@@ -111,8 +112,8 @@ void Meta::Init(HWND hwnd)
   this->CreateRenderTargetView();
 
   graphics.Init(this->pDevice);
-  this->stateEditor.Init();
-  this->stateGame.Init();
+  this->editor.Init();
+  this->game.Init();
 
   LoadLevel();
 
@@ -142,13 +143,13 @@ void Meta::Init(HWND hwnd)
     MJ_DISCARD(SDL_SetRelativeMouseMode(SDL_TRUE));
     ImGui::GetIO().WantCaptureMouse    = true;
     ImGui::GetIO().WantCaptureKeyboard = true;
-    this->stateMachine.pStateNext      = &this->stateGame;
+    this->stateMachine.pStateNext      = &this->game;
   }
   else
   {
     ImGui::GetIO().WantCaptureMouse    = false;
     ImGui::GetIO().WantCaptureKeyboard = false;
-    this->stateMachine.pStateNext      = &this->stateEditor;
+    this->stateMachine.pStateNext      = &this->editor;
   }
 
   // Fire Entry action for next state
@@ -177,9 +178,9 @@ void Meta::Update()
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    this->stateMachine.pStateNext = (this->stateMachine.pStateCurrent == &this->stateGame)
-                                        ? (StateBase*)&this->stateEditor
-                                        : (StateBase*)&this->stateGame;
+    this->stateMachine.pStateNext = (this->stateMachine.pStateCurrent == &this->game)
+                                        ? (StateBase*)&this->editor
+                                        : (StateBase*)&this->game;
   }
 
   this->stateMachine.Update(&this->pCamera);

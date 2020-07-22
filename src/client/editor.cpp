@@ -316,6 +316,9 @@ void EditorState::Do(Camera** ppCamera)
   *ppCamera = &this->camera;
 }
 
-void EditorState::Exit()
+void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
 {
+  // Generate ceiling mesh
+  (void)level;
+  (void)pDevice;
 }
