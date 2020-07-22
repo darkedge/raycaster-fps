@@ -120,8 +120,8 @@ static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>&
   indices.Add(oldVertexCount + 3);
 }
 
-static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x0, float z0, float x1,
-                            float z1, uint16_t block)
+static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x0, float z0,
+                            float x1, float z1, uint16_t block)
 {
   // Get vertex count before adding new ones
   int16_t oldVertexCount = (int16_t)vertices.Size();

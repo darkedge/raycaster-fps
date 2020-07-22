@@ -8,9 +8,6 @@
 #include <d3d11.h>
 
 #include <bx/bx.h>
-#include <bx/timer.h>
-#include <bx/thread.h>
-#include <bx/allocator.h>
 #include <bx/error.h>
 
 #include <bimg/bimg.h>
