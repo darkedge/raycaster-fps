@@ -112,8 +112,8 @@ void Meta::Init(HWND hwnd)
   this->CreateRenderTargetView();
 
   graphics.Init(this->pDevice);
-  this->editor.Init();
-  this->game.Init();
+  this->editor.Init(this->pDevice);
+  this->game.Init(this->pDevice);
 
   LoadLevel();
 
@@ -158,6 +158,8 @@ void Meta::Init(HWND hwnd)
 
 void Meta::Resize(int width, int height)
 {
+  // "Swapchain cannot be resized unless all outstanding buffer references have been released. [ MISCELLANEOUS ERROR
+  // #19: ]" This includes the render target view, and render target view creation uses swap chain buffer sizes.
   this->pRenderTargetView.Reset();
   this->pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
   this->CreateRenderTargetView();
@@ -178,9 +180,8 @@ void Meta::Update()
 
   if (mj::input::GetKeyDown(Key::F3))
   {
-    this->stateMachine.pStateNext = (this->stateMachine.pStateCurrent == &this->game)
-                                        ? (StateBase*)&this->editor
-                                        : (StateBase*)&this->game;
+    this->stateMachine.pStateNext =
+        (this->stateMachine.pStateCurrent == &this->game) ? (StateBase*)&this->editor : (StateBase*)&this->game;
   }
 
   this->stateMachine.Update(this->drawList);

@@ -9,44 +9,97 @@
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
-static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x0, float z0,
+static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x0, float z0,
                             float x1, float z1, uint16_t block)
 {
   // Get vertex count before adding new ones
-  int16_t oldVertexCount = (int16_t)vertices.Size();
+  uint16_t oldVertexCount = (uint16_t)vertices.Size();
   // 1  3
   //  \ |
   // 0->2
-  MJ_UNINITIALIZED Vertex vertex;
-  vertex.position.x = x0;
-  vertex.position.y = 0.0f;
-  vertex.position.z = z0;
-  vertex.texCoord.x = 0.0f;
-  vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = block;
-  vertices.Add(vertex);
-  vertex.position.y = 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x1;
-  vertex.position.y = 0.0f;
-  vertex.position.z = z1;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 0.0f;
-  vertices.Add(vertex);
-  vertex.position.y = 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
+  auto* pVertices = vertices.Place(4);
+  if (pVertices)
+  {
+    MJ_UNINITIALIZED Vertex vertex;
+    vertex.position.x = x0;
+    vertex.position.y = 0.0f;
+    vertex.position.z = z0;
+    vertex.texCoord.x = 0.0f;
+    vertex.texCoord.y = 0.0f;
+    vertex.texCoord.z = block;
+    pVertices[0]      = vertex;
+    vertex.position.y = 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[1]      = vertex;
+    vertex.position.x = x1;
+    vertex.position.y = 0.0f;
+    vertex.position.z = z1;
+    vertex.texCoord.x = 1.0f;
+    vertex.texCoord.y = 0.0f;
+    pVertices[2]      = vertex;
+    vertex.position.y = 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[3]      = vertex;
 
-  indices.Add(oldVertexCount + 0);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 3);
+    auto* pIndices = indices.Place(6);
+    if (pIndices)
+    {
+      pIndices[0] = oldVertexCount + 0;
+      pIndices[1] = oldVertexCount + 2;
+      pIndices[2] = oldVertexCount + 1;
+      pIndices[3] = oldVertexCount + 1;
+      pIndices[4] = oldVertexCount + 2;
+      pIndices[5] = oldVertexCount + 3;
+    }
+  }
 }
 
-void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, Level level)
+Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
+                          uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices)
+{
+  Mesh mesh;
+
+  {
+    // Fill in a buffer description.
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = vertexData.ByteWidth();
+    bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Fill in the subresource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = vertexData.Get();
+    InitData.SysMemPitch      = numVertexComponents * vertexData.ElemSize();
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the vertex buffer.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, mesh.vertexBuffer.ReleaseAndGetAddressOf()));
+  }
+  {
+    mesh.indexCount = indices.Size();
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = indices.ByteWidth();
+    bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Define the resource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = indices.Get();
+    InitData.SysMemPitch      = indices.ElemSize();
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the buffer with the device.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, mesh.indexBuffer.ReleaseAndGetAddressOf()));
+  }
+
+  return mesh;
+}
+
+void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level level)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -100,72 +153,90 @@ void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_
   }
 }
 
-void Graphics::InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z, float texture)
+void Graphics::InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float z,
+                             float texture)
 {
-  int16_t oldVertexCount = (int16_t)vertices.Size();
-  MJ_UNINITIALIZED Vertex vertex;
+  uint16_t oldVertexCount = (uint16_t)vertices.Size();
+  auto* pVertices         = vertices.Place(4);
+  if (pVertices)
+  {
+    MJ_UNINITIALIZED Vertex vertex;
 
-  vertex.position.x = x;
-  vertex.position.y = 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 0.0f;
-  vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = texture;
-  vertices.Add(vertex);
-  vertex.position.x = x;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 0.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
+    vertex.position.x = x;
+    vertex.position.y = 1.0f;
+    vertex.position.z = z;
+    vertex.texCoord.x = 0.0f;
+    vertex.texCoord.y = 0.0f;
+    vertex.texCoord.z = texture;
+    pVertices[0]      = vertex;
+    vertex.position.x = x;
+    vertex.position.z = z + 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[1]      = vertex;
+    vertex.position.x = x + 1.0f;
+    vertex.position.z = z;
+    vertex.texCoord.x = 1.0f;
+    vertex.texCoord.y = 0.0f;
+    pVertices[2]      = vertex;
+    vertex.position.x = x + 1.0f;
+    vertex.position.z = z + 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[3]      = vertex;
 
-  indices.Add(oldVertexCount + 0);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 3);
-  indices.Add(oldVertexCount + 3);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 0);
+    auto* pIndices = indices.Place(6);
+    if (pIndices)
+    {
+      pIndices[0] = oldVertexCount + 0;
+      pIndices[1] = oldVertexCount + 1;
+      pIndices[2] = oldVertexCount + 3;
+      pIndices[3] = oldVertexCount + 3;
+      pIndices[4] = oldVertexCount + 2;
+      pIndices[5] = oldVertexCount + 0;
+    }
+  }
 }
 
-void Graphics::InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float y, float z, float texture)
+void Graphics::InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float y, float z,
+                           float texture)
 {
-  int16_t oldVertexCount = (int16_t)vertices.Size();
-  MJ_UNINITIALIZED Vertex vertex;
+  uint16_t oldVertexCount = (uint16_t)vertices.Size();
+  auto* pVertices         = vertices.Place(4);
+  if (pVertices)
+  {
+    MJ_UNINITIALIZED Vertex vertex;
 
-  vertex.position.x = x;
-  vertex.position.y = y;
-  vertex.position.z = z;
-  vertex.texCoord.x = 0.0f;
-  vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = texture;
-  vertices.Add(vertex);
-  vertex.position.x = x;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 0.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
+    vertex.position.x = x;
+    vertex.position.y = y;
+    vertex.position.z = z;
+    vertex.texCoord.x = 0.0f;
+    vertex.texCoord.y = 0.0f;
+    vertex.texCoord.z = texture;
+    pVertices[0]      = vertex;
+    vertex.position.x = x;
+    vertex.position.z = z + 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[1]      = vertex;
+    vertex.position.x = x + 1.0f;
+    vertex.position.z = z;
+    vertex.texCoord.x = 1.0f;
+    vertex.texCoord.y = 0.0f;
+    pVertices[2]      = vertex;
+    vertex.position.x = x + 1.0f;
+    vertex.position.z = z + 1.0f;
+    vertex.texCoord.y = 1.0f;
+    pVertices[3]      = vertex;
 
-  indices.Add(oldVertexCount + 0);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 3);
+    auto* pIndices = indices.Place(6);
+    if (pIndices)
+    {
+      pIndices[0] = oldVertexCount + 0;
+      pIndices[1] = oldVertexCount + 2;
+      pIndices[2] = oldVertexCount + 1;
+      pIndices[3] = oldVertexCount + 1;
+      pIndices[4] = oldVertexCount + 2;
+      pIndices[5] = oldVertexCount + 3;
+    }
+  }
 }
 
 static void CreateDefaultTexture(ComPtr<ID3D11Device> pDevice)

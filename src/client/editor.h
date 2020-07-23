@@ -12,14 +12,15 @@ class EditorState : public StateBase
 
 public:
   // StateBase
-  void Init() override;
+  void Init(ComPtr<ID3D11Device> pDevice) override;
   void Resize(float w, float h) override;
   void Entry() override;
-  void Do(mj::ArrayList<DrawCommand>& drawList) override;
+  void Update(mj::ArrayList<DrawCommand>& drawList) override;
 
   void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
 
 private:
+  void CreateBlockCursor(ComPtr<ID3D11Device> pDevice);
   void DoMenu();
   void DoInput();
 
@@ -29,6 +30,11 @@ private:
   InputCombo inputComboSaveAs;
   
   Mesh levelMesh;
+
+  // Block cursor
+  Mesh blockCursor;
+  ComPtr<ID3D11VertexShader> pVertexShader;
+  ComPtr<ID3D11PixelShader> pPixelShader;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

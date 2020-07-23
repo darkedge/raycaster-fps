@@ -9,7 +9,7 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
   mj::ArrayList<Vertex> vertices;
-  mj::ArrayList<int16_t> indices;
+  mj::ArrayList<uint16_t> indices;
 
   Graphics::InsertWalls(vertices, indices, level);
 
@@ -27,42 +27,7 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     }
   }
 
-  {
-    // Fill in a buffer description.
-    D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = vertices.ByteWidth();
-    bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags      = 0;
-
-    // Fill in the subresource data.
-    D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = vertices.Get();
-    InitData.SysMemPitch      = vertices.ElemSize();
-    InitData.SysMemSlicePitch = 0;
-
-    // Create the vertex buffer.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->levelMesh.vertexBuffer.ReleaseAndGetAddressOf()));
-  }
-  {
-    this->levelMesh.indexCount = indices.Size();
-    D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = indices.ByteWidth();
-    bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags      = 0;
-
-    // Define the resource data.
-    D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = indices.Get();
-    InitData.SysMemPitch      = indices.ElemSize();
-    InitData.SysMemSlicePitch = 0;
-
-    // Create the buffer with the device.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->levelMesh.indexBuffer.ReleaseAndGetAddressOf()));
-  }
+  this->levelMesh = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices);
 }
 
 void GameState::Entry()
@@ -80,7 +45,7 @@ void GameState::Entry()
   this->yaw             = -this->currentMousePos;
 }
 
-void GameState::Do(mj::ArrayList<DrawCommand>& drawList)
+void GameState::Update(mj::ArrayList<DrawCommand>& drawList)
 {
   ZoneScoped;
 
@@ -148,8 +113,13 @@ void GameState::Do(mj::ArrayList<DrawCommand>& drawList)
 
   cam.viewProjection = projection * view;
 
-  DrawCommand drawCommand;
-  drawCommand.pCamera = &this->camera;
-  drawCommand.pMesh   = &this->levelMesh;
-  drawList.Add(drawCommand);
+  {
+    void* pMem = drawList.Place();
+    if (pMem)
+    {
+      auto* pCmd    = new (pMem) DrawCommand;
+      pCmd->pCamera = &this->camera;
+      pCmd->pMesh   = &this->levelMesh;
+    }
+  }
 }

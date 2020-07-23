@@ -238,6 +238,8 @@ struct Mesh
 
 struct DrawCommand
 {
+  ComPtr<ID3D11VertexShader> vertexShader;
+  ComPtr<ID3D11PixelShader> pixelShader;
   Mesh* pMesh     = nullptr;
   Camera* pCamera = nullptr;
 };
@@ -245,9 +247,10 @@ struct DrawCommand
 class Graphics
 {
 public:
-  static void InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, Level level);
-  static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z, float texture);
-  static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float y, float z, float texture);
+  static Mesh CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData, uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices);
+  static void InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level level);
+  static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float z, float texture);
+  static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float y, float z, float texture);
 
   void Init(ComPtr<ID3D11Device> pDevice);
   void Resize(int width, int height);

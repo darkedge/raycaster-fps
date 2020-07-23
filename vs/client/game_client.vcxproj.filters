@@ -75,5 +75,7 @@
   <ItemGroup>
     <FxCompile Include="..\..\src\client\rasterizer_ps.hlsl" />
     <FxCompile Include="..\..\src\client\rasterizer_vs.hlsl" />
+    <FxCompile Include="..\..\src\client\block_cursor_ps.hlsl" />
+    <FxCompile Include="..\..\src\client\block_cursor_vs.hlsl" />
   </ItemGroup>
 </Project>

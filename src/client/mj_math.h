@@ -26,11 +26,16 @@ namespace mjm
     float y;
     float z;
 
-    vec3(std::initializer_list<float> l) = delete;
+    static vec3 zero()
+    {
+      return vec3(0.0f, 0.0f, 0.0f);
+    }
 
-    vec3() : x(0.0f), y(0.0f), z(0.0f)
+    vec3()
     {
     }
+
+    vec3(std::initializer_list<float> l) = delete;
 
     vec3(float x, float y, float z) : x(x), y(y), z(z)
     {
@@ -75,11 +80,16 @@ namespace mjm
     float z = 0.0f;
     float w = 0.0f;
 
-    vec4(std::initializer_list<float> l) = delete;
+    static vec4 zero()
+    {
+      return vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
 
-    vec4() : x(0.0f), y(0.0f), z(0.0f), w(0.0f)
+    vec4()
     {
     }
+
+    vec4(std::initializer_list<float> l) = delete;
 
     vec4(float s) : x(s), y(s), z(s), w(s)
     {
@@ -178,9 +188,9 @@ namespace mjm
   {
     vec3 columns[3];
     mat3()
-        : columns{ vec3(), //
-                   vec3(), //
-                   vec3() }
+        : columns{ vec3::zero(), //
+                   vec3::zero(), //
+                   vec3::zero() }
     {
     }
 
@@ -215,10 +225,10 @@ namespace mjm
   {
     vec4 columns[4];
     mat4()
-        : columns{ vec4(), //
-                   vec4(), //
-                   vec4(), //
-                   vec4() }
+        : columns{ vec4::zero(), //
+                   vec4::zero(), //
+                   vec4::zero(), //
+                   vec4::zero() }
     {
     }
 

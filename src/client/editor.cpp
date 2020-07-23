@@ -5,6 +5,9 @@
 #include "mj_common.h"
 #include "meta.h"
 
+#include "generated/block_cursor_vs.h"
+#include "generated/block_cursor_ps.h"
+
 void EditorState::Resize(float w, float h)
 {
   this->camera.viewport[2] = w;
@@ -30,7 +33,7 @@ static void ResetCamera(Camera& camera)
   camera.walls.backFaceCulling = true;
 }
 
-void EditorState::Init()
+void EditorState::Init(ComPtr<ID3D11Device> pDevice)
 {
   this->inputComboNew    = { InputCombo::KEYBOARD, Key::KeyN, Modifier::LeftCtrl, MouseButton::None };
   this->inputComboOpen   = { InputCombo::KEYBOARD, Key::KeyO, Modifier::None, MouseButton::None };
@@ -38,6 +41,7 @@ void EditorState::Init()
   this->inputComboSaveAs = { InputCombo::KEYBOARD, Key::KeyS, Modifier::LeftCtrl | Modifier::LeftShift,
                              MouseButton::None };
   ResetCamera(this->camera);
+  CreateBlockCursor(pDevice);
 }
 
 void EditorState::Entry()
@@ -123,6 +127,37 @@ static void OpenFileDialog()
     }
     pFileOpen->Release();
   }
+}
+
+void EditorState::CreateBlockCursor(ComPtr<ID3D11Device> pDevice)
+{
+  MJ_DISCARD(pDevice->CreateVertexShader(block_cursor_vs, sizeof(block_cursor_vs), nullptr,
+                                         this->pVertexShader.ReleaseAndGetAddressOf()));
+  MJ_DISCARD(pDevice->CreatePixelShader(block_cursor_ps, sizeof(block_cursor_ps), nullptr,
+                                        this->pPixelShader.ReleaseAndGetAddressOf()));
+
+  // w = 1.0f;
+  // rgb = 0.0f;
+  // a = 0.4f;
+  float vertices[] = {
+    -0.002f, -0.002f, -0.002f, // 0
+    -0.002f, -0.002f, 1.002f,  // 1
+    -0.002f, 1.002f,  -0.002f, // 2
+    -0.002f, 1.002f,  1.002f,  // 3
+    1.002f,  -0.002f, -0.002f, // 4
+    1.002f,  -0.002f, 1.002f,  // 5
+    1.002f,  1.002f,  -0.002f, // 6
+    1.002f,  1.002f,  1.002f   // 7
+  };
+
+  // Line list (24)
+  uint16_t indices[] = { 4, 5, 5, 7, 7, 6, 5, 1, 1, 3, 3, 7, 1, 0, 0, 2, 2, 3, 0, 4, 4, 6, 6, 2 };
+
+  mj::ArrayListView<float> vertexList(vertices);
+  mj::ArrayListView<uint16_t> indexList(indices);
+
+  // Create static index buffer.
+  this->blockCursor = Graphics::CreateMesh(pDevice, vertexList, 3, indexList);
 }
 
 void EditorState::DoMenu()
@@ -287,7 +322,7 @@ void EditorState::DoInput()
   }
 }
 
-void EditorState::Do(mj::ArrayList<DrawCommand>& drawList)
+void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 {
   this->DoMenu();
   this->DoInput();
@@ -313,16 +348,50 @@ void EditorState::Do(mj::ArrayList<DrawCommand>& drawList)
   cam.viewProjection = projection * view;
 #endif
 
-  DrawCommand drawCommand;
-  drawCommand.pCamera = &this->camera;
-  drawCommand.pMesh   = &this->levelMesh;
-  drawList.Add(drawCommand);
+  {
+    void* pMem = drawList.Place();
+    if (pMem)
+    {
+      auto* pCmd    = new (pMem) DrawCommand;
+      pCmd->pCamera = &this->camera;
+      pCmd->pMesh   = &this->levelMesh;
+    }
+  }
+
+  // Block cursor
+  {
+    float x, y, z;
+    mjm::mat4 world = mjm::identity<mjm::mat4>();
+    world           = mjm::translate(world, mjm::vec3(x, y, z));
+
+#if 0
+    bgfx::setVertexBuffer(0, this->vertexBuffer);
+    bgfx::setIndexBuffer(this->indexBuffer);
+    bgfx::setTransform(&world);
+    bgfx::setState(0 | BGFX_STATE_CULL_CCW | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
+                       BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_PT_LINES,
+                   0xffffffff);
+    bgfx::submit(s_vidGeometry, this->program);
+#endif
+
+    {
+      void* pMem = drawList.Place();
+      if (pMem)
+      {
+        auto* pCmd         = new (pMem) DrawCommand;
+        pCmd->vertexShader = this->pVertexShader;
+        pCmd->pixelShader  = this->pPixelShader;
+        pCmd->pCamera      = &this->camera;
+        pCmd->pMesh        = &this->levelMesh;
+      }
+    }
+  }
 }
 
 void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
 {
   mj::ArrayList<Vertex> vertices;
-  mj::ArrayList<int16_t> indices;
+  mj::ArrayList<uint16_t> indices;
 
   Graphics::InsertWalls(vertices, indices, level);
 
@@ -339,7 +408,7 @@ void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
       }
       else
       {
-        // Editor: top of level
+        // Editor: draw top of level for clarity
         Graphics::InsertFloor(vertices, indices, (float)x, 1.0f, (float)z, 138.0f);
       }
     }

@@ -10,7 +10,7 @@ class Meta;
 class StateBase
 {
 public:
-  virtual void Init()
+  virtual void Init(ComPtr<ID3D11Device> pDevice)
   {
   }
   virtual void Resize(float w, float h)
@@ -21,7 +21,7 @@ public:
   virtual void Entry()
   {
   }
-  virtual void Do(mj::ArrayList<DrawCommand>& drawList)
+  virtual void Update(mj::ArrayList<DrawCommand>& drawList)
   {
     (void)drawList;
   }

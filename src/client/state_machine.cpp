@@ -17,7 +17,7 @@ void StateMachine::Update(mj::ArrayList<DrawCommand>& drawList)
 
   if (pCurrent)
   {
-    pCurrent->Do(drawList);
+    pCurrent->Update(drawList);
   }
 
   if (pNext)

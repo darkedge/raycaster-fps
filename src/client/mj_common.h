@@ -42,6 +42,61 @@ namespace mj
     b   = c;
   }
 
+#if 0
+  template <typename T>
+  class Array
+  {
+  public:
+    template <uint32_t Size>
+    Array(T (&data)[Size]) : pData(data), numElements(Size)
+    {
+    }
+
+    uint32_t Size() const
+    {
+      return numElements;
+    }
+
+    uint32_t ElemSize() const
+    {
+      return sizeof(T);
+    }
+
+    uint32_t ByteWidth() const
+    {
+      return Size() * ElemSize();
+    }
+
+    T* Get() const
+    {
+      return pData;
+    }
+
+    T* begin() const
+    {
+      return pData;
+    }
+
+    T* end() const
+    {
+      return pData + Size();
+    }
+
+    T& operator[](uint32_t index)
+    {
+      assert(index < numElements);
+      return pData[index];
+    }
+
+  private:
+    T* pData;
+    uint32_t numElements;
+  };
+#endif
+
+  template <typename T>
+  class ArrayListView;
+
   /// <summary>
   /// Reduced functionality std::vector replacement
   /// </summary>
@@ -62,23 +117,43 @@ namespace mj
       free(pData);
     }
 
-    bool Add(const T& t)
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="U"></typeparam>
+    /// <returns></returns>
+    template <typename U>
+    ArrayListView<U> Cast()
     {
-      if (numElements < capacity)
+      return ArrayListView<U>(*this);
+    }
+
+    /// <summary>
+    /// Returns a raw memory address for the user to emplace new objects.
+    /// </summary>
+    /// <returns>Null if there is no more space</returns>
+    T* Place(uint32_t num = 1)
+    {
+      if (num == 0)
       {
-        *(pData + numElements) = t;
-        numElements++;
-        return true;
+        return nullptr;
+      }
+
+      if (numElements + num <= capacity)
+      {
+        T* ptr = pData + numElements;
+        numElements += num;
+        return ptr;
       }
       else
       {
         if (Double())
         {
-          return Add(t);
+          return Place(num);
         }
         else
         {
-          return false;
+          return nullptr;
         }
       }
     }
@@ -128,11 +203,19 @@ namespace mj
       return pData[index];
     }
 
+    operator mj::ArrayListView<T>()
+    {
+      return mj::ArrayListView(pData, numElements);
+    }
+
   private:
+    template <typename U>
+    friend class ArrayListView;
+
     bool Double()
     {
       uint32_t newCapacity = 2 * capacity;
-      T* ptr               = (T*)realloc(pData, newCapacity * ElemSize());
+      T* ptr               = (T*)realloc(pData, (size_t)newCapacity * ElemSize());
       if (ptr)
       {
         capacity = newCapacity;
@@ -149,6 +232,72 @@ namespace mj
     T* pData             = nullptr;
     uint32_t numElements = 0;
     uint32_t capacity    = 4;
+  };
+
+  template <typename T>
+  class ArrayListView
+  {
+  public:
+    template <uint32_t Size>
+    ArrayListView(T (&data)[Size]) : pData(data), numElements(Size)
+    {
+    }
+
+    ArrayListView(T* pData, uint32_t numElements) : pData(pData), numElements(numElements)
+    {
+    }
+
+    /// <summary>
+    /// Creates a type-cast view of an ArrayList.
+    /// sizeof(U) should be a proper multiple of sizeof(T).
+    /// </summary>
+    /// <typeparam name="U"></typeparam>
+    /// <param name="c"></param>
+    /// <returns></returns>
+    template <typename U>
+    ArrayListView(ArrayList<U>& c) : pData((T*)c.pData), numElements(c.numElements * sizeof(U) / sizeof(T))
+    {
+    }
+
+    uint32_t Size() const
+    {
+      return numElements;
+    }
+
+    uint32_t ElemSize() const
+    {
+      return sizeof(T);
+    }
+
+    uint32_t ByteWidth() const
+    {
+      return Size() * ElemSize();
+    }
+
+    T* Get() const
+    {
+      return pData;
+    }
+
+    T* begin() const
+    {
+      return pData;
+    }
+
+    T* end() const
+    {
+      return pData + Size();
+    }
+
+    T& operator[](uint32_t index)
+    {
+      assert(index < numElements);
+      return pData[index];
+    }
+
+  private:
+    T* pData             = nullptr;
+    uint32_t numElements = 0;
   };
 
   /// <summary>
