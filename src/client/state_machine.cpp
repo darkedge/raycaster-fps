@@ -10,14 +10,14 @@ void StateMachine::Resize(float width, float height)
   }
 }
 
-void StateMachine::Update(Camera** ppCamera)
+void StateMachine::Update(mj::ArrayList<DrawCommand>& drawList)
 {
   auto*& pCurrent = this->pStateCurrent;
   auto*& pNext    = this->pStateNext;
 
   if (pCurrent)
   {
-    pCurrent->Do(ppCamera);
+    pCurrent->Do(drawList);
   }
 
   if (pNext)

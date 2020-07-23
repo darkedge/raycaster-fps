@@ -1,9 +1,9 @@
 #pragma once
-#include "camera.h"
 #include "level.h"
+#include "mj_common.h"
+#include "mj_math.h"
 
-struct ID3D11Device;
-struct ID3D11DeviceContext;
+struct Camera;
 
 template <typename T>
 class ComPtr
@@ -223,23 +223,42 @@ public:
   }
 };
 
+struct Vertex
+{
+  mjm::vec3 position;
+  mjm::vec3 texCoord;
+};
+
+struct Mesh
+{
+  ComPtr<ID3D11Buffer> vertexBuffer;
+  ComPtr<ID3D11Buffer> indexBuffer;
+  uint32_t indexCount = 0;
+};
+
+struct DrawCommand
+{
+  Mesh* pMesh     = nullptr;
+  Camera* pCamera = nullptr;
+};
+
 class Graphics
 {
 public:
+  static void InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, Level level);
+  static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z, float texture);
+  static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float y, float z, float texture);
+
   void Init(ComPtr<ID3D11Device> pDevice);
   void Resize(int width, int height);
-  void Update(ComPtr<ID3D11DeviceContext> pDeviceContext, const Camera* pCamera);
+  void Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<DrawCommand>& drawList);
   void* GetTileTexture(int x, int y);
-  void CreateMesh(Level level, ComPtr<ID3D11Device> pDevice);
-  void DiscardLevel();
 
 private:
   void InitTexture2DArray(ComPtr<ID3D11Device> pDevice);
 
   ComPtr<ID3D11Texture2D> pTextureArray;
   ComPtr<ID3D11SamplerState> pTextureSamplerState;
-  ComPtr<ID3D11Buffer> pVertexBuffer;
-  ComPtr<ID3D11Buffer> pIndexBuffer;
   ComPtr<ID3D11VertexShader> pVertexShader;
   ComPtr<ID3D11PixelShader> pPixelShader;
   ComPtr<ID3D11ShaderResourceView> pShaderResourceView; // Texture array SRV
@@ -248,7 +267,6 @@ private:
   ComPtr<ID3D11RasterizerState> pRasterizerStateCullNone;
   ComPtr<ID3D11BlendState> pBlendState;
   ComPtr<ID3D11Buffer> pResource;
-  UINT Indices;
 
   bx::DefaultAllocator defaultAllocator;
 };

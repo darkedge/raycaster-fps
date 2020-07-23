@@ -9,117 +9,6 @@
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
-static void CreateDefaultTexture(ComPtr<ID3D11Device> pDevice)
-{
-#if 0
-  D3D11_TEXTURE2D_DESC desc = {};
-  desc.Width                = 2;
-  desc.Height               = 2;
-  desc.MipLevels            = 1;
-  desc.ArraySize            = 1;
-  desc.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
-  desc.SampleDesc.Count     = 1;
-  desc.SampleDesc.Quality   = 0;
-  desc.Usage                = D3D11_USAGE_IMMUTABLE;
-  desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
-  desc.CPUAccessFlags       = 0;
-  desc.MiscFlags            = 0;
-
-  uint32_t data[] = { 0xFF00FFFF, 0x000000FF, 0x000000FF, 0xFF00FFFF };
-
-  D3D11_SUBRESOURCE_DATA srd = {};
-  srd.pSysMem                = data;
-  srd.SysMemPitch            = 8;
-  srd.SysMemSlicePitch       = 0;
-
-  MJ_UNINITIALIZED ID3D11Texture2D* pTexture2D;
-  MJ_DISCARD(pDevice->CreateTexture2D(&desc, &srd, &pTexture2D));
-
-  D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-  srvDesc.Format                          = desc.Format;
-  srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2D;
-  srvDesc.Texture2D.MostDetailedMip       = 0;
-  srvDesc.Texture2D.MipLevels             = 1;
-
-  ID3D11ShaderResourceView* pSrv;
-  MJ_DISCARD(pDevice->CreateShaderResourceView(pTexture2D, &srvDesc, &pSrv));
-#endif
-}
-
-struct Vertex
-{
-  mjm::vec3 position;
-  mjm::vec3 texCoord;
-};
-
-static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z)
-{
-  int16_t oldVertexCount = (int16_t)vertices.Size();
-  MJ_UNINITIALIZED Vertex vertex;
-
-  vertex.position.x = x;
-  vertex.position.y = 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 0.0f;
-  vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = 138.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 0.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-
-  indices.Add(oldVertexCount + 0);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 3);
-  indices.Add(oldVertexCount + 3);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 0);
-}
-
-static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z)
-{
-  int16_t oldVertexCount = (int16_t)vertices.Size();
-  MJ_UNINITIALIZED Vertex vertex;
-
-  vertex.position.x = x;
-  vertex.position.y = 0.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 0.0f;
-  vertex.texCoord.y = 0.0f;
-  vertex.texCoord.z = 136.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z;
-  vertex.texCoord.x = 1.0f;
-  vertex.texCoord.y = 0.0f;
-  vertices.Add(vertex);
-  vertex.position.x = x + 1.0f;
-  vertex.position.z = z + 1.0f;
-  vertex.texCoord.y = 1.0f;
-  vertices.Add(vertex);
-
-  indices.Add(oldVertexCount + 0);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 1);
-  indices.Add(oldVertexCount + 2);
-  indices.Add(oldVertexCount + 3);
-}
-
 static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x0, float z0,
                             float x1, float z1, uint16_t block)
 {
@@ -157,12 +46,9 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16
   indices.Add(oldVertexCount + 3);
 }
 
-void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
+void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, Level level)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
-
-  mj::ArrayList<Vertex> vertices;
-  mj::ArrayList<int16_t> indices;
 
   // Traversal direction
   // This is also the normal of the triangles
@@ -212,57 +98,111 @@ void Graphics::CreateMesh(Level level, ComPtr<ID3D11Device> pDevice)
       }
     }
   }
+}
 
-  // Floor/ceiling pass
-  for (size_t z = 0; z < Meta::LEVEL_DIM; z++)
-  {
-    // Check for blocks in this slice
-    for (size_t x = 0; x < Meta::LEVEL_DIM; x++)
-    {
-      if (level.pBlocks[z * level.width + x] >= 0x006A)
-      {
-        InsertFloor(vertices, indices, (float)x, (float)z);
-        InsertCeiling(vertices, indices, (float)x, (float)z);
-      }
-    }
-  }
+void Graphics::InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float z, float texture)
+{
+  int16_t oldVertexCount = (int16_t)vertices.Size();
+  MJ_UNINITIALIZED Vertex vertex;
 
-  {
-    // Fill in a buffer description.
-    D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = vertices.ByteWidth();
-    bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags      = 0;
+  vertex.position.x = x;
+  vertex.position.y = 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 0.0f;
+  vertex.texCoord.y = 0.0f;
+  vertex.texCoord.z = texture;
+  vertices.Add(vertex);
+  vertex.position.x = x;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.Add(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 1.0f;
+  vertex.texCoord.y = 0.0f;
+  vertices.Add(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.Add(vertex);
 
-    // Fill in the subresource data.
-    D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = vertices.Get();
-    InitData.SysMemPitch      = vertices.ElemSize();
-    InitData.SysMemSlicePitch = 0;
+  indices.Add(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 3);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 0);
+}
 
-    // Create the vertex buffer.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->pVertexBuffer.ReleaseAndGetAddressOf()));
-  }
-  {
-    this->Indices = indices.Size();
-    D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
-    bufferDesc.ByteWidth      = indices.ByteWidth();
-    bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
-    bufferDesc.MiscFlags      = 0;
+void Graphics::InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<int16_t>& indices, float x, float y, float z, float texture)
+{
+  int16_t oldVertexCount = (int16_t)vertices.Size();
+  MJ_UNINITIALIZED Vertex vertex;
 
-    // Define the resource data.
-    D3D11_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem          = indices.Get();
-    InitData.SysMemPitch      = indices.ElemSize();
-    InitData.SysMemSlicePitch = 0;
+  vertex.position.x = x;
+  vertex.position.y = y;
+  vertex.position.z = z;
+  vertex.texCoord.x = 0.0f;
+  vertex.texCoord.y = 0.0f;
+  vertex.texCoord.z = texture;
+  vertices.Add(vertex);
+  vertex.position.x = x;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.Add(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z;
+  vertex.texCoord.x = 1.0f;
+  vertex.texCoord.y = 0.0f;
+  vertices.Add(vertex);
+  vertex.position.x = x + 1.0f;
+  vertex.position.z = z + 1.0f;
+  vertex.texCoord.y = 1.0f;
+  vertices.Add(vertex);
 
-    // Create the buffer with the device.
-    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->pIndexBuffer.ReleaseAndGetAddressOf()));
-  }
+  indices.Add(oldVertexCount + 0);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 1);
+  indices.Add(oldVertexCount + 2);
+  indices.Add(oldVertexCount + 3);
+}
+
+static void CreateDefaultTexture(ComPtr<ID3D11Device> pDevice)
+{
+#if 0
+  D3D11_TEXTURE2D_DESC desc = {};
+  desc.Width                = 2;
+  desc.Height               = 2;
+  desc.MipLevels            = 1;
+  desc.ArraySize            = 1;
+  desc.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
+  desc.SampleDesc.Count     = 1;
+  desc.SampleDesc.Quality   = 0;
+  desc.Usage                = D3D11_USAGE_IMMUTABLE;
+  desc.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
+  desc.CPUAccessFlags       = 0;
+  desc.MiscFlags            = 0;
+
+  uint32_t data[] = { 0xFF00FFFF, 0x000000FF, 0x000000FF, 0xFF00FFFF };
+
+  D3D11_SUBRESOURCE_DATA srd = {};
+  srd.pSysMem                = data;
+  srd.SysMemPitch            = 8;
+  srd.SysMemSlicePitch       = 0;
+
+  MJ_UNINITIALIZED ID3D11Texture2D* pTexture2D;
+  MJ_DISCARD(pDevice->CreateTexture2D(&desc, &srd, &pTexture2D));
+
+  D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+  srvDesc.Format                          = desc.Format;
+  srvDesc.ViewDimension                   = D3D11_SRV_DIMENSION_TEXTURE2D;
+  srvDesc.Texture2D.MostDetailedMip       = 0;
+  srvDesc.Texture2D.MipLevels             = 1;
+
+  ID3D11ShaderResourceView* pSrv;
+  MJ_DISCARD(pDevice->CreateShaderResourceView(pTexture2D, &srvDesc, &pSrv));
+#endif
 }
 
 void Graphics::InitTexture2DArray(ComPtr<ID3D11Device> pDevice)
@@ -431,52 +371,48 @@ void Graphics::Resize(int width, int height)
   MJ_DISCARD(height);
 }
 
-/// <summary>
-/// Note: Eventually, we will have to renderer a list of draw commands (command buffer).
-/// Draw commands will contain matrices, textures, buffers, and all other bindings.
-/// </summary>
-/// <param name="pContext"></param>
-/// <param name="width"></param>
-/// <param name="height"></param>
-/// <param name="pCamera"></param>
-void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const Camera* pCamera)
+void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<DrawCommand>& drawList)
 {
-  if (this->pIndexBuffer && this->pVertexBuffer)
+  // Input Assembler
+  pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  pContext->IASetInputLayout(this->pInputLayout.Get());
+
+  // Vertex Shader
+  pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
+  pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
+
+  // Rasterizer
+  D3D11_VIEWPORT viewport = {};
+  viewport.TopLeftX       = 0;
+  viewport.TopLeftY       = 0;
+  viewport.MinDepth       = 0.0f;
+  viewport.MaxDepth       = 1.0f;
+  mj::GetWindowSize(&viewport.Width, &viewport.Height);
+
+  pContext->RSSetViewports(1, &viewport);
+  pContext->RSSetState(this->pRasterizerState.Get());
+
+  // Pixel Shader
+  pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
+  pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
+  pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
+
+  // Output Merger
+  pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
+
+  for (const auto& command : drawList)
   {
-    pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &pCamera->viewProjection, 0, 0);
+    if (command.pMesh->indexBuffer && command.pMesh->vertexBuffer)
+    {
+      // Input Assembler
+      pContext->IASetIndexBuffer(command.pMesh->indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
+      UINT strides[] = { sizeof(Vertex) };
+      UINT offsets[] = { 0 };
+      pContext->IASetVertexBuffers(0, 1, command.pMesh->vertexBuffer.GetAddressOf(), strides, offsets);
 
-    // Input Assembler
-    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    pContext->IASetInputLayout(this->pInputLayout.Get());
-    pContext->IASetIndexBuffer(this->pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
-    UINT strides[] = { sizeof(Vertex) };
-    UINT offsets[] = { 0 };
-    pContext->IASetVertexBuffers(0, 1, this->pVertexBuffer.GetAddressOf(), strides, offsets);
-
-    // Vertex Shader
-    pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
-    pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
-
-    // Rasterizer
-    D3D11_VIEWPORT viewport = {};
-    viewport.TopLeftX       = 0;
-    viewport.TopLeftY       = 0;
-    viewport.MinDepth       = 0.0f;
-    viewport.MaxDepth       = 1.0f;
-    mj::GetWindowSize(&viewport.Width, &viewport.Height);
-
-    pContext->RSSetViewports(1, &viewport);
-    pContext->RSSetState(this->pRasterizerState.Get());
-
-    // Pixel Shader
-    pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
-    pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
-    pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
-
-    // Output Merger
-    pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
-
-    pContext->DrawIndexed(this->Indices, 0, 0);
+      pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &command.pCamera->viewProjection, 0, 0);
+      pContext->DrawIndexed(command.pMesh->indexCount, 0, 0);
+    }
   }
 }
 
@@ -485,10 +421,4 @@ void* Graphics::GetTileTexture(int x, int y)
   (void)x;
   (void)y;
   return this->pShaderResourceView.Get();
-}
-
-void Graphics::DiscardLevel()
-{
-  this->pIndexBuffer.Reset();
-  this->pVertexBuffer.Reset();
 }

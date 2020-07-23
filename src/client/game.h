@@ -6,7 +6,9 @@ class GameState : public StateBase
 {
 public:
   void Entry() override;
-  void Do(Camera** ppCamera) override;
+  void Do(mj::ArrayList<DrawCommand>& drawList) override;
+  
+  void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
 
 private:
   static constexpr float MOVEMENT_FACTOR = 3.0f;
@@ -15,6 +17,8 @@ private:
   float lastMousePos;
   float currentMousePos;
   float yaw;
+
+  Mesh levelMesh;
 
   Camera camera;
 };

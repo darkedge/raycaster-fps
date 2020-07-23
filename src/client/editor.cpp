@@ -287,7 +287,7 @@ void EditorState::DoInput()
   }
 }
 
-void EditorState::Do(Camera** ppCamera)
+void EditorState::Do(mj::ArrayList<DrawCommand>& drawList)
 {
   this->DoMenu();
   this->DoInput();
@@ -313,12 +313,72 @@ void EditorState::Do(Camera** ppCamera)
   cam.viewProjection = projection * view;
 #endif
 
-  *ppCamera = &this->camera;
+  DrawCommand drawCommand;
+  drawCommand.pCamera = &this->camera;
+  drawCommand.pMesh   = &this->levelMesh;
+  drawList.Add(drawCommand);
 }
 
 void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
 {
-  // Generate ceiling mesh
-  (void)level;
-  (void)pDevice;
+  mj::ArrayList<Vertex> vertices;
+  mj::ArrayList<int16_t> indices;
+
+  Graphics::InsertWalls(vertices, indices, level);
+
+  // Floor/ceiling pass
+  for (size_t z = 0; z < Meta::LEVEL_DIM; z++)
+  {
+    // Check for blocks in this slice
+    for (size_t x = 0; x < Meta::LEVEL_DIM; x++)
+    {
+      if (level.pBlocks[z * level.width + x] >= 0x006A)
+      {
+        Graphics::InsertFloor(vertices, indices, (float)x, 0.0f, (float)z, 136.0f);
+        Graphics::InsertCeiling(vertices, indices, (float)x, (float)z, 138.0f);
+      }
+      else
+      {
+        // Editor: top of level
+        Graphics::InsertFloor(vertices, indices, (float)x, 1.0f, (float)z, 138.0f);
+      }
+    }
+  }
+
+  {
+    // Fill in a buffer description.
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = vertices.ByteWidth();
+    bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Fill in the subresource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = vertices.Get();
+    InitData.SysMemPitch      = vertices.ElemSize();
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the vertex buffer.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->levelMesh.vertexBuffer.ReleaseAndGetAddressOf()));
+  }
+  {
+    this->levelMesh.indexCount = indices.Size();
+    D3D11_BUFFER_DESC bufferDesc;
+    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.ByteWidth      = indices.ByteWidth();
+    bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
+    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.MiscFlags      = 0;
+
+    // Define the resource data.
+    D3D11_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem          = indices.Get();
+    InitData.SysMemPitch      = indices.ElemSize();
+    InitData.SysMemSlicePitch = 0;
+
+    // Create the buffer with the device.
+    MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->levelMesh.indexBuffer.ReleaseAndGetAddressOf()));
+  }
 }

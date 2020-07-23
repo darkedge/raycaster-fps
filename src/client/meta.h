@@ -38,8 +38,7 @@ private:
   GameState game;
   EditorState editor;
   Graphics graphics;
-
-  Camera* pCamera = nullptr;
+  mj::ArrayList<DrawCommand> drawList;
 
   StateMachine stateMachine;
 };

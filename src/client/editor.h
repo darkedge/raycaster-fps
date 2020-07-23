@@ -15,7 +15,7 @@ public:
   void Init() override;
   void Resize(float w, float h) override;
   void Entry() override;
-  void Do(Camera** ppCamera) override;
+  void Do(mj::ArrayList<DrawCommand>& drawList) override;
 
   void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
 
@@ -28,8 +28,7 @@ private:
   InputCombo inputComboSave;
   InputCombo inputComboSaveAs;
   
-  ComPtr<ID3D11Buffer> pCeilingVertexBuffer;
-  ComPtr<ID3D11Buffer> pCeilingIndexBuffer;
+  Mesh levelMesh;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

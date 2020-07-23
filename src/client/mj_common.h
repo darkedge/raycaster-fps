@@ -83,6 +83,15 @@ namespace mj
       }
     }
 
+    void Clear()
+    {
+      for (auto& t : *this)
+      {
+        t.~T();
+      }
+      this->numElements = 0;
+    }
+
     uint32_t Size() const
     {
       return numElements;
@@ -93,7 +102,7 @@ namespace mj
       return sizeof(T);
     }
 
-    uint32_t ByteWidth() const 
+    uint32_t ByteWidth() const
     {
       return Size() * ElemSize();
     }
@@ -103,12 +112,12 @@ namespace mj
       return pData;
     }
 
-    T* begin()
+    T* begin() const
     {
       return pData;
     }
 
-    T* end()
+    T* end() const
     {
       return pData + Size();
     }

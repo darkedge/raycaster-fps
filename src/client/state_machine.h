@@ -1,4 +1,5 @@
 #pragma once
+#include "graphics.h"
 
 struct Camera;
 class Meta;
@@ -20,9 +21,9 @@ public:
   virtual void Entry()
   {
   }
-  virtual void Do(Camera** ppCamera)
+  virtual void Do(mj::ArrayList<DrawCommand>& drawList)
   {
-    (void)ppCamera;
+    (void)drawList;
   }
   virtual void Exit()
   {
@@ -44,5 +45,5 @@ struct StateMachine
   StateBase* pStateNext    = nullptr;
 
   void Resize(float width, float height);
-  void Update(Camera** ppCamera);
+  void Update(mj::ArrayList<DrawCommand>& drawList);
 };

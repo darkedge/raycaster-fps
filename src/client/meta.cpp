@@ -96,7 +96,7 @@ void Meta::LoadLevel()
   Level level = Level::Load("e1m1.mjm");
   if (Level::Valid(level))
   {
-    graphics.CreateMesh(level, pDevice);
+    game.SetLevel(level, pDevice);
     editor.SetLevel(level, pDevice);
     Level::Free(level);
   }
@@ -153,7 +153,7 @@ void Meta::Init(HWND hwnd)
   }
 
   // Fire Entry action for next state
-  this->stateMachine.Update(nullptr);
+  this->stateMachine.Update(drawList);
 }
 
 void Meta::Resize(int width, int height)
@@ -183,7 +183,7 @@ void Meta::Update()
                                         : (StateBase*)&this->game;
   }
 
-  this->stateMachine.Update(&this->pCamera);
+  this->stateMachine.Update(this->drawList);
 
   this->pContext->OMSetRenderTargets(1, this->pRenderTargetView.GetAddressOf(), this->pDepthStencilView.Get());
   this->pContext->ClearDepthStencilView(this->pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -191,7 +191,8 @@ void Meta::Update()
   this->pContext->ClearRenderTargetView(this->pRenderTargetView.Get(), clearColor);
   this->pContext->OMSetDepthStencilState(this->pDepthStencilState.Get(), 1);
 
-  graphics.Update(this->pContext, this->pCamera);
+  graphics.Update(this->pContext, this->drawList);
+  this->drawList.Clear();
 
 #if 0
   {
@@ -230,6 +231,5 @@ Meta::~Meta()
 
 void Meta::NewLevel()
 {
-  graphics.DiscardLevel();
   LoadLevel();
 }
