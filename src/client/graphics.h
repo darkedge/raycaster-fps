@@ -231,9 +231,12 @@ struct Vertex
 
 struct Mesh
 {
+  D3D11_PRIMITIVE_TOPOLOGY primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
   ComPtr<ID3D11Buffer> vertexBuffer;
   ComPtr<ID3D11Buffer> indexBuffer;
+  ComPtr<ID3D11InputLayout> inputLayout;
   uint32_t indexCount = 0;
+  UINT stride;
 };
 
 struct DrawCommand
@@ -247,10 +250,16 @@ struct DrawCommand
 class Graphics
 {
 public:
-  static Mesh CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData, uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices);
+  static Mesh CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
+                         uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices);
   static void InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level level);
-  static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float z, float texture);
-  static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float y, float z, float texture);
+  static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float z,
+                            float texture);
+  static void InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float y, float z,
+                          float texture);
+  static ComPtr<ID3D11InputLayout> GetInputLayout();
+  static ComPtr<ID3D11VertexShader> GetVertexShader();
+  static ComPtr<ID3D11PixelShader> GetPixelShader();
 
   void Init(ComPtr<ID3D11Device> pDevice);
   void Resize(int width, int height);
@@ -258,14 +267,15 @@ public:
   void* GetTileTexture(int x, int y);
 
 private:
+  static ComPtr<ID3D11InputLayout> s_InputLayout;
+  static ComPtr<ID3D11VertexShader> s_VertexShader;
+  static ComPtr<ID3D11PixelShader> s_PixelShader;
+
   void InitTexture2DArray(ComPtr<ID3D11Device> pDevice);
 
   ComPtr<ID3D11Texture2D> pTextureArray;
   ComPtr<ID3D11SamplerState> pTextureSamplerState;
-  ComPtr<ID3D11VertexShader> pVertexShader;
-  ComPtr<ID3D11PixelShader> pPixelShader;
   ComPtr<ID3D11ShaderResourceView> pShaderResourceView; // Texture array SRV
-  ComPtr<ID3D11InputLayout> pInputLayout;
   ComPtr<ID3D11RasterizerState> pRasterizerState;
   ComPtr<ID3D11RasterizerState> pRasterizerStateCullNone;
   ComPtr<ID3D11BlendState> pBlendState;

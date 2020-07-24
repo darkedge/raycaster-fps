@@ -9,6 +9,25 @@
 #include "generated/rasterizer_vs.h"
 #include "generated/rasterizer_ps.h"
 
+ComPtr<ID3D11InputLayout> Graphics::s_InputLayout;
+ComPtr<ID3D11VertexShader> Graphics::s_VertexShader;
+ComPtr<ID3D11PixelShader> Graphics::s_PixelShader;
+
+ComPtr<ID3D11InputLayout> Graphics::GetInputLayout()
+{
+  return s_InputLayout;
+}
+
+ComPtr<ID3D11VertexShader> Graphics::GetVertexShader()
+{
+  return s_VertexShader;
+}
+
+ComPtr<ID3D11PixelShader> Graphics::GetPixelShader()
+{
+  return s_PixelShader;
+}
+
 static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x0, float z0,
                             float x1, float z1, uint16_t block)
 {
@@ -61,7 +80,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
 
   {
     // Fill in a buffer description.
-    D3D11_BUFFER_DESC bufferDesc;
+    MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
     bufferDesc.ByteWidth      = vertexData.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
@@ -69,9 +88,10 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
     bufferDesc.MiscFlags      = 0;
 
     // Fill in the subresource data.
-    D3D11_SUBRESOURCE_DATA InitData;
+    MJ_UNINITIALIZED D3D11_SUBRESOURCE_DATA InitData;
     InitData.pSysMem          = vertexData.Get();
     InitData.SysMemPitch      = numVertexComponents * vertexData.ElemSize();
+    mesh.stride               = InitData.SysMemPitch;
     InitData.SysMemSlicePitch = 0;
 
     // Create the vertex buffer.
@@ -79,7 +99,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
   }
   {
     mesh.indexCount = indices.Size();
-    D3D11_BUFFER_DESC bufferDesc;
+    MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
     bufferDesc.ByteWidth      = indices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
@@ -87,7 +107,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
     bufferDesc.MiscFlags      = 0;
 
     // Define the resource data.
-    D3D11_SUBRESOURCE_DATA InitData;
+    MJ_UNINITIALIZED D3D11_SUBRESOURCE_DATA InitData;
     InitData.pSysMem          = indices.Get();
     InitData.SysMemPitch      = indices.ElemSize();
     InitData.SysMemSlicePitch = 0;
@@ -355,10 +375,11 @@ void Graphics::InitTexture2DArray(ComPtr<ID3D11Device> pDevice)
 void Graphics::Init(ComPtr<ID3D11Device> pDevice)
 {
   MJ_DISCARD(pDevice->CreateVertexShader(rasterizer_vs, sizeof(rasterizer_vs), nullptr,
-                                         this->pVertexShader.ReleaseAndGetAddressOf()));
+                                         s_VertexShader.ReleaseAndGetAddressOf()));
   MJ_DISCARD(pDevice->CreatePixelShader(rasterizer_ps, sizeof(rasterizer_ps), nullptr,
-                                        this->pPixelShader.ReleaseAndGetAddressOf()));
+                                        s_PixelShader.ReleaseAndGetAddressOf()));
 
+  // "Default" input layout. We use this for game and editor states, so we have it publicly available.
   {
     D3D11_INPUT_ELEMENT_DESC desc[2] = {};
 
@@ -381,7 +402,7 @@ void Graphics::Init(ComPtr<ID3D11Device> pDevice)
     desc[1].InstanceDataStepRate = 0;
 
     MJ_DISCARD(pDevice->CreateInputLayout(desc, 2, rasterizer_vs, sizeof(rasterizer_vs),
-                                          this->pInputLayout.ReleaseAndGetAddressOf()));
+                                          s_InputLayout.ReleaseAndGetAddressOf()));
   }
 
   {
@@ -444,14 +465,6 @@ void Graphics::Resize(int width, int height)
 
 void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<DrawCommand>& drawList)
 {
-  // Input Assembler
-  pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  pContext->IASetInputLayout(this->pInputLayout.Get());
-
-  // Vertex Shader
-  pContext->VSSetShader(this->pVertexShader.Get(), nullptr, 0);
-  pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
-
   // Rasterizer
   D3D11_VIEWPORT viewport = {};
   viewport.TopLeftX       = 0;
@@ -463,11 +476,6 @@ void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<
   pContext->RSSetViewports(1, &viewport);
   pContext->RSSetState(this->pRasterizerState.Get());
 
-  // Pixel Shader
-  pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
-  pContext->PSSetShader(this->pPixelShader.Get(), nullptr, 0);
-  pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
-
   // Output Merger
   pContext->OMSetBlendState(this->pBlendState.Get(), nullptr, 0xFFFFFFFF);
 
@@ -476,10 +484,21 @@ void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<
     if (command.pMesh->indexBuffer && command.pMesh->vertexBuffer)
     {
       // Input Assembler
-      pContext->IASetIndexBuffer(command.pMesh->indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // Index type
-      UINT strides[] = { sizeof(Vertex) };
+      pContext->IASetIndexBuffer(command.pMesh->indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0); // uint16_t indices only
+      UINT strides[] = { command.pMesh->stride };
       UINT offsets[] = { 0 };
       pContext->IASetVertexBuffers(0, 1, command.pMesh->vertexBuffer.GetAddressOf(), strides, offsets);
+      pContext->IASetPrimitiveTopology(command.pMesh->primitiveTopology);
+      pContext->IASetInputLayout(command.pMesh->inputLayout.Get());
+
+      // Vertex Shader
+      pContext->VSSetShader(command.vertexShader.Get(), nullptr, 0);
+      pContext->VSSetConstantBuffers(0, 1, this->pResource.GetAddressOf());
+
+      // Pixel Shader
+      pContext->PSSetShaderResources(0, 1, this->pShaderResourceView.GetAddressOf());
+      pContext->PSSetShader(command.pixelShader.Get(), nullptr, 0);
+      pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
 
       pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &command.pCamera->viewProjection, 0, 0);
       pContext->DrawIndexed(command.pMesh->indexCount, 0, 0);

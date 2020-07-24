@@ -157,7 +157,24 @@ void EditorState::CreateBlockCursor(ComPtr<ID3D11Device> pDevice)
   mj::ArrayListView<uint16_t> indexList(indices);
 
   // Create static index buffer.
-  this->blockCursor = Graphics::CreateMesh(pDevice, vertexList, 3, indexList);
+  this->blockCursor                   = Graphics::CreateMesh(pDevice, vertexList, 3, indexList);
+  this->blockCursor.primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+
+  {
+    D3D11_INPUT_ELEMENT_DESC desc = {};
+
+    // float3 a_position : POSITION
+    desc.SemanticName         = "POSITION";
+    desc.SemanticIndex        = 0;
+    desc.Format               = DXGI_FORMAT_R32G32B32_FLOAT;
+    desc.InputSlot            = 0;
+    desc.AlignedByteOffset    = 0;
+    desc.InputSlotClass       = D3D11_INPUT_PER_VERTEX_DATA;
+    desc.InstanceDataStepRate = 0;
+
+    MJ_DISCARD(pDevice->CreateInputLayout(&desc, 1, block_cursor_vs, sizeof(block_cursor_vs),
+                                          this->blockCursor.inputLayout.ReleaseAndGetAddressOf()));
+  }
 }
 
 void EditorState::DoMenu()
@@ -349,41 +366,28 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 #endif
 
   {
+    // Level
     void* pMem = drawList.Place();
     if (pMem)
     {
-      auto* pCmd    = new (pMem) DrawCommand;
-      pCmd->pCamera = &this->camera;
-      pCmd->pMesh   = &this->levelMesh;
+      auto* pCmd         = new (pMem) DrawCommand;
+      pCmd->pCamera      = &this->camera;
+      pCmd->pMesh        = &this->levelMesh;
+      pCmd->vertexShader = Graphics::GetVertexShader();
+      pCmd->pixelShader  = Graphics::GetPixelShader();
     }
   }
 
-  // Block cursor
   {
-    float x, y, z;
-    mjm::mat4 world = mjm::identity<mjm::mat4>();
-    world           = mjm::translate(world, mjm::vec3(x, y, z));
-
-#if 0
-    bgfx::setVertexBuffer(0, this->vertexBuffer);
-    bgfx::setIndexBuffer(this->indexBuffer);
-    bgfx::setTransform(&world);
-    bgfx::setState(0 | BGFX_STATE_CULL_CCW | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
-                       BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_PT_LINES,
-                   0xffffffff);
-    bgfx::submit(s_vidGeometry, this->program);
-#endif
-
+    // Block cursor
+    void* pMem = drawList.Place();
+    if (pMem)
     {
-      void* pMem = drawList.Place();
-      if (pMem)
-      {
-        auto* pCmd         = new (pMem) DrawCommand;
-        pCmd->vertexShader = this->pVertexShader;
-        pCmd->pixelShader  = this->pPixelShader;
-        pCmd->pCamera      = &this->camera;
-        pCmd->pMesh        = &this->levelMesh;
-      }
+      auto* pCmd         = new (pMem) DrawCommand;
+      pCmd->vertexShader = this->pVertexShader;
+      pCmd->pixelShader  = this->pPixelShader;
+      pCmd->pCamera      = &this->camera;
+      pCmd->pMesh        = &this->blockCursor;
     }
   }
 }
@@ -427,13 +431,16 @@ void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     D3D11_SUBRESOURCE_DATA InitData;
     InitData.pSysMem          = vertices.Get();
     InitData.SysMemPitch      = vertices.ElemSize();
+    this->levelMesh.stride    = InitData.SysMemPitch;
     InitData.SysMemSlicePitch = 0;
 
     // Create the vertex buffer.
     MJ_DISCARD(pDevice->CreateBuffer(&bufferDesc, &InitData, this->levelMesh.vertexBuffer.ReleaseAndGetAddressOf()));
   }
   {
-    this->levelMesh.indexCount = indices.Size();
+    this->levelMesh.indexCount  = indices.Size();
+    this->levelMesh.inputLayout = Graphics::GetInputLayout();
+
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
     bufferDesc.ByteWidth      = indices.ByteWidth();

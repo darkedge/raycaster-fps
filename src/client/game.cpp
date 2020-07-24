@@ -27,7 +27,8 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     }
   }
 
-  this->levelMesh = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices);
+  this->levelMesh             = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices);
+  this->levelMesh.inputLayout = Graphics::GetInputLayout();
 }
 
 void GameState::Entry()
@@ -117,9 +118,11 @@ void GameState::Update(mj::ArrayList<DrawCommand>& drawList)
     void* pMem = drawList.Place();
     if (pMem)
     {
-      auto* pCmd    = new (pMem) DrawCommand;
-      pCmd->pCamera = &this->camera;
-      pCmd->pMesh   = &this->levelMesh;
+      auto* pCmd         = new (pMem) DrawCommand;
+      pCmd->pCamera      = &this->camera;
+      pCmd->pMesh        = &this->levelMesh;
+      pCmd->vertexShader = Graphics::GetVertexShader();
+      pCmd->pixelShader  = Graphics::GetPixelShader();
     }
   }
 }
