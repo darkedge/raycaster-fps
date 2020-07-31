@@ -36,7 +36,7 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint1
   // 1  3
   //  \ |
   // 0->2
-  auto* pVertices = vertices.Place(4);
+  auto* pVertices = vertices.Reserve(4);
   if (pVertices)
   {
     MJ_UNINITIALIZED Vertex vertex;
@@ -60,7 +60,7 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint1
     vertex.texCoord.y = 1.0f;
     pVertices[3]      = vertex;
 
-    auto* pIndices = indices.Place(6);
+    auto* pIndices = indices.Reserve(6);
     if (pIndices)
     {
       pIndices[0] = oldVertexCount + 0;
@@ -177,7 +177,7 @@ void Graphics::InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint
                              float texture)
 {
   uint16_t oldVertexCount = (uint16_t)vertices.Size();
-  auto* pVertices         = vertices.Place(4);
+  auto* pVertices         = vertices.Reserve(4);
   if (pVertices)
   {
     MJ_UNINITIALIZED Vertex vertex;
@@ -203,7 +203,7 @@ void Graphics::InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint
     vertex.texCoord.y = 1.0f;
     pVertices[3]      = vertex;
 
-    auto* pIndices = indices.Place(6);
+    auto* pIndices = indices.Reserve(6);
     if (pIndices)
     {
       pIndices[0] = oldVertexCount + 0;
@@ -220,7 +220,7 @@ void Graphics::InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16
                            float texture)
 {
   uint16_t oldVertexCount = (uint16_t)vertices.Size();
-  auto* pVertices         = vertices.Place(4);
+  auto* pVertices         = vertices.Reserve(4);
   if (pVertices)
   {
     MJ_UNINITIALIZED Vertex vertex;
@@ -246,7 +246,7 @@ void Graphics::InsertFloor(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16
     vertex.texCoord.y = 1.0f;
     pVertices[3]      = vertex;
 
-    auto* pIndices = indices.Place(6);
+    auto* pIndices = indices.Reserve(6);
     if (pIndices)
     {
       pIndices[0] = oldVertexCount + 0;

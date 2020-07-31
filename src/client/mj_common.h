@@ -114,6 +114,10 @@ namespace mj
     }
     ~ArrayList()
     {
+      for (auto& t : *this)
+      {
+        t.~T();
+      }
       free(pData);
     }
 
@@ -129,10 +133,11 @@ namespace mj
     }
 
     /// <summary>
-    /// Returns a raw memory address for the user to emplace new objects.
+    /// Reserves memory for multiple objects. No construction is done.
     /// </summary>
+    /// <param name="num">Amount of objects</param>
     /// <returns>Null if there is no more space</returns>
-    T* Place(uint32_t num = 1)
+    T* Reserve(uint32_t num)
     {
       if (num == 0)
       {
@@ -149,7 +154,67 @@ namespace mj
       {
         if (Double())
         {
-          return Place(num);
+          return EmplaceMultiple(num);
+        }
+        else
+        {
+          return nullptr;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Emplaces (constructs in-place) a new object.
+    /// Uses placement-new.
+    /// </summary>
+    /// <returns>Null if there is no more space</returns>
+    template <typename... Ts>
+    T* EmplaceSingle(Ts&&... args)
+    {
+      if (numElements < capacity)
+      {
+        T* ptr = pData + numElements;
+        new (ptr) T(std::forward<Ts>(args)...);
+        numElements++;
+        return ptr;
+      }
+      else
+      {
+        if (Double())
+        {
+          return EmplaceSingle();
+        }
+        else
+        {
+          return nullptr;
+        }
+      }
+    }
+
+    /// <summary>
+    /// Emplaces (constructs in-place) multiple objects.
+    /// Uses placement-new.
+    /// </summary>
+    /// <returns>Null if there is no more space</returns>
+    template <typename... Ts>
+    T* EmplaceMultiple(uint32_t num)
+    {
+      if (num == 0)
+      {
+        return nullptr;
+      }
+
+      if (numElements + num <= capacity)
+      {
+        T* ptr = (T*)operator new(num, pData + numElements);
+        numElements += num;
+        return ptr;
+      }
+      else
+      {
+        if (Double())
+        {
+          return EmplaceMultiple(num);
         }
         else
         {

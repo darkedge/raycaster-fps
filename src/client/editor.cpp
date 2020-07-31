@@ -530,10 +530,9 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 
   {
     // Level
-    void* pMem = drawList.Place();
-    if (pMem)
+    DrawCommand* pCmd = drawList.EmplaceSingle();
+    if (pCmd)
     {
-      auto* pCmd         = new (pMem) DrawCommand;
       pCmd->pCamera      = &this->camera;
       pCmd->pMesh        = &this->levelMesh;
       pCmd->vertexShader = Graphics::GetVertexShader();
@@ -543,10 +542,9 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 
   {
     // Block cursor
-    void* pMem = drawList.Place();
-    if (pMem)
+    DrawCommand* pCmd = drawList.EmplaceSingle();
+    if (pCmd)
     {
-      auto* pCmd         = new (pMem) DrawCommand;
       pCmd->vertexShader = this->pVertexShader;
       pCmd->pixelShader  = this->pPixelShader;
       pCmd->pCamera      = &this->camera;

@@ -115,10 +115,9 @@ void GameState::Update(mj::ArrayList<DrawCommand>& drawList)
   cam.viewProjection = projection * view;
 
   {
-    void* pMem = drawList.Place();
-    if (pMem)
+    auto* pCmd = drawList.EmplaceSingle();
+    if (pCmd)
     {
-      auto* pCmd         = new (pMem) DrawCommand;
       pCmd->pCamera      = &this->camera;
       pCmd->pMesh        = &this->levelMesh;
       pCmd->vertexShader = Graphics::GetVertexShader();
