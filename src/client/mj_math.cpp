@@ -49,6 +49,11 @@ mjm::quat& mjm::quat::operator*=(const quat& r)
   return *this;
 }
 
+mjm::mat4& mjm::mat4::operator*=(const mat4& m)
+{
+  return (*this = *this * m);
+}
+
 bool mjm::operator!=(const int3& a, const int3& b)
 {
   return !(a == b);

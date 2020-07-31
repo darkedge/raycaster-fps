@@ -87,7 +87,7 @@ void Level::Free(Level level)
   }
 }
 
-bool Level::Valid(Level level)
+bool Level::IsValid() const
 {
-  return ((level.pBlocks) && (level.width > 0) && (level.height > 0));
+  return (pBlocks && (width > 0) && (height > 0));
 }

@@ -35,6 +35,7 @@ private:
   ComPtr<ID3D11DepthStencilView> pDepthStencilView;
   ComPtr<ID3D11Texture2D> pDepthStencilBuffer;
 
+  Level level;
   GameState game;
   EditorState editor;
   Graphics graphics;

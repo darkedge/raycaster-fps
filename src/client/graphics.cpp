@@ -76,7 +76,7 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint1
 Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
                           uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices)
 {
-  Mesh mesh;
+  MJ_UNINITIALIZED Mesh mesh;
 
   {
     // Fill in a buffer description.
@@ -119,7 +119,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
   return mesh;
 }
 
-void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level* pLevel)
+void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, const Level* pLevel)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -500,7 +500,12 @@ void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<
       pContext->PSSetShader(command.pixelShader.Get(), nullptr, 0);
       pContext->PSSetSamplers(0, 1, this->pTextureSamplerState.GetAddressOf());
 
-      pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &command.pCamera->viewProjection, 0, 0);
+      mjm::mat4 mvp = command.pCamera->viewProjection;
+      if (command.pMatrix)
+      {
+        mvp *= *command.pMatrix;
+      }
+      pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &mvp, 0, 0);
       pContext->DrawIndexed(command.pMesh->indexCount, 0, 0);
     }
   }

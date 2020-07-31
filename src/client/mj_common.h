@@ -5,7 +5,7 @@
 
 // Annotation macros
 
-// Variable is uninitialized
+// Variable may be (partially) uninitialized
 #define MJ_UNINITIALIZED
 // Argument is passed by reference
 #define MJ_REF

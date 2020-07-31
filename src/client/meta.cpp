@@ -93,12 +93,12 @@ void Meta::CreateRenderTargetView()
 
 void Meta::LoadLevel()
 {
-  Level level = Level::Load("e1m1.mjm");
-  if (Level::Valid(level))
+  Level::Free(this->level);
+  this->level = Level::Load("e1m1.mjm");
+  if (level.IsValid())
   {
     game.SetLevel(level, pDevice);
     editor.SetLevel(&level, pDevice);
-    Level::Free(level);
   }
 }
 

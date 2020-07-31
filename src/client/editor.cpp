@@ -42,6 +42,11 @@ void EditorState::Init(ComPtr<ID3D11Device> pDevice)
                              MouseButton::None };
   ResetCamera(this->camera);
   CreateBlockCursor(pDevice);
+
+  this->blockCursorMatrix = mjm::mat4(1.0f, 0.0f, 0.0f, 0.0f, //
+                                      0.0f, 1.0f, 0.0f, 0.0f, //
+                                      0.0f, 0.0f, 1.0f, 0.0f, //
+                                      0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void EditorState::Entry()
@@ -350,7 +355,7 @@ enum EFace
   EFace_North
 };
 
-struct TerrainHit
+struct TraversalResult
 {
   mjm::int3 position;
   int32_t type;
@@ -364,9 +369,10 @@ static int32_t GetBlock(const Level* pLevel, const mjm::int3& position)
       position.z >= 0 &&            //
       position.z < pLevel->height)
   {
+    auto Block = [&] { return (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z]; };
     if (position.y == -1)
     {
-      int32_t block = (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z];
+      int32_t block = Block();
       if (block >= 0x006A)
       {
         return block;
@@ -374,7 +380,7 @@ static int32_t GetBlock(const Level* pLevel, const mjm::int3& position)
     }
     else if (position.y == 0)
     {
-      int32_t block = (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z];
+      int32_t block = Block();
       if (block < 0x006A)
       {
         return block;
@@ -385,7 +391,8 @@ static int32_t GetBlock(const Level* pLevel, const mjm::int3& position)
   return -1;
 }
 
-static bool Trace(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, float distance, TerrainHit* pResult)
+static bool Traverse(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, float distance,
+                     TraversalResult* pResult)
 {
   // Step values
   int32_t stepX = direction.x < 0 ? -1 : 1;
@@ -414,9 +421,9 @@ static bool Trace(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, fl
   endPos.z = (int32_t)floorf(origin.z + distance * direction.z);
 
   // Advance ray to level layer
-  int32_t diff = (int32_t)floorf(1 - pResult->position.y);
-  tMaxY += diff * tDeltaY;
-  tMax = tMaxY;
+  // int32_t diff = (int32_t)floorf(1 - pResult->position.y);
+  // tMaxY += diff * tDeltaY;
+  // tMax = tMaxY;
 
   while (pResult->position != endPos)
   {
@@ -453,7 +460,7 @@ static bool Trace(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, fl
         pResult->position.y += stepY;
         pResult->face = stepY > 0 ? EFace_Bottom : EFace_Top;
 
-        if (pResult->position.y < 0 || pResult->position.y >= 2) // TODO
+        if ((direction.y < 0 && pResult->position.y < 0) || (direction.y > 0 && pResult->position.y >= 2)) // TODO
         {
           return false;
         }
@@ -474,31 +481,38 @@ static bool Trace(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, fl
   return false;
 }
 
-static void bla(const Level* pLevel, const mjm::mat4& vp)
+void EditorState::UpdateBlockCursor(const mjm::mat4& vp)
 {
-  MJ_UNINITIALIZED mjm::vec4 origin;
-  mj::input::GetMousePosition(&origin.x, &origin.y);
-  MJ_UNINITIALIZED float windowX;
-  MJ_UNINITIALIZED float windowY;
-  mj::GetWindowSize(&windowX, &windowY);
-  origin.x = origin.x / windowX * 2.0f - 1.0f;
-  origin.y = origin.y / windowY * 2.0f - 1.0f;
-  origin.z = 0.0f;
-  origin.w = 1.0f;
+  MJ_UNINITIALIZED float mouseX;
+  MJ_UNINITIALIZED float mouseY;
+  mj::input::GetMousePosition(&mouseX, &mouseY);
 
-  mjm::vec4 end(origin.x, origin.y, 1.0f, 1.0f);
+  MJ_UNINITIALIZED float windowWidth;
+  MJ_UNINITIALIZED float windowHeight;
+  mj::GetWindowSize(&windowWidth, &windowHeight);
 
-  auto inv      = mjm::inverse(vp);
-  origin        = inv * origin;
-  mjm::vec4 ray = mjm::normalize(inv * end - origin);
+  MJ_UNINITIALIZED mjm::vec4 ndcNear;
+  ndcNear.x = mouseX / windowWidth * 2.0f - 1.0f;
+  ndcNear.y = 1.0f - mouseY / windowHeight * 2.0f;
+  ndcNear.z = 0.0f;
+  ndcNear.w = 1.0f;
+
+  mjm::vec4 ndcFar(ndcNear.x, ndcNear.y, 1.0f, 1.0f);
+
+  auto inv       = mjm::inverse(vp);
+  auto worldNear = inv * ndcNear;
+  auto worldFar  = inv * ndcFar;
+  worldNear /= worldNear.w;
+  worldFar /= worldFar.w;
+  mjm::vec4 ray = mjm::normalize(worldFar - worldNear);
 
   // Ray-voxel intersection (2 y-layers: walls and floors)
-  MJ_UNINITIALIZED TerrainHit outHit;
-  Trace(pLevel, origin, ray, -1.0f, &outHit);
-
-  ImGui::Begin("raycast");
-  ImGui::InputInt3("position", (int*)&outHit.position);
-  ImGui::End();
+  MJ_UNINITIALIZED TraversalResult result;
+  if (Traverse(this->pLevel, worldNear, ray, -1.0f, &result))
+  {
+    this->blockCursorMatrix[3][0] = (float)result.position.x;
+    this->blockCursorMatrix[3][2] = (float)result.position.z;
+  }
 }
 
 void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
@@ -507,26 +521,16 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 
   this->DoMenu();
   this->DoInput();
-  bla(this->pLevel, cam.viewProjection);
+  this->UpdateBlockCursor(cam.viewProjection);
 
   mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(cam.rotation));
   mjm::mat4 translate = mjm::identity<mjm::mat4>();
   translate           = mjm::translate(translate, -mjm::vec3(cam.position));
 
-  auto view = rotate * translate;
-  cam.yFov  = 90.0f;
-#if 0
-  float aspect      = cam.viewport[2] / cam.viewport[3];
-  cam.projection = mjm::ortho(-10.0f * this->mouseScrollFactor * aspect, //
-                                   10.0f * this->mouseScrollFactor * aspect,  //
-                                   -10.0f * this->mouseScrollFactor,          //
-                                   10.0f * this->mouseScrollFactor,           //
-                                   0.1f,                                  //
-                                   1000.0f);
-#else
+  auto view          = rotate * translate;
+  cam.yFov           = 90.0f;
   auto projection    = mjm::perspectiveLH_ZO(mjm::radians(cam.yFov), cam.viewport[2] / cam.viewport[3], 0.01f, 100.0f);
   cam.viewProjection = projection * view;
-#endif
 
   {
     // Level
@@ -548,12 +552,13 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
       pCmd->vertexShader = this->pVertexShader;
       pCmd->pixelShader  = this->pPixelShader;
       pCmd->pCamera      = &this->camera;
+      pCmd->pMatrix      = &this->blockCursorMatrix;
       pCmd->pMesh        = &this->blockCursor;
     }
   }
 }
 
-void EditorState::SetLevel(Level* pLvl, ComPtr<ID3D11Device> pDevice)
+void EditorState::SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice)
 {
   this->pLevel = pLvl;
 

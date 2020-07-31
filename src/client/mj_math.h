@@ -5,17 +5,22 @@
 //#define MJ_MATH_GLM
 
 #ifdef MJ_MATH_GLM
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+//#define GLM_FORCE_EXPLICIT_CTOR
+#define GLM_FORCE_LEFT_HANDED
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtc/quaternion.hpp>
-#else
-#include <initializer_list>
-#endif
 
-#ifdef MJ_MATH_GLM
 namespace mjm = glm;
+
 #else
+
+#include <initializer_list>
+
 namespace mjm
 {
   struct int3
@@ -277,6 +282,8 @@ namespace mjm
                    vec4(0, 0, 0, s) }
     {
     }
+
+    mat4& operator*=(const mjm::mat4& m);
 
     vec4& operator[](size_t i)
     {
