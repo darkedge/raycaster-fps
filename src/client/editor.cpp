@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "mj_input.h"
 #include "camera.h"
 #include "main.h"
@@ -339,12 +339,175 @@ void EditorState::DoInput()
   }
 }
 
+// -X, -Y, -Z, +X, +Y, +Z
+enum EFace
+{
+  EFace_West,
+  EFace_Bottom,
+  EFace_South,
+  EFace_East,
+  EFace_Top,
+  EFace_North
+};
+
+struct TerrainHit
+{
+  mjm::int3 position;
+  int32_t type;
+  EFace face;
+};
+
+static int32_t GetBlock(const Level* pLevel, const mjm::int3& position)
+{
+  if (position.x >= 0 &&            //
+      position.x < pLevel->width && //
+      position.z >= 0 &&            //
+      position.z < pLevel->height)
+  {
+    if (position.y == -1)
+    {
+      int32_t block = (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z];
+      if (block >= 0x006A)
+      {
+        return block;
+      }
+    }
+    else if (position.y == 0)
+    {
+      int32_t block = (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z];
+      if (block < 0x006A)
+      {
+        return block;
+      }
+    }
+  }
+
+  return -1;
+}
+
+static bool Trace(const Level* pLevel, mjm::vec3 origin, mjm::vec3 direction, float distance, TerrainHit* pResult)
+{
+  // Step values
+  int32_t stepX = direction.x < 0 ? -1 : 1;
+  int32_t stepY = direction.y < 0 ? -1 : 1;
+  int32_t stepZ = direction.z < 0 ? -1 : 1;
+
+  // Inverse direction
+  float tDeltaX = fabsf(1.0f / direction.x);
+  float tDeltaY = fabsf(1.0f / direction.y);
+  float tDeltaZ = fabsf(1.0f / direction.z);
+
+  // t values
+  float tMax  = 0.0f;
+  float tMaxX = (direction.x > 0 ? ceilf(origin.x) - origin.x : origin.x - floorf(origin.x)) * tDeltaX;
+  float tMaxY = (direction.y > 0 ? ceilf(origin.y) - origin.y : origin.y - floorf(origin.y)) * tDeltaY;
+  float tMaxZ = (direction.z > 0 ? ceilf(origin.z) - origin.z : origin.z - floorf(origin.z)) * tDeltaZ;
+
+  pResult->position.x = (int32_t)floorf(origin.x);
+  pResult->position.y = (int32_t)floorf(origin.y);
+  pResult->position.z = (int32_t)floorf(origin.z);
+  pResult->type       = -1;
+
+  MJ_UNINITIALIZED mjm::int3 endPos;
+  endPos.x = (int32_t)floorf(origin.x + distance * direction.x);
+  endPos.y = (int32_t)floorf(origin.y + distance * direction.y);
+  endPos.z = (int32_t)floorf(origin.z + distance * direction.z);
+
+  // Advance ray to level layer
+  int32_t diff = (int32_t)floorf(1 - pResult->position.y);
+  tMaxY += diff * tDeltaY;
+  tMax = tMaxY;
+
+  while (pResult->position != endPos)
+  {
+    int32_t block = GetBlock(pLevel, pResult->position);
+
+    if (block != -1)
+    {
+      pResult->type = block;
+
+      return true;
+    }
+
+    if (tMaxX < tMaxY)
+    {
+      if (tMaxX < tMaxZ)
+      {
+        pResult->position.x += stepX;
+        pResult->face = stepX > 0 ? EFace_West : EFace_East;
+        tMaxX += tDeltaX;
+        tMax = tMaxX;
+      }
+      else
+      {
+        pResult->position.z += stepZ;
+        pResult->face = stepZ > 0 ? EFace_South : EFace_North;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
+    }
+    else
+    {
+      if (tMaxY < tMaxZ)
+      {
+        pResult->position.y += stepY;
+        pResult->face = stepY > 0 ? EFace_Bottom : EFace_Top;
+
+        if (pResult->position.y < 0 || pResult->position.y >= 2) // TODO
+        {
+          return false;
+        }
+
+        tMaxY += tDeltaY;
+        tMax = tMaxY;
+      }
+      else
+      {
+        pResult->position.z += stepZ;
+        pResult->face = stepZ > 0 ? EFace_South : EFace_North;
+        tMaxZ += tDeltaZ;
+        tMax = tMaxZ;
+      }
+    }
+  }
+
+  return false;
+}
+
+static void bla(const Level* pLevel, const mjm::mat4& vp)
+{
+  MJ_UNINITIALIZED mjm::vec4 origin;
+  mj::input::GetMousePosition(&origin.x, &origin.y);
+  MJ_UNINITIALIZED float windowX;
+  MJ_UNINITIALIZED float windowY;
+  mj::GetWindowSize(&windowX, &windowY);
+  origin.x = origin.x / windowX * 2.0f - 1.0f;
+  origin.y = origin.y / windowY * 2.0f - 1.0f;
+  origin.z = 0.0f;
+  origin.w = 1.0f;
+
+  mjm::vec4 end(origin.x, origin.y, 1.0f, 1.0f);
+
+  auto inv      = mjm::inverse(vp);
+  origin        = inv * origin;
+  mjm::vec4 ray = mjm::normalize(inv * end - origin);
+
+  // Ray-voxel intersection (2 y-layers: walls and floors)
+  MJ_UNINITIALIZED TerrainHit outHit;
+  Trace(pLevel, origin, ray, -1.0f, &outHit);
+
+  ImGui::Begin("raycast");
+  ImGui::InputInt3("position", (int*)&outHit.position);
+  ImGui::End();
+}
+
 void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
 {
+  auto& cam = this->camera;
+
   this->DoMenu();
   this->DoInput();
-
-  auto& cam = this->camera;
+  bla(this->pLevel, cam.viewProjection);
 
   mjm::mat4 rotate    = mjm::transpose(mjm::mat4_cast(cam.rotation));
   mjm::mat4 translate = mjm::identity<mjm::mat4>();
@@ -392,12 +555,14 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
   }
 }
 
-void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
+void EditorState::SetLevel(Level* pLvl, ComPtr<ID3D11Device> pDevice)
 {
+  this->pLevel = pLvl;
+
   mj::ArrayList<Vertex> vertices;
   mj::ArrayList<uint16_t> indices;
 
-  Graphics::InsertWalls(vertices, indices, level);
+  Graphics::InsertWalls(vertices, indices, pLevel);
 
   // Floor/ceiling pass
   for (size_t z = 0; z < Meta::LEVEL_DIM; z++)
@@ -405,7 +570,7 @@ void EditorState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     // Check for blocks in this slice
     for (size_t x = 0; x < Meta::LEVEL_DIM; x++)
     {
-      if (level.pBlocks[z * level.width + x] >= 0x006A)
+      if (this->pLevel->pBlocks[z * this->pLevel->width + x] >= 0x006A)
       {
         Graphics::InsertFloor(vertices, indices, (float)x, 0.0f, (float)z, 136.0f);
         Graphics::InsertCeiling(vertices, indices, (float)x, (float)z, 138.0f);

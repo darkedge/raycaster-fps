@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 // Win32 platform implementation
 #include "mj_platform.h"
 #include "mj_common.h"

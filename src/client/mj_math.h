@@ -1,4 +1,5 @@
 // Untemplated glm code to optimize compile time
+#include <stdint.h>
 
 #pragma once
 //#define MJ_MATH_GLM
@@ -17,6 +18,16 @@ namespace mjm = glm;
 #else
 namespace mjm
 {
+  struct int3
+  {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+  };
+
+  bool operator==(const int3& a, const int3& b);
+  bool operator!=(const int3& a, const int3& b);
+
   /// <summary>
   /// 3-component vector
   /// </summary>
@@ -279,69 +290,44 @@ namespace mjm
   };
 
   vec3 operator-(const vec3& v);
-
   vec3 operator+(const vec3& a, const vec3& b);
-
   vec3 operator-(const vec3& a, const vec3& b);
-
   vec3 operator+=(vec3& a, const vec3& b);
-
-  vec4 operator+(const vec4& a, const vec4& b);
-
-  vec4 operator-(const vec4& a, const vec4& b);
-
   vec3 operator*(const vec3& a, const vec3& b);
-
   vec3 operator*(const vec3& v, float s);
-
   vec3 operator*(float s, const vec3& v);
 
+  vec4 operator+(const vec4& a, const vec4& b);
+  vec4 operator-(const vec4& a, const vec4& b);
   vec4 operator*(const vec4& v, float s);
-
   vec4 operator/(const vec4& v, float s);
-
   vec4 operator*(float s, const vec4& v);
-
   vec4 operator*(const vec4& a, const vec4& b);
 
   mat4 operator*(const mat4& m1, const mat4& m2);
-
   mat4 operator*(const mat4& m, float s);
 
   float dot(const vec3& a, const vec3& b);
-
+  float dot(const vec4& a, const vec4& b);
   vec3 cross(const vec3& x, const vec3& y);
-
   float inversesqrt(float x);
-
   vec3 normalize(const vec3& v);
-
+  vec4 normalize(const vec4& v);
   float dot(const quat& a, const quat& b);
-
   float length(const quat& q);
-
   quat normalize(const quat& q);
-
   vec3 operator*(const quat& q, const vec3& v);
-
   quat operator*(const quat& q, const quat& p);
-
   vec4 operator*(const mat4& m, const vec4& v);
-
   quat quat_cast(const mat3& m);
-
   quat quatLookAtLH(const vec3& direction, const vec3& up);
-
   quat angleAxis(float angle, const vec3& v);
-
   mat4 eulerAngleY(float angleY);
 
   template <typename T>
   T identity();
-
   template <>
   mat3 identity<mat3>();
-
   template <>
   mat4 identity<mat4>();
 
@@ -350,36 +336,27 @@ namespace mjm
 
   template <>
   float* value_ptr<vec3>(vec3& t);
-
   template <>
   float* value_ptr<vec4>(vec4& t);
-
   template <>
   float* value_ptr<mat3>(mat3& t);
-
   template <>
   float* value_ptr<mat4>(mat4& t);
 
   mat4 inverse(const mat4& m);
-
   vec3 unProjectZO(const vec3& win, const mat4& model, const mat4& proj, const vec4& viewport);
-
   mat4 translate(const mat4& m, const vec3& v);
-
   mat4 transpose(const mat4& m);
 
   mat3 mat3_cast(const quat& q);
-
   mat4 mat4_cast(const quat& q);
 
   mat4 perspectiveLH_ZO(float fovy, float aspect, float zNear, float zFar);
 
   float radians(float degrees);
-
   float degrees(float radians);
 
   vec3 cos(const vec3& v);
-
   vec3 sin(const vec3& v);
 
 } // namespace mjm

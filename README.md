@@ -14,3 +14,7 @@ Folders:
     ```git submodule update --init --recursive```
 
 2. Manually copy SDL.dll from 3rdparty/SDL2-2.0.12/lib/x64 to the output directory
+
+# Graphics conventions
+* Left-handed Y-up coordinate system
+* NDC range: [0, +1]

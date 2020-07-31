@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "graphics.h"
 #include "mj_common.h"
 #include "level.h"
@@ -119,7 +119,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
   return mesh;
 }
 
-void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level level)
+void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, Level* pLevel)
 {
   uint8_t xz[] = { 0, 0 }; // xz yzx zxy
 
@@ -128,7 +128,7 @@ void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16
   // -X, -Z, +X, +Z
   for (int32_t i = 0; i < 4; i++)
   {
-    int32_t levelDim[]    = { level.width, level.height };
+    int32_t levelDim[]    = { pLevel->width, pLevel->height };
     int32_t primaryAxis   = i & 1;           //  x  z  x  z
     int32_t secondaryAxis = primaryAxis ^ 1; //  z  x  z  x
 
@@ -143,16 +143,16 @@ void Graphics::InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16
       // Check for blocks in this slice
       for (xz[secondaryAxis] = 0; xz[secondaryAxis] < levelDim[secondaryAxis]; xz[secondaryAxis]++)
       {
-        uint16_t block = level.pBlocks[xz[1] * level.width + xz[0]];
+        uint16_t block = pLevel->pBlocks[xz[1] * pLevel->width + xz[0]];
 
         if (block < 0x006A) // This block is solid
         {
           // Check the opposite block that is connected to this face
           xz[primaryAxis] += neighbor;
 
-          if ((xz[1] < level.height) && (xz[0] < level.width)) // Bounds check
+          if ((xz[1] < pLevel->height) && (xz[0] < pLevel->width)) // Bounds check
           {
-            if (level.pBlocks[xz[1] * level.width + xz[0]] >= 0x006A) // Is it empty?
+            if (pLevel->pBlocks[xz[1] * pLevel->width + xz[0]] >= 0x006A) // Is it empty?
             {
               xz[primaryAxis] -= neighbor;
               mjm::vec3 v((float)xz[0], 0.0f, (float)xz[1]);

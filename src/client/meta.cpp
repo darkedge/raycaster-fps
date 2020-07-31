@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "meta.h"
 #include "mj_common.h"
 #include "graphics.h"
@@ -97,7 +97,7 @@ void Meta::LoadLevel()
   if (Level::Valid(level))
   {
     game.SetLevel(level, pDevice);
-    editor.SetLevel(level, pDevice);
+    editor.SetLevel(&level, pDevice);
     Level::Free(level);
   }
 }

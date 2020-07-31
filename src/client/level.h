@@ -4,6 +4,9 @@ struct Level
 {
   uint8_t width;
   uint8_t height;
+  /// <summary>
+  /// Indexing: x * width + z (height)
+  /// </summary>
   uint16_t* pBlocks;
 
 public:

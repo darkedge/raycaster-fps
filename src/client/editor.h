@@ -17,7 +17,7 @@ public:
   void Entry() override;
   void Update(mj::ArrayList<DrawCommand>& drawList) override;
 
-  void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
+  void SetLevel(Level* pLvl, ComPtr<ID3D11Device> pDevice);
 
 private:
   void CreateBlockCursor(ComPtr<ID3D11Device> pDevice);
@@ -35,6 +35,7 @@ private:
   Mesh blockCursor;
   ComPtr<ID3D11VertexShader> pVertexShader;
   ComPtr<ID3D11PixelShader> pPixelShader;
+  Level* pLevel = nullptr;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

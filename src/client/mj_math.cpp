@@ -49,6 +49,18 @@ mjm::quat& mjm::quat::operator*=(const quat& r)
   return *this;
 }
 
+bool mjm::operator!=(const int3& a, const int3& b)
+{
+  return !(a == b);
+}
+
+bool mjm::operator==(const int3& a, const int3& b)
+{
+  return (a.x == b.x) && //
+         (a.y == b.y) && //
+         (a.z == b.z);
+}
+
 mjm::vec3 mjm::operator-(const vec3& v)
 {
   return vec3(-v.x, -v.y, -v.z);
@@ -151,6 +163,12 @@ float mjm::dot(const vec3& a, const vec3& b)
   return tmp.x + tmp.y + tmp.z;
 }
 
+float mjm::dot(const vec4& a, const vec4& b)
+{
+  vec4 tmp(a * b);
+  return tmp.x + tmp.y + tmp.z;
+}
+
 mjm::vec3 mjm::cross(const vec3& x, const vec3& y)
 {
   return vec3(x.y * y.z - y.y * x.z, //
@@ -164,6 +182,11 @@ float mjm::inversesqrt(float x)
 }
 
 mjm::vec3 mjm::normalize(const vec3& v)
+{
+  return v * inversesqrt(dot(v, v));
+}
+
+mjm::vec4 mjm::normalize(const vec4& v)
 {
   return v * inversesqrt(dot(v, v));
 }

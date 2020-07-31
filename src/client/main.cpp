@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "mj_common.h"
 #include "mj_input.h"
 #include "meta.h"

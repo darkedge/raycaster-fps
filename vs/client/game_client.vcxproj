@@ -39,7 +39,7 @@
     <ClInclude Include="..\..\src\client\camera.h" />
     <ClInclude Include="..\..\src\client\graphics.h" />
     <ClInclude Include="..\..\src\client\state_machine.h" />
-    <ClInclude Include="..\..\src\client\stdafx.h" />
+    <ClInclude Include="..\..\src\client\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\3rdparty\imgui\imgui.cpp">
@@ -89,7 +89,7 @@
     <ClCompile Include="..\..\src\client\mj_win32.cpp" />
     <ClCompile Include="..\..\src\client\graphics.cpp" />
     <ClCompile Include="..\..\src\client\state_machine.cpp" />
-    <ClCompile Include="..\..\src\client\stdafx.cpp">
+    <ClCompile Include="..\..\src\client\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -230,6 +230,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\$(Configuration);..\bx\$(Platform)\$(Configuration);..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
@@ -265,6 +266,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\bimg\$(Platform)\Debug;..\bx\$(Platform)\Debug;..\..\3rdparty\SDL2-2.0.12\lib\x64</AdditionalLibraryDirectories>
@@ -299,6 +301,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -333,6 +336,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

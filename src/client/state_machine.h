@@ -28,11 +28,11 @@ public:
   virtual void Exit()
   {
   }
-  void SetMeta(Meta* pMeta)
+  void SetMeta(Meta* ptr)
   {
-    assert(pMeta);
+    assert(ptr);
     assert(!this->pMeta);
-    this->pMeta = pMeta;
+    this->pMeta = ptr;
   }
 
 protected:

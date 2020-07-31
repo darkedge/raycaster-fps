@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "mj_input.h"
 #include "mj_common.h" // MJ_RT_WIDTH / MJ_RT_HEIGHT
 #include "main.h"
@@ -11,7 +11,7 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
   mj::ArrayList<Vertex> vertices;
   mj::ArrayList<uint16_t> indices;
 
-  Graphics::InsertWalls(vertices, indices, level);
+  Graphics::InsertWalls(vertices, indices, &level);
 
   // Floor/ceiling pass
   for (size_t z = 0; z < Meta::LEVEL_DIM; z++)

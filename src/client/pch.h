@@ -4,7 +4,8 @@
 #include <imgui.h>
 
 #include <shobjidl.h> // Save/Load dialogs
-#include <shlobj.h> // Save/Load dialogs
+#include <shlobj.h>   // Save/Load dialogs
+
 #include <d3d11.h>
 
 #include <bx/bx.h>
