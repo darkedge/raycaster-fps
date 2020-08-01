@@ -20,11 +20,34 @@ public:
   void SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice);
 
 private:
-  struct BlockCursor
+  class DragAction
   {
+  private:
+  };
+
+  class BlockSelection
+  {
+  private:
+    struct BlockPos
+    {
+      int32_t x;
+      int32_t z;
+    };
+    struct DragSelection
+    {
+      BlockPos begin;
+      BlockPos end;
+    };
+    mj::ArrayList<DragSelection> selections;
+  };
+
+  class BlockCursor
+  {
+  public:
     void Init(ComPtr<ID3D11Device> pDevice);
     void Update(const EditorState& pState, mj::ArrayList<DrawCommand>& drawList);
 
+  private:
     Mesh blockCursor;
     ComPtr<ID3D11VertexShader> pVertexShader;
     ComPtr<ID3D11PixelShader> pPixelShader;
@@ -42,6 +65,8 @@ private:
   Mesh levelMesh;
   const Level* pLevel = nullptr;
   BlockCursor blockCursor;
+  DragAction dragAction;
+  BlockSelection blockSelection;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;

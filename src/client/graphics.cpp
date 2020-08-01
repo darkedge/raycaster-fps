@@ -74,14 +74,14 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint1
 }
 
 Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
-                          uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices)
+                          uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices, D3D11_USAGE usage)
 {
   MJ_UNINITIALIZED Mesh mesh;
 
   {
     // Fill in a buffer description.
     MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.Usage          = usage;
     bufferDesc.ByteWidth      = vertexData.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
@@ -100,7 +100,7 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
   {
     mesh.indexCount = indices.Size();
     MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.Usage          = usage;
     bufferDesc.ByteWidth      = indices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
@@ -408,9 +408,9 @@ void Graphics::Init(ComPtr<ID3D11Device> pDevice)
   {
     D3D11_BUFFER_DESC desc   = {};
     desc.ByteWidth           = sizeof(mjm::mat4);
-    desc.Usage               = D3D11_USAGE_DEFAULT;
+    desc.Usage               = D3D11_USAGE_DYNAMIC;
     desc.BindFlags           = D3D11_BIND_CONSTANT_BUFFER;
-    desc.CPUAccessFlags      = 0;
+    desc.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
     desc.MiscFlags           = 0;
     desc.StructureByteStride = 0;
     MJ_DISCARD(pDevice->CreateBuffer(&desc, nullptr, this->pResource.ReleaseAndGetAddressOf()));
@@ -505,7 +505,15 @@ void Graphics::Update(ComPtr<ID3D11DeviceContext> pContext, const mj::ArrayList<
       {
         mvp *= *command.pMatrix;
       }
-      pContext->UpdateSubresource(this->pResource.Get(), 0, 0, &mvp, 0, 0);
+
+      // Constant buffer
+      MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedResource;
+      mappedResource.DepthPitch = 0;
+      mappedResource.RowPitch   = 0;
+      pContext->Map(this->pResource.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+      memcpy(mappedResource.pData, &mvp, sizeof(mvp));
+      pContext->Unmap(this->pResource.Get(), 0);
+
       pContext->DrawIndexed(command.pMesh->indexCount, 0, 0);
     }
   }

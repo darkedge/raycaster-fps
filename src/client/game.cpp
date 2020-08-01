@@ -27,7 +27,7 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     }
   }
 
-  this->levelMesh             = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices);
+  this->levelMesh             = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices, D3D11_USAGE_IMMUTABLE);
   this->levelMesh.inputLayout = Graphics::GetInputLayout();
 }
 

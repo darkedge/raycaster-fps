@@ -36,7 +36,7 @@ void EditorState::BlockCursor::Init(ComPtr<ID3D11Device> pDevice)
   mj::ArrayListView<uint16_t> indexList(indices);
 
   // Create static index buffer.
-  this->blockCursor                   = Graphics::CreateMesh(pDevice, vertexList, 3, indexList);
+  this->blockCursor                   = Graphics::CreateMesh(pDevice, vertexList, 3, indexList, D3D11_USAGE_DEFAULT);
   this->blockCursor.primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
 
   {
@@ -102,6 +102,15 @@ void EditorState::BlockCursor::Update(const EditorState& state, mj::ArrayList<Dr
       pCmd->pCamera      = &state.camera;
       pCmd->pMatrix      = &this->blockCursorMatrix;
       pCmd->pMesh        = &this->blockCursor;
+    }
+
+    if (mj::input::GetMouseButtonDown(MouseButton::Left))
+    {
+
+    }
+    else if (mj::input::GetMouseButtonUp(MouseButton::Left))
+    {
+
     }
   }
 }
@@ -394,7 +403,7 @@ void EditorState::SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice)
   {
     // Fill in a buffer description.
     D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.Usage          = D3D11_USAGE_IMMUTABLE;
     bufferDesc.ByteWidth      = vertices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
@@ -415,7 +424,7 @@ void EditorState::SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice)
     this->levelMesh.inputLayout = Graphics::GetInputLayout();
 
     D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = D3D11_USAGE_DEFAULT;
+    bufferDesc.Usage          = D3D11_USAGE_IMMUTABLE;
     bufferDesc.ByteWidth      = indices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
