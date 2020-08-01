@@ -124,11 +124,6 @@ static void ResetCamera(Camera& camera)
   camera.viewport[1] = 0.0f;
   camera.viewport[2] = w;
   camera.viewport[3] = h;
-
-  camera.floor.show            = true;
-  camera.floor.backFaceCulling = true;
-  camera.walls.show            = true;
-  camera.walls.backFaceCulling = true;
 }
 
 void EditorState::Init(ComPtr<ID3D11Device> pDevice)
@@ -251,22 +246,6 @@ void EditorState::DoMenu()
       }
       if (ImGui::MenuItem("Redo", "Ctrl+Y"))
       {
-      }
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("View"))
-    {
-      if (ImGui::BeginMenu("Floor"))
-      {
-        ImGui::MenuItem("Show", "", &this->camera.floor.show);
-        ImGui::MenuItem("Back-Face Culling", "", &this->camera.floor.backFaceCulling);
-        ImGui::EndMenu();
-      }
-      if (ImGui::BeginMenu("Walls"))
-      {
-        ImGui::MenuItem("Show", "", &this->camera.walls.show);
-        ImGui::MenuItem("Back-Face Culling", "", &this->camera.walls.backFaceCulling);
-        ImGui::EndMenu();
       }
       ImGui::EndMenu();
     }

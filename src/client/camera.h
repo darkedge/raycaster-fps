@@ -11,12 +11,6 @@ namespace axis
   const auto BACKWARD = mjm::vec3(0.0f, 0.0f, -1.0f);
 } // namespace axis
 
-struct DrawCallOptions
-{
-  bool show;
-  bool backFaceCulling;
-};
-
 struct Camera
 {
   mjm::vec3 position;
@@ -24,6 +18,4 @@ struct Camera
   mjm::vec4 viewport; // x, y, w, h
   mjm::quat rotation;
   float yFov;         // Degrees
-  DrawCallOptions floor;
-  DrawCallOptions walls;
 };
