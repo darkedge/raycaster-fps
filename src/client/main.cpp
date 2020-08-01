@@ -112,6 +112,11 @@ static bool PumpEvents(Meta* pMeta)
         }
       }
       break;
+      case SDL_WINDOWEVENT_FOCUS_LOST:
+        MJ_DISCARD(SDL_SetRelativeMouseMode((SDL_bool) false));
+        break;
+      case SDL_WINDOWEVENT_FOCUS_GAINED:
+        pMeta->GainFocus();
       default:
         break;
       }

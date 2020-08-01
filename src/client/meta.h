@@ -21,6 +21,7 @@ public:
   void NewFrame();
   void Update();
   void NewLevel();
+  void GainFocus();
 
 private:
   bool CreateDeviceD3D(HWND hWnd);

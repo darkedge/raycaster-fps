@@ -234,3 +234,11 @@ void Meta::NewLevel()
 {
   LoadLevel();
 }
+
+void Meta::GainFocus()
+{
+  // For now, we just exit and enter the current scene again.
+  // This should set the mouse mode properly (done in the Entry method).
+  this->stateMachine.pStateNext = this->stateMachine.pStateCurrent;
+}
+
