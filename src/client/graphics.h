@@ -243,9 +243,9 @@ struct DrawCommand
 {
   ComPtr<ID3D11VertexShader> vertexShader;
   ComPtr<ID3D11PixelShader> pixelShader;
-  Mesh* pMesh        = nullptr;
-  Camera* pCamera    = nullptr;
-  mjm::mat4* pMatrix = nullptr;
+  const Mesh* pMesh        = nullptr;
+  const Camera* pCamera    = nullptr;
+  const mjm::mat4* pMatrix = nullptr;
 };
 
 class Graphics

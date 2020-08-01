@@ -20,10 +20,19 @@ public:
   void SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice);
 
 private:
-  void CreateBlockCursor(ComPtr<ID3D11Device> pDevice);
+  struct BlockCursor
+  {
+    void Init(ComPtr<ID3D11Device> pDevice);
+    void Update(const EditorState& pState, mj::ArrayList<DrawCommand>& drawList);
+
+    Mesh blockCursor;
+    ComPtr<ID3D11VertexShader> pVertexShader;
+    ComPtr<ID3D11PixelShader> pPixelShader;
+    mjm::mat4 blockCursorMatrix;
+  };
+
   void DoMenu();
   void DoInput();
-  void UpdateBlockCursor(const mjm::mat4& vp);
 
   InputCombo inputComboNew;
   InputCombo inputComboOpen;
@@ -31,13 +40,8 @@ private:
   InputCombo inputComboSaveAs;
 
   Mesh levelMesh;
-
-  // Block cursor
-  Mesh blockCursor;
-  ComPtr<ID3D11VertexShader> pVertexShader;
-  ComPtr<ID3D11PixelShader> pPixelShader;
   const Level* pLevel = nullptr;
-  mjm::mat4 blockCursorMatrix;
+  BlockCursor blockCursor;
 
   Camera camera;
   int32_t mouseScrollFactor = 1;
