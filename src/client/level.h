@@ -1,6 +1,8 @@
 #pragma once
 #include "mj_math.h"
 
+using block_t = uint16_t;
+
 // -X, -Y, -Z, +X, +Y, +Z
 struct Face
 {
@@ -18,7 +20,7 @@ struct Face
 struct RaycastResult
 {
   mjm::int3 position;
-  int32_t type;
+  block_t block;
   Face::Enum face;
 };
 
@@ -27,9 +29,9 @@ struct Level
   uint8_t width  = 0;
   uint8_t height = 0;
   /// <summary>
-  /// Indexing: x * width + z (height)
+  /// Indexing: z * width + x (height)
   /// </summary>
-  uint16_t* pBlocks = nullptr;
+  block_t* pBlocks = nullptr;
 
 public:
   static Level Load(const char* path);

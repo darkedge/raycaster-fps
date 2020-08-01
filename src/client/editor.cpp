@@ -88,7 +88,7 @@ void EditorState::BlockCursor::Update(const EditorState& state, mj::ArrayList<Dr
 
   // Ray-voxel intersection (2 y-layers: walls and floors)
   MJ_UNINITIALIZED RaycastResult result;
-  if (state.pLevel->FireRay(worldNear, ray, -1.0f, &result))
+  if (state.pLevel->FireRay(worldNear, ray, 100.0f, &result))
   {
     this->blockCursorMatrix[3][0] = (float)result.position.x;
     this->blockCursorMatrix[3][2] = (float)result.position.z;

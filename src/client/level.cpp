@@ -15,33 +15,40 @@ static constexpr uint32_t s_MagicWord = 0x464D4A4D;
 static constexpr uint8_t s_Version    = 0;
 static bx::DefaultAllocator s_defaultAllocator;
 
-static int32_t GetBlock(const Level* pLevel, const mjm::int3& position)
+/// <summary>
+///
+/// </summary>
+/// <param name="pLevel"></param>
+/// <param name="position"></param>
+/// <param name="pBlock"></param>
+/// <returns></returns>
+static bool BlockCursorTest(const Level* pLevel, const mjm::int3& position, block_t* pBlock)
 {
-  if (position.x >= 0 &&            //
-      position.x < pLevel->width && //
-      position.z >= 0 &&            //
-      position.z < pLevel->height)
+  if (position.x >= 0 &&             //
+      position.x < pLevel->width &&  //
+      position.z >= 0 &&             //
+      position.z < pLevel->height && //
+      position.y == 0)
   {
-    auto Block = [&] { return (int32_t)pLevel->pBlocks[position.x * pLevel->width + position.z]; };
-    if (position.y == -1)
+    block_t block = pLevel->pBlocks[position.z * pLevel->width + position.x];
+    if (pBlock)
     {
-      int32_t block = Block();
-      if (block >= 0x006A)
-      {
-        return block;
-      }
+      *pBlock = block;
     }
-    else if (position.y == 0)
-    {
-      int32_t block = Block();
-      if (block < 0x006A)
-      {
-        return block;
-      }
-    }
+    return block < 0x006A;
   }
-
-  return -1;
+  else
+  {
+    if (position.y == -1) // Floor always hits
+    {
+      if (pBlock)
+      {
+        *pBlock = 0;
+      }
+      return true;
+    }
+    return false;
+  }
 }
 
 Level Level::Load(const char* path)
@@ -137,7 +144,7 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
   pResult->position.x = (int32_t)floorf(origin.x);
   pResult->position.y = (int32_t)floorf(origin.y);
   pResult->position.z = (int32_t)floorf(origin.z);
-  pResult->type       = -1;
+  pResult->block       = 0;
 
   MJ_UNINITIALIZED mjm::int3 endPos;
   endPos.x = (int32_t)floorf(origin.x + distance * direction.x);
@@ -151,14 +158,16 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
 
   while (pResult->position != endPos)
   {
-    int32_t block = GetBlock(this, pResult->position);
+    MJ_UNINITIALIZED block_t block;
+    bool hit = BlockCursorTest(this, pResult->position, &block);
 
-    if (block != -1)
+#if 1
+    if (hit)
     {
-      pResult->type = block;
-
+      pResult->block = block;
       return true;
     }
+#endif
 
     if (tMaxX < tMaxY)
     {
@@ -183,12 +192,6 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
       {
         pResult->position.y += stepY;
         pResult->face = stepY > 0 ? Face::Bottom : Face::Top;
-
-        if ((direction.y < 0 && pResult->position.y < 0) || (direction.y > 0 && pResult->position.y >= 2)) // TODO
-        {
-          return false;
-        }
-
         tMaxY += tDeltaY;
         tMax = tMaxY;
       }
