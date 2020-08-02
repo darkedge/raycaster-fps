@@ -15,29 +15,63 @@ public:
   void Init(ComPtr<ID3D11Device> pDevice) override;
   void Resize(float w, float h) override;
   void Entry() override;
-  void Update(mj::ArrayList<DrawCommand>& drawList) override;
+  void Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList) override;
 
   void SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice);
 
 private:
-  class DragAction
-  {
-  private:
-  };
-
   class BlockSelection
   {
-  private:
-    struct BlockPos
+  public:
+    void Begin(BlockPos pos)
     {
-      int32_t x;
-      int32_t z;
-    };
+      assert(!isDragging);
+      this->begin = pos;
+      isDragging  = true;
+    }
+
+    void End(BlockPos pos)
+    {
+      assert(isDragging);
+      Add(begin, pos);
+      isDragging = false;
+    }
+
+    void AddSingle(BlockPos pos)
+    {
+      assert(!isDragging);
+      Add(pos, pos);
+    }
+
+    bool IsDragging() const
+    {
+      return isDragging;
+    }
+
+    void Clear()
+    {
+      selections.Clear();
+    }
+
+  private:
     struct DragSelection
     {
-      BlockPos begin;
-      BlockPos end;
+      MJ_UNINITIALIZED BlockPos begin;
+      MJ_UNINITIALIZED BlockPos end;
     };
+
+    void Add(BlockPos b, BlockPos e)
+    {
+      auto* pSelection = selections.EmplaceSingle();
+      if (pSelection)
+      {
+        pSelection->begin = b;
+        pSelection->end   = e;
+      }
+    }
+
+    MJ_UNINITIALIZED BlockPos begin;
+    bool isDragging = false;
     mj::ArrayList<DragSelection> selections;
   };
 
@@ -45,13 +79,17 @@ private:
   {
   public:
     void Init(ComPtr<ID3D11Device> pDevice);
-    void Update(const EditorState& pState, mj::ArrayList<DrawCommand>& drawList);
+    void Update(EditorState& pState, ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList);
 
   private:
-    Mesh blockCursor;
+    void AdjustMesh(ComPtr<ID3D11DeviceContext> pContext, const BlockPos& begin, const BlockPos& end);
+
+    Mesh mesh;
     ComPtr<ID3D11VertexShader> pVertexShader;
     ComPtr<ID3D11PixelShader> pPixelShader;
-    mjm::mat4 blockCursorMatrix;
+    BlockPos firstPosition;
+    BlockPos lastPosition;
+    mjm::mat4 worldMatrix;
   };
 
   void DoMenu();
@@ -65,7 +103,6 @@ private:
   Mesh levelMesh;
   const Level* pLevel = nullptr;
   BlockCursor blockCursor;
-  DragAction dragAction;
   BlockSelection blockSelection;
 
   Camera camera;

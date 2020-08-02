@@ -74,17 +74,18 @@ static void InsertRectangle(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint1
 }
 
 Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
-                          uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices, D3D11_USAGE usage)
+                          uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices,
+                          D3D11_USAGE vertexBufferUsage, D3D11_USAGE indexBufferUsage)
 {
   MJ_UNINITIALIZED Mesh mesh;
 
   {
     // Fill in a buffer description.
     MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = usage;
+    bufferDesc.Usage          = vertexBufferUsage;
     bufferDesc.ByteWidth      = vertexData.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.CPUAccessFlags = vertexBufferUsage == D3D11_USAGE_DYNAMIC ? D3D11_CPU_ACCESS_WRITE : 0;
     bufferDesc.MiscFlags      = 0;
 
     // Fill in the subresource data.
@@ -100,10 +101,10 @@ Mesh Graphics::CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<
   {
     mesh.indexCount = indices.Size();
     MJ_UNINITIALIZED D3D11_BUFFER_DESC bufferDesc;
-    bufferDesc.Usage          = usage;
+    bufferDesc.Usage          = indexBufferUsage;
     bufferDesc.ByteWidth      = indices.ByteWidth();
     bufferDesc.BindFlags      = D3D11_BIND_INDEX_BUFFER;
-    bufferDesc.CPUAccessFlags = 0;
+    bufferDesc.CPUAccessFlags = indexBufferUsage == D3D11_USAGE_DYNAMIC ? D3D11_CPU_ACCESS_WRITE : 0;
     bufferDesc.MiscFlags      = 0;
 
     // Define the resource data.

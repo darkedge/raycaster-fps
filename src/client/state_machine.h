@@ -21,8 +21,9 @@ public:
   virtual void Entry()
   {
   }
-  virtual void Update(mj::ArrayList<DrawCommand>& drawList)
+  virtual void Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList)
   {
+    (void)pContext;
     (void)drawList;
   }
   virtual void Exit()
@@ -45,5 +46,5 @@ struct StateMachine
   StateBase* pStateNext    = nullptr;
 
   void Resize(float width, float height);
-  void Update(mj::ArrayList<DrawCommand>& drawList);
+  void Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList);
 };

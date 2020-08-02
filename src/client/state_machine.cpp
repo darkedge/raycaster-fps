@@ -10,14 +10,14 @@ void StateMachine::Resize(float width, float height)
   }
 }
 
-void StateMachine::Update(mj::ArrayList<DrawCommand>& drawList)
+void StateMachine::Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList)
 {
   auto*& pCurrent = this->pStateCurrent;
   auto*& pNext    = this->pStateNext;
 
   if (pCurrent)
   {
-    pCurrent->Update(drawList);
+    pCurrent->Update(pContext, drawList);
   }
 
   if (pNext)

@@ -27,7 +27,8 @@ void GameState::SetLevel(Level level, ComPtr<ID3D11Device> pDevice)
     }
   }
 
-  this->levelMesh             = Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices, D3D11_USAGE_IMMUTABLE);
+  this->levelMesh =
+      Graphics::CreateMesh(pDevice, vertices.Cast<float>(), 6, indices, D3D11_USAGE_IMMUTABLE, D3D11_USAGE_IMMUTABLE);
   this->levelMesh.inputLayout = Graphics::GetInputLayout();
 }
 
@@ -46,7 +47,7 @@ void GameState::Entry()
   this->yaw             = -this->currentMousePos;
 }
 
-void GameState::Update(mj::ArrayList<DrawCommand>& drawList)
+void GameState::Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList)
 {
   ZoneScoped;
 

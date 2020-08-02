@@ -252,7 +252,8 @@ class Graphics
 {
 public:
   static Mesh CreateMesh(ComPtr<ID3D11Device> pDevice, const mj::ArrayListView<float>& vertexData,
-                         uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices, D3D11_USAGE usage);
+                         uint32_t numVertexComponents, const mj::ArrayListView<uint16_t>& indices,
+                         D3D11_USAGE vertexBufferUsage, D3D11_USAGE indexBufferUsage);
   static void InsertWalls(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, const Level* pLevel);
   static void InsertCeiling(mj::ArrayList<Vertex>& vertices, mj::ArrayList<uint16_t>& indices, float x, float z,
                             float texture);

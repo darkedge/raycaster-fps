@@ -15,6 +15,17 @@ static constexpr uint32_t s_MagicWord = 0x464D4A4D;
 static constexpr uint8_t s_Version    = 0;
 static bx::DefaultAllocator s_defaultAllocator;
 
+bool operator!=(const BlockPos& a, const BlockPos& b)
+{
+  return !(a == b);
+}
+
+bool operator==(const BlockPos& a, const BlockPos& b)
+{
+  return (a.x == b.x) && //
+         (a.z == b.z);
+}
+
 /// <summary>
 ///
 /// </summary>
@@ -141,10 +152,11 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
   float tMaxY = (direction.y > 0 ? ceilf(origin.y) - origin.y : origin.y - floorf(origin.y)) * tDeltaY;
   float tMaxZ = (direction.z > 0 ? ceilf(origin.z) - origin.z : origin.z - floorf(origin.z)) * tDeltaZ;
 
-  pResult->position.x = (int32_t)floorf(origin.x);
-  pResult->position.y = (int32_t)floorf(origin.y);
-  pResult->position.z = (int32_t)floorf(origin.z);
-  pResult->block       = 0;
+  mjm::int3 position;
+  position.x     = (int32_t)floorf(origin.x);
+  position.y     = (int32_t)floorf(origin.y);
+  position.z     = (int32_t)floorf(origin.z);
+  pResult->block = 0;
 
   MJ_UNINITIALIZED mjm::int3 endPos;
   endPos.x = (int32_t)floorf(origin.x + distance * direction.x);
@@ -156,15 +168,17 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
   // tMaxY += diff * tDeltaY;
   // tMax = tMaxY;
 
-  while (pResult->position != endPos)
+  while (position != endPos)
   {
     MJ_UNINITIALIZED block_t block;
-    bool hit = BlockCursorTest(this, pResult->position, &block);
+    bool hit = BlockCursorTest(this, position, &block);
 
 #if 1
     if (hit)
     {
-      pResult->block = block;
+      pResult->block      = block;
+      pResult->position.x = position.x;
+      pResult->position.z = position.z;
       return true;
     }
 #endif
@@ -173,14 +187,14 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
     {
       if (tMaxX < tMaxZ)
       {
-        pResult->position.x += stepX;
+        position.x += stepX;
         pResult->face = stepX > 0 ? Face::West : Face::East;
         tMaxX += tDeltaX;
         tMax = tMaxX;
       }
       else
       {
-        pResult->position.z += stepZ;
+        position.z += stepZ;
         pResult->face = stepZ > 0 ? Face::South : Face::North;
         tMaxZ += tDeltaZ;
         tMax = tMaxZ;
@@ -190,14 +204,14 @@ bool Level::FireRay(mjm::vec3 origin, mjm::vec3 direction, float distance, Rayca
     {
       if (tMaxY < tMaxZ)
       {
-        pResult->position.y += stepY;
+        position.y += stepY;
         pResult->face = stepY > 0 ? Face::Bottom : Face::Top;
         tMaxY += tDeltaY;
         tMax = tMaxY;
       }
       else
       {
-        pResult->position.z += stepZ;
+        position.z += stepZ;
         pResult->face = stepZ > 0 ? Face::South : Face::North;
         tMaxZ += tDeltaZ;
         tMax = tMaxZ;

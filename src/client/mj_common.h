@@ -34,6 +34,33 @@ static constexpr uint16_t MJ_FS_HEIGHT = 1080;
 
 namespace mj
 {
+  /// <summary>
+  /// Calculates min and max at the same time.
+  /// Also checks if the order of a and b was initially correct or not.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  /// <param name="a"></param>
+  /// <param name="b"></param>
+  /// <param name="outMin">Output min value.</param>
+  /// <param name="outMax">Output max value.</param>
+  /// <returns>True if a is min and b is max, otherwise false.</returns>
+  template <typename T>
+  inline constexpr bool minmax(const T& a, const T& b, T& outMin, T& outMax)
+  {
+    if (a < b)
+    {
+      outMin = a;
+      outMax = b;
+      return true;
+    }
+    else
+    {
+      outMin = b;
+      outMax = a;
+      return false;
+    }
+  }
+
   template <typename T>
   void swap(T& a, T& b)
   {
@@ -165,9 +192,9 @@ namespace mj
 
     /// <summary>
     /// Emplaces (constructs in-place) a new object.
-    /// Uses placement-new.
+    /// Uses placement-new. Could still be uninitialized!
     /// </summary>
-    /// <returns>Null if there is no more space</returns>
+    /// <returns>Null if there is no more space.</returns>
     template <typename... Ts>
     T* EmplaceSingle(Ts&&... args)
     {
@@ -195,7 +222,7 @@ namespace mj
     /// Emplaces (constructs in-place) multiple objects.
     /// Uses placement-new.
     /// </summary>
-    /// <returns>Null if there is no more space</returns>
+    /// <returns>Null if there is no more space.</returns>
     template <typename... Ts>
     T* EmplaceMultiple(uint32_t num)
     {
@@ -222,6 +249,36 @@ namespace mj
         }
       }
     }
+
+#if 0
+    /// <summary>
+    /// Adds a copy of the argument to the end of the ArrayList.
+    /// Uses copy constructor.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <returns>False if there is no more space.</returns>
+    bool Add(const T& t)
+    {
+      if (numElements < capacity)
+      {
+        T* ptr = pData + numElements;
+        new (ptr) T(t);
+        numElements++;
+        return ptr;
+      }
+      else
+      {
+        if (Double())
+        {
+          return Add(t);
+        }
+        else
+        {
+          return false;
+        }
+      }
+    }
+#endif
 
     void Clear()
     {

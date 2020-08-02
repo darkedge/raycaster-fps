@@ -1,5 +1,6 @@
 #pragma once
 #include "mj_math.h"
+#include "mj_common.h"
 
 using block_t = uint16_t;
 
@@ -17,9 +18,18 @@ struct Face
   };
 };
 
+struct BlockPos
+{
+  MJ_UNINITIALIZED int32_t x;
+  MJ_UNINITIALIZED int32_t z;
+};
+
+bool operator==(const BlockPos& a, const BlockPos& b);
+bool operator!=(const BlockPos& a, const BlockPos& b);
+
 struct RaycastResult
 {
-  mjm::int3 position;
+  BlockPos position;
   block_t block;
   Face::Enum face;
 };

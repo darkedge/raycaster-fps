@@ -153,7 +153,7 @@ void Meta::Init(HWND hwnd)
   }
 
   // Fire Entry action for next state
-  this->stateMachine.Update(drawList);
+  this->stateMachine.Update(this->pContext, drawList);
 }
 
 void Meta::Resize(int width, int height)
@@ -184,7 +184,7 @@ void Meta::Update()
         (this->stateMachine.pStateCurrent == &this->game) ? (StateBase*)&this->editor : (StateBase*)&this->game;
   }
 
-  this->stateMachine.Update(this->drawList);
+  this->stateMachine.Update(this->pContext, this->drawList);
 
   this->pContext->OMSetRenderTargets(1, this->pRenderTargetView.GetAddressOf(), this->pDepthStencilView.Get());
   this->pContext->ClearDepthStencilView(this->pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);

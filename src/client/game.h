@@ -7,7 +7,7 @@ class GameState : public StateBase
 public:
   // StateBase
   void Entry() override;
-  void Update(mj::ArrayList<DrawCommand>& drawList) override;
+  void Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList) override;
 
   void SetLevel(Level level, ComPtr<ID3D11Device> pDevice);
 

@@ -35,9 +35,9 @@ void EditorState::BlockCursor::Init(ComPtr<ID3D11Device> pDevice)
   mj::ArrayListView<float> vertexList(vertices);
   mj::ArrayListView<uint16_t> indexList(indices);
 
-  // Create static index buffer.
-  this->blockCursor                   = Graphics::CreateMesh(pDevice, vertexList, 3, indexList, D3D11_USAGE_DEFAULT);
-  this->blockCursor.primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+  // Block cursor mesh
+  this->mesh = Graphics::CreateMesh(pDevice, vertexList, 3, indexList, D3D11_USAGE_DYNAMIC, D3D11_USAGE_IMMUTABLE);
+  this->mesh.primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
 
   {
     D3D11_INPUT_ELEMENT_DESC desc = {};
@@ -52,16 +52,17 @@ void EditorState::BlockCursor::Init(ComPtr<ID3D11Device> pDevice)
     desc.InstanceDataStepRate = 0;
 
     MJ_DISCARD(pDevice->CreateInputLayout(&desc, 1, block_cursor_vs, sizeof(block_cursor_vs),
-                                          this->blockCursor.inputLayout.ReleaseAndGetAddressOf()));
+                                          this->mesh.inputLayout.ReleaseAndGetAddressOf()));
   }
 
-  this->blockCursorMatrix = mjm::mat4(1.0f, 0.0f, 0.0f, 0.0f, //
-                                      0.0f, 1.0f, 0.0f, 0.0f, //
-                                      0.0f, 0.0f, 1.0f, 0.0f, //
-                                      0.0f, 0.0f, 0.0f, 1.0f);
+  this->worldMatrix = mjm::mat4(1.0f, 0.0f, 0.0f, 0.0f, //
+                                0.0f, 1.0f, 0.0f, 0.0f, //
+                                0.0f, 0.0f, 1.0f, 0.0f, //
+                                0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-void EditorState::BlockCursor::Update(const EditorState& state, mj::ArrayList<DrawCommand>& drawList)
+void EditorState::BlockCursor::Update(EditorState& state, ComPtr<ID3D11DeviceContext> pContext,
+                                      mj::ArrayList<DrawCommand>& drawList)
 {
   MJ_UNINITIALIZED float mouseX;
   MJ_UNINITIALIZED float mouseY;
@@ -90,8 +91,8 @@ void EditorState::BlockCursor::Update(const EditorState& state, mj::ArrayList<Dr
   MJ_UNINITIALIZED RaycastResult result;
   if (state.pLevel->FireRay(worldNear, ray, 100.0f, &result))
   {
-    this->blockCursorMatrix[3][0] = (float)result.position.x;
-    this->blockCursorMatrix[3][2] = (float)result.position.z;
+    this->worldMatrix[3][0] = (float)result.position.x;
+    this->worldMatrix[3][2] = (float)result.position.z;
 
     // Add to draw list
     DrawCommand* pCmd = drawList.EmplaceSingle();
@@ -100,19 +101,81 @@ void EditorState::BlockCursor::Update(const EditorState& state, mj::ArrayList<Dr
       pCmd->vertexShader = this->pVertexShader;
       pCmd->pixelShader  = this->pPixelShader;
       pCmd->pCamera      = &state.camera;
-      pCmd->pMatrix      = &this->blockCursorMatrix;
-      pCmd->pMesh        = &this->blockCursor;
+      pCmd->pMatrix      = &this->worldMatrix;
+      pCmd->pMesh        = &this->mesh;
     }
+
+    if (state.blockSelection.IsDragging() && result.position != lastPosition)
+    {
+      AdjustMesh(pContext, firstPosition, result.position);
+    }
+    lastPosition = result.position;
 
     if (mj::input::GetMouseButtonDown(MouseButton::Left))
     {
-
+      if (!mj::input::GetKey(Key::LeftCtrl) && !mj::input::GetKey(Key::LeftCtrl))
+      {
+        state.blockSelection.Clear();
+      }
+      firstPosition = result.position;
+      state.blockSelection.Begin(result.position);
     }
     else if (mj::input::GetMouseButtonUp(MouseButton::Left))
     {
-
+      state.blockSelection.End(result.position);
+      AdjustMesh(pContext, result.position, result.position);
     }
   }
+}
+
+void EditorState::BlockCursor::AdjustMesh(ComPtr<ID3D11DeviceContext> pContext, const BlockPos& begin,
+                                          const BlockPos& end)
+{
+  /// <summary>
+  /// Remap begin and end to min and max
+  /// </summary>
+  /// <param name="pContext"></param>
+  /// <param name="begin"></param>
+  /// <param name="end"></param>
+  auto remap = [](int32_t begin, int32_t end, float& outMin, float& outMax) {
+    MJ_UNINITIALIZED int32_t min, max;
+    if (mj::minmax(begin, end, min, max))
+    {
+      // begin < end (drag right)
+      // map end(max) to zero, begin(min) is negative
+      outMin = min - max - 0.002f;
+      outMax = 1.002f;
+    }
+    else
+    {
+      // end < begin (drag left)
+      // map begin(min) to zero, end(max) is positive
+      outMax = max - min + 1.002f;
+      outMin = -0.002f;
+    }
+  };
+
+  MJ_UNINITIALIZED float minX, minZ, maxX, maxZ;
+  remap(begin.x, end.x, minX, maxX);
+  remap(begin.z, end.z, minZ, maxZ);
+
+  float vertices[] = {
+    minX, -0.002f, minZ, // 0
+    minX, -0.002f, maxZ, // 1
+    minX, 1.002f,  minZ, // 2
+    minX, 1.002f,  maxZ, // 3
+    maxX, -0.002f, minZ, // 4
+    maxX, -0.002f, maxZ, // 5
+    maxX, 1.002f,  minZ, // 6
+    maxX, 1.002f,  maxZ  // 7
+  };
+
+  MJ_UNINITIALIZED D3D11_MAPPED_SUBRESOURCE mappedResource;
+  mappedResource.DepthPitch = 0;
+  mappedResource.RowPitch   = 0;
+  pContext->Map(this->mesh.vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+  memcpy(mappedResource.pData, vertices, sizeof(vertices));
+  pContext->Unmap(this->mesh.vertexBuffer.Get(), 0);
 }
 
 void EditorState::Resize(float w, float h)
@@ -341,7 +404,7 @@ void EditorState::DoInput()
   }
 }
 
-void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
+void EditorState::Update(ComPtr<ID3D11DeviceContext> pContext, mj::ArrayList<DrawCommand>& drawList)
 {
   auto& cam = this->camera;
 
@@ -369,7 +432,7 @@ void EditorState::Update(mj::ArrayList<DrawCommand>& drawList)
     }
   }
 
-  this->blockCursor.Update(*this, drawList);
+  this->blockCursor.Update(*this, pContext, drawList);
 }
 
 void EditorState::SetLevel(const Level* pLvl, ComPtr<ID3D11Device> pDevice)
